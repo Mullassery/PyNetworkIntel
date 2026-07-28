@@ -66,7 +66,18 @@ Documentation = "https://github.com/Mullassery/PyNetworkIntel/blob/main/README.m
 pynetworkintel = "pynetworkintel.cli:main"
 
 [tool.setuptools]
-packages = ["pynetworkintel", "pynetworkintel.discovery", "pynetworkintel.analysis"]
+packages = [
+    "pynetworkintel",
+    "pynetworkintel.discovery",
+    "pynetworkintel.analysis",
+    "pynetworkintel.cloud",
+    "pynetworkintel.kubernetes",
+    "pynetworkintel.iot",
+    "pynetworkintel.ml",
+    "pynetworkintel.devops",
+    "pynetworkintel.enterprise",
+    "pynetworkintel.architect",
+]
 
 [tool.black]
 line-length = 100
