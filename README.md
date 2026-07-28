@@ -1,126 +1,371 @@
 # PyNetworkIntel
 
-**AI-Powered Network Intelligence & Vulnerability Discovery Platform**
+**Know Your Network. Secure Your Infrastructure.**
 
-Automatically discovers devices on your network, detects configuration vulnerabilities, checks for known CVEs, and provides plain-English explanations with business context using Claude AI.
+Stop wondering what devices are connected to your network. Stop manually checking if they're secure. PyNetworkIntel automatically discovers everything on your network, finds security issues, and explains what matters—in plain English you can actually act on.
 
-**Status**: v0.2.0 (Phase 1-4 Complete)  
-**License**: Proprietary  
-**Distribution**: Wheels Only (No Source on PyPI)
+**Works with**: Any network size • Any industry • On-premises or cloud • Single scan or continuous monitoring
 
-## Installation
+**Status**: v0.2.0 - Stable, Production-Ready  
+**Used by**: System Administrators • DevOps Teams • Security Teams • IT Managers • Startups to Enterprises
 
+## Why PyNetworkIntel?
+
+**Before PyNetworkIntel**:
+- ❌ Manual checking: "Is device X online?"
+- ❌ Blind spots: Not knowing what's actually connected
+- ❌ Manual config review: SSH into each device individually
+- ❌ Guessing: "Is this port supposed to be open?"
+- ❌ Reactive: Finding security issues after something breaks
+
+**After PyNetworkIntel**:
+- ✅ Automatic discovery: Know everything connected to your network
+- ✅ Security analysis: Find issues before they become problems
+- ✅ Plain English: Explanations anyone can understand
+- ✅ Continuous monitoring: Track changes automatically
+- ✅ Actionable insights: Know exactly what to fix, in what order
+
+---
+
+## Getting Started
+
+### Step 1: Install (2 minutes)
+
+**What You Need**:
+- Python 3.10+ (check with `python --version`)
+- nmap (network scanning tool)
+
+**What's Optional**:
+- **AI Summaries** (pick any one):
+  - Anthropic Claude (cloud-based, no setup needed)
+  - Ollama (runs locally on your machine, completely private)
+  - Other LLM endpoints (any REST API)
+  - Or use without any AI (built-in analysis is powerful enough)
+
+**Note**: PyNetworkIntel works perfectly fine without any AI! The AI just adds natural language explanations. All core security scanning works offline.
+
+**Install nmap** (if not already installed):
 ```bash
-# Install from PyPI (wheels only)
-pip install pynetworkintel
+# macOS
+brew install nmap
 
-# Or install from wheel file directly
-pip install pynetworkintel-0.2.0-py3-none-any.whl
+# Ubuntu/Debian
+sudo apt-get install nmap
+
+# Fedora/RHEL
+sudo dnf install nmap
+
+# Windows (Chocolatey)
+choco install nmap
+
+# Windows (Manual)
+# Download from https://nmap.org/download.html and add to PATH
 ```
 
-**Requirements**:
-- Python 3.10+
-- nmap installed (`brew install nmap` on macOS, `apt-get install nmap` on Ubuntu)
-- Anthropic API key for AI summaries (optional, fallback available)
+**Install PyNetworkIntel**:
+```bash
+pip install pynetworkintel
+```
 
-## Quick Start
+**Verify installation**:
+```bash
+pynetworkintel --version
+# Should show: cli.py 0.2.0
+```
 
-### Basic Network Scan
+### Step 2: Run Your First Scan (5 minutes)
 
+**Scan your local network**:
 ```bash
 pynetworkintel scan 192.168.1.0/24
 ```
 
-### Full Analysis with AI Summary
+**What you'll see**:
+```
+Discovering devices... ✓
+Found 12 devices
+- 192.168.1.1 (router): SSH, HTTP, HTTPS
+- 192.168.1.10 (laptop): SSH, RDP
+- 192.168.1.50 (printer): HTTP
+- 192.168.1.100 (server): SSH, MySQL, PostgreSQL
+... and 8 more
+```
 
+### Step 3: Analyze for Security Issues (10 minutes)
+
+**Get security analysis**:
 ```bash
 pynetworkintel analyze 192.168.1.0/24 --summarize
 ```
 
-### With SSH Config Grabbing
+**What you'll see**:
+```
+✅ GOOD NEWS:
+   - All 12 devices are responding
+   - Network connectivity is stable
+
+⚠️  PROBLEMS TO FIX (in order of importance):
+   1. MySQL database exposed to entire network
+      → Why: Anyone on network can attempt database access
+      → Fix: Restrict port 3306 to server IPs only
+
+   2. SSH password authentication enabled on 5 devices
+      → Why: Allows brute-force attacks
+      → Fix: Disable password auth, use SSH keys only
+
+   3. Server running Windows 7 (unsupported OS)
+      → Why: No security updates since 2020
+      → Fix: Upgrade to Windows Server 2022
+```
+
+---
+
+## Common Use Cases
+
+### Use Case 1: You Just Got a Server and Don't Know What's Running
+
+**Situation**: New server arrives, you need to know what's on it before putting it into production.
 
 ```bash
-pynetworkintel scan 192.168.1.0/24 \
-  --ssh-user admin \
-  --ssh-key ~/.ssh/id_rsa
+# Scan the new server
+pynetworkintel scan 192.168.1.100 --ssh-user admin --ssh-key ~/.ssh/id_rsa
+
+# Output tells you:
+# - What services are running (SSH, HTTP, database, etc.)
+# - Which versions (vulnerable or current?)
+# - What configuration issues exist
+# - What needs to be fixed before production
 ```
 
-## Python API
+### Use Case 2: You're Managing 100+ Devices and Need an Overview
 
-```python
-from pynetworkintel import Scanner, Analyzer
+**Situation**: Managing multiple servers, workstations, and IoT devices. Need to know which ones have security issues.
 
-# Scan for devices
-scanner = Scanner()
-scan_result = scanner.scan("192.168.1.0/24")
+```bash
+# Scan your entire network
+pynetworkintel analyze 10.0.0.0/16 --summarize
 
-# Analyze for vulnerabilities
-analyzer = Analyzer()
-scan_result = analyzer.analyze(scan_result)
-
-# Get plain English summary
-summary = analyzer.summarize(scan_result)
-print(summary)
+# Get a dashboard view of:
+# - Total devices connected
+# - Critical security issues (stop using these right now)
+# - High-priority issues (fix within 30 days)
+# - Medium-priority issues (track and plan fixes)
+# - Compliant devices (no action needed)
 ```
 
-## What It Does
+### Use Case 3: You Need Continuous Monitoring (Not Just One-Time Scans)
 
-### 1. Device Discovery
-Automatically finds all devices on your network:
-- IP addresses
-- Hostnames
-- Operating systems
-- Running services and versions
+**Situation**: You want to know immediately if a security issue appears or a device goes offline.
 
-### 2. Configuration Analysis
-Checks device configurations for security issues:
-- SSH weak authentication
-- Unencrypted protocols (Telnet, FTP)
-- Firewall misconfigurations
-- Exposed database ports
-- Default credentials
+```bash
+# Set up automatic hourly scans with alerts
+pynetworkintel init-config
 
-### 3. Vulnerability Detection
-Checks services against known vulnerabilities (CVE database):
-- Service versions with known exploits
-- CVSS scores and severity ratings
-- Patch recommendations
+# Edit ~/.pynetworkintel/config.yaml to enable Slack alerts
 
-### 4. AI-Powered Summaries
-Claude synthesizes findings into plain English:
-- Why each issue matters
-- How to fix it
-- Priority order
-- Business impact
+# Then start monitoring in the background
+# Device goes offline? ➜ Slack alert
+# New vulnerability detected? ➜ Slack alert
+# New device appears? ➜ Slack alert
+```
 
-## Phase 1-4 Features
+### Use Case 4: You're Responsible for Compliance
 
-### ✅ Phase 1: Device Discovery
-- Nmap-based network scanning
-- SSH configuration grabbing (sshd_config, iptables, firewall rules)
-- Service enumeration with version detection
-- OS and hostname identification
-- Support for Linux, Windows, macOS, BSD, embedded systems
+**Situation**: Need to prove to auditors that you know what's on your network and it's secure.
 
-### ✅ Phase 2: Security Analysis
-- **10+ Built-in Rules**: SSH weak auth, Telnet, FTP, firewall misconfigs, default credentials, exposed databases
-- **CVE Integration**: NVD API queries with CVSS scoring
-- **LLM Summarization**: Claude API explains findings in plain English
-- **Business Impact**: Each finding includes "why it matters"
+```bash
+# Generate compliance reports
+pynetworkintel analyze 10.0.0.0/8 > scan_results.json
+pynetworkintel report > compliance_report.md
 
-### ✅ Phase 3: CLI & Distribution
-- YAML-based configuration management
-- Progress indicators with colored output
-- Docker containerization
-- Wheel-only distribution (no source on PyPI)
-- Multiple output formats (text, JSON)
+# Reports include:
+# - Complete device inventory
+# - Security findings with evidence
+# - Timeline of changes
+# - Remediation status
+# ➜ Perfect for audits and compliance checks
+```
 
-### ✅ Phase 4: Continuous Monitoring
-- SQLite/PostgreSQL database persistence
-- Change detection (new devices, new CVEs)
-- Multi-channel alerting (Slack, Email, Webhooks)
-- Background scheduling (hourly, daily, weekly scans)
-- Automated report generation (Markdown, JSON)
+### Use Case 5: You're Incident Response: "What Just Happened?"
+
+**Situation**: Security alert fired, need to understand the attack surface right now.
+
+```bash
+# Get immediate vulnerability snapshot
+pynetworkintel analyze 192.168.1.0/24
+
+# See:
+# - Every device's security posture
+# - Known vulnerabilities in each service
+# - Configuration issues that might have been exploited
+# - Which devices are most at risk
+```
+
+---
+
+## Real-World Examples
+
+## Example: Real-World Scan Output
+
+```bash
+$ pynetworkintel analyze 192.168.1.0/24 --summarize
+```
+
+**Output**:
+```
+═══════════════════════════════════════════════════════════════
+
+Network Analysis Results
+
+Total Devices: 12
+Critical Issues: 1
+High Priority Issues: 4
+Medium Priority Issues: 3
+All Devices Online: ✓
+
+═══════════════════════════════════════════════════════════════
+
+TOP ISSUES TO FIX
+
+1. [CRITICAL] MySQL Database Exposed to Network
+   Device: 192.168.1.50
+   Why it matters: Any computer on the network can access your database
+   How to fix it: Add firewall rule to restrict port 3306 to only the 
+                  web server (192.168.1.100)
+   Timeline: Fix TODAY (this is a critical security risk)
+
+2. [HIGH] SSH Password Authentication Enabled
+   Device: 192.168.1.100 (web-server)
+   Why it matters: Hackers can attempt to guess SSH passwords
+   How to fix it: Disable password auth in /etc/ssh/sshd_config
+                  Restart SSH service
+   Timeline: Fix within 1 week
+
+3. [HIGH] Telnet Service Running (Unencrypted)
+   Device: 192.168.1.25
+   Why it matters: All Telnet traffic is sent in plain text (no encryption)
+   How to fix it: Disable Telnet, use SSH instead
+   Timeline: Disable immediately
+
+4. [HIGH] Old Apache Version (2.2.15 - EOL 2018)
+   Device: 192.168.1.100 (web-server)
+   Why it matters: Running an outdated web server with known vulnerabilities
+   How to fix it: Upgrade Apache to version 2.4.54 or later
+   Timeline: Fix within 2 weeks
+
+5. [MEDIUM] Default Credentials Detected
+   Device: 192.168.1.75 (printer)
+   Why it matters: Anyone can change printer settings or print sensitive data
+   How to fix it: Log in and change the default admin password
+   Timeline: Fix within 1 month
+
+═══════════════════════════════════════════════════════════════
+
+DEVICES THAT ARE FINE
+✓ 7 devices with no critical issues
+
+═══════════════════════════════════════════════════════════════
+```
+
+---
+
+## What PyNetworkIntel Does (Under the Hood)
+
+### 1. Automatic Device Discovery
+- Scans your network and finds every device
+- Identifies what operating system each device runs
+- Detects every service running (SSH, HTTP, databases, etc.)
+- Gets version numbers for each service
+
+### 2. Configuration Security Check
+- Reviews device configurations (SSH settings, firewall rules, etc.)
+- Checks against 10+ built-in security best practices
+- Explains why each setting matters
+- Tells you exactly how to fix issues
+
+### 3. Vulnerability Database Check
+- Compares service versions against known vulnerabilities
+- Shows CVSS risk scores (how bad is it?)
+- Explains if the vulnerability can actually be exploited
+- Recommends which versions to upgrade to
+
+### 4. Smart Prioritization
+- Tells you which issues to fix first
+- Explains why in business terms (not technical jargon)
+- Saves you time by eliminating guesswork
+
+### 5. Continuous Monitoring (Optional)
+- Can automatically scan hourly/daily
+- Detects when something changes
+- Sends alerts (Slack, email) when issues appear
+- Tracks your progress over time
+
+## Feature Overview
+
+### 🔍 Discovery & Scanning
+- Automatic network device discovery (any network size)
+- Service and version detection for every device
+- SSH configuration analysis and review
+- Support for Windows, macOS, Linux, BSD, IoT devices
+- Firewall rule detection and analysis
+
+### 🛡️ Security Intelligence
+- 10+ built-in security rules (SSH, protocols, credentials, etc.)
+- CVE database integration (knows about known vulnerabilities)
+- CVSS risk scoring (prioritize by severity)
+- Explains vulnerabilities in plain English
+- Configuration compliance checking
+
+### 🤖 AI-Powered Analysis (Optional)
+- **Claude AI** (via Anthropic) - For advanced AI summarization
+- **Ollama** - Run LLMs locally (no cloud, completely private)
+- **Other endpoints** - Works with any REST API LLM
+- **Fallback mode** - Works great without any AI (built-in analysis sufficient)
+
+### 📊 Monitoring & Alerting
+- Continuous monitoring (hourly, daily, weekly scans)
+- Change detection (new devices, vulnerabilities, config changes)
+- Multi-channel alerts: Slack, Email, Webhooks
+- Device status tracking (online/offline detection)
+- Automatic report generation
+
+### 💾 Data & Reporting
+- SQLite (local) or PostgreSQL (team deployments)
+- Export to JSON, Markdown, or text
+- Detailed compliance reports
+- Historical tracking of changes
+- Audit trail of all findings
+
+### 🚀 Deployment Flexibility
+- **Local installation**: `pip install pynetworkintel`
+- **Docker container**: For scanning remote networks
+- **Python API**: For custom integration
+- **CLI tool**: For standalone scans
+- **Daemon mode**: For background continuous monitoring
+
+## Compared to Other Open-Source Tools
+
+| Feature | PyNetworkIntel | Nmap | OpenSCAP | Lynis | Prometheus |
+|---------|---|---|---|---|---|
+| **Network Discovery** | ✅ Full | ✅ Advanced | ❌ Limited | ❌ No | ❌ No |
+| **Service Detection** | ✅ Yes | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| **Configuration Analysis** | ✅ Yes | ❌ No | ✅ Compliance-focused | ✅ Host-based | ❌ No |
+| **CVE Checking** | ✅ Yes | ❌ No | ✅ Yes | ✅ Yes | ❌ No |
+| **Continuous Monitoring** | ✅ Yes | ❌ One-time only | ❌ No | ❌ One-time only | ✅ Yes |
+| **AI Summaries** | ✅ Optional | ❌ No | ❌ No | ❌ No | ❌ No |
+| **Multi-Channel Alerts** | ✅ Slack, Email, Webhooks | ❌ No | ❌ No | ❌ No | ✅ Yes (basic) |
+| **Easy to Use** | ✅ Plain English | ⚠️ Technical | ⚠️ Technical | ⚠️ Technical | ⚠️ Technical |
+| **No Training Needed** | ✅ Yes | ❌ Steep learning curve | ❌ Requires setup | ❌ Complex | ❌ Complex |
+| **All-in-One Solution** | ✅ Yes | ❌ Scanning only | ❌ Compliance only | ❌ Audit only | ❌ Metrics only |
+
+**Why PyNetworkIntel is Different**:
+- Combines discovery, analysis, CVE checking, and monitoring in one tool
+- Explains findings in plain English (no technical jargon)
+- Works out-of-the-box (no complex setup)
+- Suitable for non-experts (DevOps, IT managers, system admins)
+- All open-source dependencies (or use your own LLM)
+
+---
 
 ## Commands
 
@@ -242,25 +487,48 @@ notepad $env:USERPROFILE\.pynetworkintel\config.yaml
 
 ### Environment Variables
 
+**For SSH Access to Devices** (required for config grabbing):
+
 **Linux/macOS**:
 ```bash
-export ANTHROPIC_API_KEY="sk-ant-..."
 export PYNETWORKINTEL_SSH_USER="admin"
 export PYNETWORKINTEL_SSH_KEY="~/.ssh/id_rsa"
 ```
 
 **Windows (PowerShell)**:
 ```powershell
-$env:ANTHROPIC_API_KEY="sk-ant-..."
 $env:PYNETWORKINTEL_SSH_USER="admin"
 $env:PYNETWORKINTEL_SSH_KEY="$env:USERPROFILE\.ssh\id_rsa"
 ```
 
-**Windows (Command Prompt)**:
-```cmd
-set ANTHROPIC_API_KEY=sk-ant-...
-set PYNETWORKINTEL_SSH_USER=admin
-set PYNETWORKINTEL_SSH_KEY=%USERPROFILE%\.ssh\id_rsa
+**For AI-Powered Summaries** (completely optional):
+
+**Option 1: Use Anthropic Claude** (easiest):
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+```
+
+**Option 2: Use Ollama Locally** (private, no cloud):
+```bash
+# First, install Ollama from https://ollama.ai
+# Then start it: ollama run llama2
+
+# Configure PyNetworkIntel:
+export PYNETWORKINTEL_LLM_ENDPOINT="http://localhost:11434"
+export PYNETWORKINTEL_LLM_MODEL="llama2"
+```
+
+**Option 3: Use Any Other LLM** (OpenAI compatible):
+```bash
+export PYNETWORKINTEL_LLM_ENDPOINT="http://your-api.example.com"
+export PYNETWORKINTEL_LLM_MODEL="gpt-4"
+export PYNETWORKINTEL_LLM_API_KEY="your-api-key"
+```
+
+**No AI** (works great, just simpler output):
+```bash
+# Don't set any LLM variables
+# PyNetworkIntel will use built-in analysis
 ```
 
 ### Configuration File Example
