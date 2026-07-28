@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="pynetworkintel",
-    version="0.2.0",
+    version="1.0.0",
     description="AI-powered network intelligence and vulnerability discovery platform",
     author="Georgi Mullassery",
     author_email="mullassery@gmail.com",
