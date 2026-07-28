@@ -202,6 +202,16 @@ sudo dnf install nmap
 
 # Alpine
 apk add nmap
+
+# Windows
+# Option 1: Chocolatey
+choco install nmap
+
+# Option 2: Download installer from https://nmap.org/download.html
+# Then add nmap to PATH
+
+# Verify installation (all platforms)
+nmap -version
 ```
 
 **Python Dependencies**:
@@ -222,19 +232,35 @@ Automatically installed with `pip install pynetworkintel`:
 # Create default config file
 pynetworkintel init-config
 
-# Edit configuration
+# Edit configuration (use your preferred editor)
+# Linux/macOS: nano, vim, or VSCode
 nano ~/.pynetworkintel/config.yaml
+
+# Windows: PowerShell or Notepad
+notepad $env:USERPROFILE\.pynetworkintel\config.yaml
 ```
 
 ### Environment Variables
 
+**Linux/macOS**:
 ```bash
-# Anthropic API key
 export ANTHROPIC_API_KEY="sk-ant-..."
-
-# SSH credentials
 export PYNETWORKINTEL_SSH_USER="admin"
 export PYNETWORKINTEL_SSH_KEY="~/.ssh/id_rsa"
+```
+
+**Windows (PowerShell)**:
+```powershell
+$env:ANTHROPIC_API_KEY="sk-ant-..."
+$env:PYNETWORKINTEL_SSH_USER="admin"
+$env:PYNETWORKINTEL_SSH_KEY="$env:USERPROFILE\.ssh\id_rsa"
+```
+
+**Windows (Command Prompt)**:
+```cmd
+set ANTHROPIC_API_KEY=sk-ant-...
+set PYNETWORKINTEL_SSH_USER=admin
+set PYNETWORKINTEL_SSH_KEY=%USERPROFILE%\.ssh\id_rsa
 ```
 
 ### Configuration File Example
