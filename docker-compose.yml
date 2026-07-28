@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  pynetworkintel:
+    build: .
+    image: pynetworkintel:0.2.0
+    container_name: pynetworkintel
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    volumes:
+      - ~/.ssh:/root/.ssh:ro
+      - ~/.pynetworkintel:/root/.pynetworkintel
+      - ./results:/app/results
+    networks:
+      - host
+    # Uncomment to keep container running for interactive use
+    # stdin_open: true
+    # tty: true
+
+networks:
+  host:
+    driver: host
