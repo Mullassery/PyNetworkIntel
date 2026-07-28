@@ -1,0 +1,77 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pynetworkintel"
+version = "0.2.0"
+description = "AI-powered network intelligence and vulnerability discovery platform"
+readme = "README.md"
+license = {text = "Proprietary"}
+authors = [
+    {name = "Georgi Mullassery", email = "mullassery@gmail.com"}
+]
+keywords = [
+    "network",
+    "security",
+    "vulnerability",
+    "scanning",
+    "discovery",
+    "monitoring",
+    "artificial-intelligence"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: Other/Proprietary License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: System :: Monitoring",
+    "Topic :: System :: Networking",
+    "Topic :: Security",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "paramiko>=3.0",
+    "netaddr>=0.9",
+    "pyyaml>=6.0",
+    "requests>=2.31",
+    "anthropic>=0.25",
+    "rich>=13.0",
+    "sqlalchemy>=2.0",
+    "apscheduler>=3.10",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "black>=23.7",
+    "ruff>=0.0.280",
+    "build>=0.10",
+    "twine>=4.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/Mullassery/PyNetworkIntel"
+Documentation = "https://github.com/Mullassery/PyNetworkIntel/blob/main/README.md"
+"Source Code" = "https://github.com/Mullassery/PyNetworkIntel"
+"Bug Tracker" = "https://github.com/Mullassery/PyNetworkIntel/issues"
+
+[project.scripts]
+pynetworkintel = "pynetworkintel.cli:main"
+
+[tool.setuptools]
+packages = ["pynetworkintel", "pynetworkintel.discovery", "pynetworkintel.analysis"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311', 'py312']
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
