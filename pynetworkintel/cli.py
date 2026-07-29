@@ -11,6 +11,11 @@ from pynetworkintel import Scanner, Analyzer
 from pynetworkintel.core import Pipeline
 from pynetworkintel.config import ConfigManager
 from pynetworkintel.progress import ProgressIndicator, OutputFormatter
+from pynetworkintel.dashboard import (
+    launch_stats_dashboard,
+    StatsCollector,
+    DashboardServer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +58,7 @@ Examples:
     parser.add_argument(
         "--version",
         action="version",
-        version="%(prog)s 0.2.0",
+        version="%(prog)s 1.0.1",
     )
     parser.add_argument(
         "--verbose",
@@ -80,6 +85,16 @@ Examples:
     # Init config command
     init_parser = subparsers.add_parser("init-config", help="Initialize default config")
     init_parser.set_defaults(func=handle_init_config)
+
+    # Dashboard command
+    dashboard_parser = subparsers.add_parser(
+        "dashboard", help="Launch stats dashboard viewer"
+    )
+    dashboard_parser.add_argument(
+        "--socket",
+        help="Connect to existing stats server socket (advanced)",
+    )
+    dashboard_parser.set_defaults(func=handle_dashboard)
 
     # Scan command
     scan_parser = subparsers.add_parser("scan", help="Scan network for devices")
@@ -111,6 +126,11 @@ Examples:
     scan_parser.add_argument(
         "--output-file",
         help="Save results to file (auto-detect format from extension)",
+    )
+    scan_parser.add_argument(
+        "--dashboard",
+        action="store_true",
+        help="Launch stats dashboard in separate terminal",
     )
     scan_parser.set_defaults(func=handle_scan)
 
@@ -151,6 +171,11 @@ Examples:
         "--output-file",
         help="Save results to file",
     )
+    analyze_parser.add_argument(
+        "--dashboard",
+        action="store_true",
+        help="Launch stats dashboard in separate terminal",
+    )
     analyze_parser.set_defaults(func=handle_analyze)
 
     args = parser.parse_args()
@@ -186,9 +211,40 @@ def handle_init_config(args) -> int:
     return 0
 
 
+def handle_dashboard(args) -> int:
+    """Handle dashboard command."""
+    from pynetworkintel.dashboard import Dashboard
+
+    socket_path = getattr(args, "socket", None)
+
+    if not socket_path:
+        progress.error("Dashboard viewer requires --socket argument (from active scan)")
+        return 1
+
+    try:
+        dashboard = Dashboard(socket_path=socket_path)
+        dashboard.run()
+        return 0
+    except KeyboardInterrupt:
+        return 0
+    except Exception as e:
+        progress.error(f"Dashboard error: {e}")
+        return 1
+
+
 def handle_scan(args) -> int:
     """Handle scan command."""
     progress.section(f"Scanning {args.target}")
+
+    # Launch dashboard if requested
+    dashboard_process = None
+    stats_server = None
+    if getattr(args, "dashboard", False):
+        dashboard_process, stats_server = launch_stats_dashboard(args.target)
+        if stats_server:
+            progress.status("Dashboard launched in separate terminal")
+        else:
+            progress.warning("Could not launch dashboard (Rich library may be missing)")
 
     scanner = Scanner(
         ssh_username=args.ssh_user,
@@ -198,34 +254,71 @@ def handle_scan(args) -> int:
 
     progress.status(f"Starting scan of {args.target}...")
 
-    scan_result = scanner.scan(
-        args.target,
-        grab_configs=not args.no_config_grab,
-    )
+    try:
+        if stats_server:
+            stats_server.stats.scan_status = "Scanning"
+            stats_server.stats.current_phase = "Device Discovery"
 
-    progress.success(f"Discovered {len(scan_result.devices)} devices in {scan_result.scan_duration_seconds:.1f}s")
+        scan_result = scanner.scan(
+            args.target,
+            grab_configs=not args.no_config_grab,
+        )
 
-    if args.output == "json":
-        output = scan_result.to_dict()
-        result_str = json.dumps(output, indent=2, default=str)
-    else:
-        result_str = format_scan_output(scan_result)
+        if stats_server:
+            stats_server.stats.devices_discovered = len(scan_result.devices)
+            stats_server.stats.devices_online = sum(
+                1 for d in scan_result.devices if d.is_online
+            )
+            stats_server.stats.scan_status = "Complete"
 
-    if args.output_file:
-        with open(args.output_file, "w") as f:
-            f.write(result_str)
-        progress.success(f"Results saved to {args.output_file}")
-    else:
-        print(result_str)
+        progress.success(
+            f"Discovered {len(scan_result.devices)} devices in {scan_result.scan_duration_seconds:.1f}s"
+        )
 
-    return 0
+        if args.output == "json":
+            output = scan_result.to_dict()
+            result_str = json.dumps(output, indent=2, default=str)
+        else:
+            result_str = format_scan_output(scan_result)
+
+        if args.output_file:
+            with open(args.output_file, "w") as f:
+                f.write(result_str)
+            progress.success(f"Results saved to {args.output_file}")
+        else:
+            print(result_str)
+
+        if stats_server:
+            progress.status("Dashboard will continue running. Close the terminal to stop.")
+
+        return 0
+    finally:
+        # Keep server running if dashboard was launched
+        if stats_server:
+            try:
+                # Wait a bit for user to see final results
+                import time
+
+                time.sleep(2)
+            except KeyboardInterrupt:
+                pass
 
 
 def handle_analyze(args) -> int:
     """Handle analyze command."""
-    api_key = getattr(args, 'api_key', None) or os.getenv("ANTHROPIC_API_KEY")
+    api_key = getattr(args, "api_key", None) or os.getenv("ANTHROPIC_API_KEY")
 
     progress.section(f"Analyzing {args.target}")
+
+    # Launch dashboard if requested
+    dashboard_process = None
+    stats_server = None
+    if getattr(args, "dashboard", False):
+        dashboard_process, stats_server = launch_stats_dashboard(args.target)
+        if stats_server:
+            progress.status("Dashboard launched in separate terminal")
+        else:
+            progress.warning("Could not launch dashboard (Rich library may be missing)")
 
     pipeline = Pipeline(
         ssh_username=args.ssh_user,
@@ -236,25 +329,62 @@ def handle_analyze(args) -> int:
 
     progress.status(f"Scanning network {args.target}...")
 
-    result = pipeline.run(
-        args.target,
-        grab_configs=True,
-        summarize=args.summarize,
-    )
+    try:
+        if stats_server:
+            stats_server.stats.scan_status = "Scanning"
+            stats_server.stats.current_phase = "Device Discovery"
 
-    if args.output == "json":
-        result_str = json.dumps(result, indent=2, default=str)
-    else:
-        result_str = format_analysis_output(result, args.summarize)
+        result = pipeline.run(
+            args.target,
+            grab_configs=True,
+            summarize=args.summarize,
+        )
 
-    if args.output_file:
-        with open(args.output_file, "w") as f:
-            f.write(result_str)
-        progress.success(f"Results saved to {args.output_file}")
-    else:
-        print(result_str)
+        if stats_server:
+            summary = result.get("summary", {})
+            stats_server.stats.devices_discovered = summary.get("total_devices", 0)
+            stats_server.stats.devices_online = summary.get("online_devices", 0)
+            findings = result.get("findings", [])
+            for finding in findings:
+                severity = finding.get("severity", "info").lower()
+                if severity == "critical":
+                    stats_server.stats.findings_critical += 1
+                elif severity == "high":
+                    stats_server.stats.findings_high += 1
+                elif severity == "medium":
+                    stats_server.stats.findings_medium += 1
+                elif severity == "low":
+                    stats_server.stats.findings_low += 1
+                else:
+                    stats_server.stats.findings_info += 1
+            stats_server.stats.scan_status = "Complete"
+            stats_server.stats.current_phase = "Analysis Complete"
 
-    return 0
+        if args.output == "json":
+            result_str = json.dumps(result, indent=2, default=str)
+        else:
+            result_str = format_analysis_output(result, args.summarize)
+
+        if args.output_file:
+            with open(args.output_file, "w") as f:
+                f.write(result_str)
+            progress.success(f"Results saved to {args.output_file}")
+        else:
+            print(result_str)
+
+        if stats_server:
+            progress.status("Dashboard will continue running. Close the terminal to stop.")
+
+        return 0
+    finally:
+        # Keep server running if dashboard was launched
+        if stats_server:
+            try:
+                import time
+
+                time.sleep(2)
+            except KeyboardInterrupt:
+                pass
 
 
 def format_scan_output(scan_result) -> str:

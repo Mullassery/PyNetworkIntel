@@ -6,11 +6,12 @@ Stop wondering what devices are connected to your network. Stop manually checkin
 
 **Works with**: Any network size • Any industry • On-premises or cloud • Single scan or continuous monitoring
 
-**Status**: v1.0.0 - Enterprise-Ready with AI Architecture Advisor  
-**Latest Release**: 2026-07-28  
+**Status**: v1.0.1 - Enterprise-Ready with AI Architecture Advisor and Live Dashboard  
+**Latest Release**: 2026-07-30  
 **Used by**: System Administrators • DevOps Teams • Security Teams • IT Managers • Cloud Architects • Startups to Enterprises
 
-**What's New in v1.0.0**:
+**What's New in v1.0.1**:
+- Live stats dashboard (separate terminal window with real-time metrics)
 - Multi-cloud discovery (AWS, Azure, GCP)
 - Kubernetes security analysis (RBAC, pod security, network policies)
 - ML-powered anomaly detection & vulnerability forecasting
@@ -165,8 +166,8 @@ pynetworkintel scan 192.168.1.0/24
 
 **What you'll see**:
 ```
-Discovering devices... ✓
-Found 12 devices
+[+] Discovering devices...
+[+] Found 12 devices
 - 192.168.1.1 (router): SSH, HTTP, HTTPS
 - 192.168.1.10 (laptop): SSH, RDP
 - 192.168.1.50 (printer): HTTP
@@ -183,22 +184,22 @@ pynetworkintel analyze 192.168.1.0/24 --summarize
 
 **What you'll see**:
 ```
-✅ GOOD NEWS:
+[+] GOOD NEWS:
    - All 12 devices are responding
    - Network connectivity is stable
 
-⚠️  PROBLEMS TO FIX (in order of importance):
+[!] PROBLEMS TO FIX (in order of importance):
    1. MySQL database exposed to entire network
-      → Why: Anyone on network can attempt database access
-      → Fix: Restrict port 3306 to server IPs only
+      Reason: Anyone on network can attempt database access
+      Fix: Restrict port 3306 to server IPs only
 
    2. SSH password authentication enabled on 5 devices
-      → Why: Allows brute-force attacks
-      → Fix: Disable password auth, use SSH keys only
+      Reason: Allows brute-force attacks
+      Fix: Disable password auth, use SSH keys only
 
    3. Server running Windows 7 (unsupported OS)
-      → Why: No security updates since 2020
-      → Fix: Upgrade to Windows Server 2022
+      Reason: No security updates since 2020
+      Fix: Upgrade to Windows Server 2022
 ```
 
 ---
@@ -247,9 +248,9 @@ pynetworkintel init-config
 # Edit ~/.pynetworkintel/config.yaml to enable Slack alerts
 
 # Then start monitoring in the background
-# Device goes offline? ➜ Slack alert
-# New vulnerability detected? ➜ Slack alert
-# New device appears? ➜ Slack alert
+# Device goes offline? -> Slack alert
+# New vulnerability detected? -> Slack alert
+# New device appears? -> Slack alert
 ```
 
 ### Use Case 4: You're Responsible for Compliance
@@ -304,7 +305,7 @@ Total Devices: 12
 Critical Issues: 1
 High Priority Issues: 4
 Medium Priority Issues: 3
-All Devices Online: ✓
+All Devices Online: [OK]
 
 ═══════════════════════════════════════════════════════════════
 
@@ -345,7 +346,7 @@ TOP ISSUES TO FIX
 ═══════════════════════════════════════════════════════════════
 
 DEVICES THAT ARE FINE
-✓ 7 devices with no critical issues
+[OK] 7 devices with no critical issues
 
 ═══════════════════════════════════════════════════════════════
 ```
@@ -385,41 +386,41 @@ DEVICES THAT ARE FINE
 
 ## Feature Overview
 
-### 🔍 Discovery & Scanning
+### Discovery & Scanning
 - Automatic network device discovery (any network size)
 - Service and version detection for every device
 - SSH configuration analysis and review
 - Support for Windows, macOS, Linux, BSD, IoT devices
 - Firewall rule detection and analysis
 
-### 🛡️ Security Intelligence
+### Security Intelligence
 - 10+ built-in security rules (SSH, protocols, credentials, etc.)
 - CVE database integration (knows about known vulnerabilities)
 - CVSS risk scoring (prioritize by severity)
 - Explains vulnerabilities in plain English
 - Configuration compliance checking
 
-### 🤖 AI-Powered Analysis (Optional)
+### AI-Powered Analysis (Optional)
 - **Claude AI** (via Anthropic) - For advanced AI summarization
 - **Ollama** - Run LLMs locally (no cloud, completely private)
 - **Other endpoints** - Works with any REST API LLM
 - **Fallback mode** - Works great without any AI (built-in analysis sufficient)
 
-### 📊 Monitoring & Alerting
+### Monitoring & Alerting
 - Continuous monitoring (hourly, daily, weekly scans)
 - Change detection (new devices, vulnerabilities, config changes)
 - Multi-channel alerts: Slack, Email, Webhooks
 - Device status tracking (online/offline detection)
 - Automatic report generation
 
-### 💾 Data & Reporting
+### Data & Reporting
 - SQLite (local) or PostgreSQL (team deployments)
 - Export to JSON, Markdown, or text
 - Detailed compliance reports
 - Historical tracking of changes
 - Audit trail of all findings
 
-### 🚀 Deployment Flexibility
+### Deployment Flexibility
 - **Local installation**: `pip install pynetworkintel`
 - **Docker container**: For scanning remote networks
 - **Python API**: For custom integration
@@ -430,16 +431,16 @@ DEVICES THAT ARE FINE
 
 | Feature | PyNetworkIntel | Nmap | OpenSCAP | Lynis | Prometheus |
 |---------|---|---|---|---|---|
-| **Network Discovery** | ✅ Full | ✅ Advanced | ❌ Limited | ❌ No | ❌ No |
-| **Service Detection** | ✅ Yes | ✅ Yes | ❌ No | ❌ No | ❌ No |
-| **Configuration Analysis** | ✅ Yes | ❌ No | ✅ Compliance-focused | ✅ Host-based | ❌ No |
-| **CVE Checking** | ✅ Yes | ❌ No | ✅ Yes | ✅ Yes | ❌ No |
-| **Continuous Monitoring** | ✅ Yes | ❌ One-time only | ❌ No | ❌ One-time only | ✅ Yes |
-| **AI Summaries** | ✅ Optional | ❌ No | ❌ No | ❌ No | ❌ No |
-| **Multi-Channel Alerts** | ✅ Slack, Email, Webhooks | ❌ No | ❌ No | ❌ No | ✅ Yes (basic) |
-| **Easy to Use** | ✅ Plain English | ⚠️ Technical | ⚠️ Technical | ⚠️ Technical | ⚠️ Technical |
-| **No Training Needed** | ✅ Yes | ❌ Steep learning curve | ❌ Requires setup | ❌ Complex | ❌ Complex |
-| **All-in-One Solution** | ✅ Yes | ❌ Scanning only | ❌ Compliance only | ❌ Audit only | ❌ Metrics only |
+| **Network Discovery** | Yes (Full) | Yes (Advanced) | Limited | No | No |
+| **Service Detection** | Yes | Yes | No | No | No |
+| **Configuration Analysis** | Yes | No | Yes (Compliance) | Yes (Host-based) | No |
+| **CVE Checking** | Yes | No | Yes | Yes | No |
+| **Continuous Monitoring** | Yes | One-time only | No | One-time only | Yes |
+| **AI Summaries** | Yes (Optional) | No | No | No | No |
+| **Multi-Channel Alerts** | Yes (Slack, Email, Webhooks) | No | No | No | Yes (basic) |
+| **Easy to Use** | Yes (Plain English) | Technical | Technical | Technical | Technical |
+| **No Training Needed** | Yes | Steep learning curve | Requires setup | Complex | Complex |
+| **All-in-One Solution** | Yes | Scanning only | Compliance only | Audit only | Metrics only |
 
 **Why PyNetworkIntel is Different**:
 - Combines discovery, analysis, CVE checking, and monitoring in one tool
@@ -465,6 +466,12 @@ pynetworkintel analyze 192.168.1.0/24 \
   --ssh-key ~/.ssh/id_rsa \
   --summarize
 
+# Scan with real-time stats dashboard (launches in separate terminal)
+pynetworkintel scan 192.168.1.0/24 --dashboard
+
+# Full analysis with dashboard showing live findings
+pynetworkintel analyze 192.168.1.0/24 --dashboard --summarize
+
 # Scan with output to file
 pynetworkintel scan 192.168.1.0/24 --output-file results.json
 
@@ -472,6 +479,37 @@ pynetworkintel scan 192.168.1.0/24 --output-file results.json
 pynetworkintel --help
 pynetworkintel --version
 ```
+
+## Real-Time Stats Dashboard
+
+PyNetworkIntel includes a **live stats dashboard** that displays scan progress in a separate terminal window:
+
+```bash
+pynetworkintel scan 192.168.1.0/24 --dashboard
+```
+
+The dashboard shows:
+- **Devices discovered** and online status in real-time
+- **Configs grabbed** via SSH
+- **Security findings** broken down by severity (critical, high, medium, low, info)
+- **Scan progress** and current phase
+- **Elapsed time** and performance metrics
+
+### Dashboard Features
+
+- **Cross-platform**: Works on macOS, Linux, and Windows
+- **Auto-launching**: Automatically opens in the appropriate terminal emulator
+- **Live updates**: Refreshes every second with latest stats
+- **Color-coded**: Severity levels color-coded for quick identification
+- **Low overhead**: <5% CPU impact
+
+### Supported Terminal Emulators
+
+- **macOS**: Terminal.app
+- **Linux**: GNOME Terminal, KDE Konsole, Xterm, XFCE Terminal, Terminator, or Rxvt
+- **Windows**: Command Prompt
+
+See [Dashboard Documentation](docs/DASHBOARD.md) for more details.
 
 ## Docker
 
@@ -491,15 +529,15 @@ docker run -v ~/.ssh:/root/.ssh:ro pynetworkintel:0.2.0 \
 
 ```
 Discovery Engine          Analysis Engine           Output
-    ↓                            ↓                     ↓
-Nmap Scanner    ──→  Rule Checker   ──→  LLM  ──→  CLI/JSON
-SSH Config      ──→  CVE Checker    ──→  Reports
-Grabber         ──→  Scoring        ──→  Alerts
-                        ↓
-                    Database (SQLite/PostgreSQL)
-                        ↓
-                    Scheduler (APScheduler)
-                        ↓
+         |                         |                   |
+Nmap Scanner    -->  Rule Checker   -->  LLM  -->  CLI/JSON
+SSH Config      -->  CVE Checker    -->  Reports
+Grabber         -->  Scoring        -->  Alerts
+                         |
+                 Database (SQLite/PostgreSQL)
+                         |
+                 Scheduler (APScheduler)
+                         |
                     Change Detection & Alerting
 ```
 

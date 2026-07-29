@@ -46,28 +46,28 @@ class ProgressIndicator:
     def status(self, message: str):
         """Print status message."""
         if self.use_rich:
-            self.console.print(f"ℹ️  {message}")
+            self.console.print(f"[*] {message}")
         else:
             print(f"[*] {message}")
 
     def success(self, message: str):
         """Print success message."""
         if self.use_rich:
-            self.console.print(f"✅ {message}")
+            self.console.print(f"[+] {message}")
         else:
-            print(f"[✓] {message}")
+            print(f"[+] {message}")
 
     def error(self, message: str):
         """Print error message."""
         if self.use_rich:
-            self.console.print(f"❌ {message}")
+            self.console.print(f"[-] {message}")
         else:
-            print(f"[✗] {message}")
+            print(f"[-] {message}")
 
     def warning(self, message: str):
         """Print warning message."""
         if self.use_rich:
-            self.console.print(f"⚠️  {message}")
+            self.console.print(f"[!] {message}")
         else:
             print(f"[!] {message}")
 
@@ -116,15 +116,15 @@ class OutputFormatter:
     def format_findings_table(self, findings: list, max_rows: int = 10):
         """Format findings as table."""
         if not findings:
-            print("✓ No security issues found!")
+            print("[OK] No security issues found!")
             return
 
         severity_map = {
-            "critical": ("🔴", "red"),
-            "high": ("🟠", "yellow"),
-            "medium": ("🟡", "yellow"),
-            "low": ("🟢", "green"),
-            "info": ("🔵", "blue"),
+            "critical": ("[C]", "red"),
+            "high": ("[H]", "yellow"),
+            "medium": ("[M]", "yellow"),
+            "low": ("[L]", "green"),
+            "info": ("[I]", "blue"),
         }
 
         if RICH_AVAILABLE and self.use_color:
