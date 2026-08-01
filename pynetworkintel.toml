@@ -1,0 +1,26 @@
+[mcp]
+enabled = true
+port = 8773
+discovery_method = "stdio"
+
+[mcp.tools]
+analyze_network_flow = true
+detect_anomalies = true
+threat_correlation = true
+get_asset_inventory = true
+check_port_exposure = true
+analyze_dns_records = true
+get_geolocation_analysis = true
+protocol_analysis = true
+behavioral_profiling = true
+get_threat_intelligence = true
+remediation_recommendations = true
+network_segmentation_analysis = true
+
+[mcp.security]
+require_auth = false
+allowed_models = []
+
+[mcp.performance]
+cache_results = true
+cache_ttl_seconds = 3600
