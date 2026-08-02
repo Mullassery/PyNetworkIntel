@@ -4,11 +4,11 @@
 
 ## Overview
 
-PyNetworkIntel is part of the unified **MCP 2.0 Mega-Platform** (207 tools across 18 projects). This project provides AI-native tools for Claude via Model Context Protocol (MCP 2.0).
+PyNetworkIntel is part of the unified **MCP 2.0 Mega-Platform** (207 tools across 18 projects). This project provides AI-native tools via Model Context Protocol (MCP 2.0).
 
 ## Features
 
-- **MCP 2.0 Support**: Discoverable by Claude via MCP protocol on port 8773
+- **MCP 2.0 Support**: Discoverable via MCP protocol protocol on port 8773
 - **Async Handlers**: All tools are async-first for high-performance execution
 - **Type-Safe**: 100% Python type hints throughout
 - **Zero External Dependencies**: Fallback implementations included
@@ -30,9 +30,9 @@ pip install --only-binary=:all: PyNetworkIntel
 
 Enable MCP tools on port **8773** (see MCP_QUICKSTART.md for details).
 
-Claude discovers all 207 tools across 18 projects, enabling:
+AI systems discover all 207 tools across 18 projects, enabling:
 - Multi-project workflows
-- Intelligent query optimization (60-75% token reduction)
+- Intelligent query optimization (60-75% reduction in context usage)
 - Cross-database joins
 - Cost-optimized inference routing
 
@@ -44,7 +44,7 @@ See [MCP_QUICKSTART.md](PyNetworkIntel/MCP_QUICKSTART.md) for detailed tool docu
 
 18 projects, 207 tools, 18 simultaneous MCP endpoints (8765-8782).
 
-**All tools discoverable by Claude in single connection.**
+**All tools discoverable via MCP protocol in a single connection.**
 
 ## Version History
 
