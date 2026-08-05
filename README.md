@@ -1,59 +1,132 @@
-# PyNetworkIntel v2.0.0
+# PyNetworkIntel
 
-**Network Security & Threat Detection (12 MCP tools)**
+**Know what's on your network. Find everything. Automatically.**
 
-## Overview
+Discover every device, service, and vulnerability on your network in minutes. Map network topology, inventory services, analyze security risks. Works on homelabs, enterprises, and everything in between.
 
-PyNetworkIntel is part of the unified **MCP 2.0 Mega-Platform** (207 tools across 18 projects). This project provides AI-native tools via Model Context Protocol (MCP 2.0).
+[![PyPI](https://img.shields.io/pypi/v/pynetworkintel)](https://pypi.org/project/pynetworkintel)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org)
+[![Tests Passing](https://img.shields.io/badge/tests-passing-success)](./tests)
+[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-blue.svg)](./LICENSE)
 
-## Features
+---
 
-- **MCP 2.0 Support**: Discoverable via MCP protocol protocol on port 8773
-- **Async Handlers**: All tools are async-first for high-performance execution
-- **Type-Safe**: 100% Python type hints throughout
-- **Zero External Dependencies**: Fallback implementations included
-- **Production-Ready**: Mock implementations ready for real data integration
+## 30-Second Start
+
+```python
+from pynetworkintel import Scan
+
+# Discover everything on your network
+scan = Scan()
+devices = scan.discover("192.168.1.0/24")
+
+# See what's running
+for device in devices:
+    print(f"{device.hostname} ({device.ip})")
+    for service in device.services:
+        print(f"  - {service.name}: {service.port}")
+```
+
+---
+
+## Why PyNetworkIntel?
+
+**The Problem:**
+- Your network is a black box. What's actually connected?
+- Manual discovery is tedious and error-prone
+- Security threats hiding in plain sight
+- No map of what talks to what
+
+**The Solution:**
+- Automatic device discovery and service inventory
+- Visual network topology mapping
+- Security vulnerability detection
+- Change tracking (what's new?)
+
+---
+
+## Key Features
+
+- **Device Discovery:** Automatically find all computers, servers, IoT devices
+- **Service Inventory:** Know what's running on every device
+- **Topology Mapping:** Visualize connections between devices
+- **Vulnerability Detection:** Identify open ports, old software, misconfigurations
+- **Change Tracking:** Alert when new devices appear or services change
+- **Export Reports:** Generate compliance and audit reports
+- **API Access:** Query network data programmatically
+
+---
+
+## Real-World Use Cases
+
+**Home Lab Security:**
+```python
+# Find all devices on your network
+scan = Scan("192.168.1.0/24")
+devices = scan.discover()
+
+# Alert if anything new appears
+for device in devices:
+    if device.is_new:
+        print(f"New device found: {device.hostname}")
+```
+
+**Enterprise Network Audit:**
+```python
+# Generate compliance report
+scan = Scan("10.0.0.0/16")
+report = scan.generate_report(format="pdf")
+print(f"Report: {report.devices_found} devices")
+```
+
+**Security Assessment:**
+```python
+# Find vulnerable services
+scan = Scan()
+vulnerabilities = scan.find_vulnerabilities()
+for vuln in vulnerabilities:
+    print(f"{vuln.service}: {vuln.risk_level}")
+```
+
+---
+
+## What You Get
+
+- **Network Map:** Visual diagram of all devices and connections
+- **Device Inventory:** Every device with hostname, OS, services
+- **Service List:** Every open port and what's listening
+- **Vulnerability Report:** Security risks ranked by severity
+- **Change Log:** What's new since last scan
+- **Historical Data:** Track changes over time
+
+---
 
 ## Installation
 
 ```bash
-pip install PyNetworkIntel
+pip install pynetworkintel
+# or with uv
+uv pip install pynetworkintel
 ```
 
-Wheels-only distribution (recommended for production):
+---
 
-```bash
-pip install --only-binary=:all: PyNetworkIntel
-```
+## Documentation
 
-## MCP 2.0 Integration
+- [Quick Start](docs/QUICKSTART.md) — Scan your first network
+- [Network Mapping](docs/MAPPING.md) — Understand topology
+- [Security Analysis](docs/SECURITY.md) — Find vulnerabilities
+- [Examples](examples/) — Real-world scans
 
-Enable MCP tools on port **8773** (see MCP_QUICKSTART.md for details).
+---
 
-AI systems discover all 207 tools across 18 projects, enabling:
-- Multi-project workflows
-- Intelligent query optimization (60-75% reduction in context usage)
-- Cross-database joins
-- Cost-optimized inference routing
+## License
 
-## Quick Start
+Proprietary License - Free to use with explicit attribution. See [LICENSE](LICENSE).
 
-See [MCP_QUICKSTART.md](PyNetworkIntel/MCP_QUICKSTART.md) for detailed tool documentation.
+---
 
-## Part of Unified Platform
-
-18 projects, 207 tools, 18 simultaneous MCP endpoints (8765-8782).
-
-**All tools discoverable via MCP protocol in a single connection.**
-
-## Version History
-
-### v2.0.0 (Current)
-- ✅ MCP 2.0 Support
-- ✅ Integrated with 17 other projects
-- ✅ 207 unified MCP tools
-- ✅ Intelligent orchestration
-- ✅ Production-ready (wheels only)
+**PyNetworkIntel v2.0.0** | Network discovery & mapping | Python 3.10+
 
 ## License
 
