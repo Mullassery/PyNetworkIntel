@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Hand-constructed but representative sample of real `nmap -sV -oX -` output,
+     covering: two up hosts (one with hostname+OS+multiple services, one
+     minimal), an unresolved-service port, a closed port that must be
+     skipped, and a down host that must be filtered out entirely. -->
+<nmaprun scanner="nmap" args="nmap -sV --script=smb-os-discovery -oX - 192.168.1.0/24" start="1700000000" version="7.94">
+  <host starttime="1700000000" endtime="1700000010">
+    <status state="up" reason="syn-ack" reason_ttl="64"/>
+    <address addr="192.168.1.10" addrtype="ipv4"/>
+    <address addr="AA:BB:CC:DD:EE:01" addrtype="mac" vendor="Dell Inc."/>
+    <hostnames>
+      <hostname name="fileserver.local" type="PTR"/>
+    </hostnames>
+    <ports>
+      <port protocol="tcp" portid="22">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssh" product="OpenSSH" version="8.2p1 Ubuntu 4ubuntu0.5" extrainfo="Ubuntu Linux; protocol 2.0" method="probed" conf="10"/>
+      </port>
+      <port protocol="tcp" portid="80">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="http" product="Apache httpd" version="2.4.49" method="probed" conf="10"/>
+      </port>
+      <port protocol="tcp" portid="443">
+        <state state="closed" reason="reset" reason_ttl="64"/>
+        <service name="https" method="table" conf="3"/>
+      </port>
+      <port protocol="tcp" portid="8080">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="http-proxy" method="table" conf="3"/>
+      </port>
+    </ports>
+    <os>
+      <osmatch name="Linux 5.4 - 5.15" accuracy="95" line="12345">
+        <osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="5.X" accuracy="95"/>
+      </osmatch>
+      <osmatch name="Linux 4.x" accuracy="80" line="12346">
+        <osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="4.X" accuracy="80"/>
+      </osmatch>
+    </os>
+  </host>
+  <host starttime="1700000010" endtime="1700000015">
+    <status state="up" reason="syn-ack" reason_ttl="64"/>
+    <address addr="192.168.1.11" addrtype="ipv4"/>
+    <ports>
+      <port protocol="tcp" portid="22">
+        <state state="open" reason="syn-ack" reason_ttl="64"/>
+        <service name="ssh" product="OpenSSH" version="9.0" method="probed" conf="10"/>
+      </port>
+    </ports>
+  </host>
+  <host starttime="1700000015" endtime="1700000016">
+    <status state="down" reason="no-response" reason_ttl="0"/>
+    <address addr="192.168.1.12" addrtype="ipv4"/>
+  </host>
+  <runstats>
+    <finished time="1700000020" timestr="2023-11-14 12:00:20" elapsed="20.0" summary="Nmap done at Tue Nov 14 12:00:20 2023; 3 IP addresses (2 hosts up) scanned in 20.0 seconds" exit="success"/>
+    <hosts up="2" down="1" total="3"/>
+  </runstats>
+</nmaprun>
