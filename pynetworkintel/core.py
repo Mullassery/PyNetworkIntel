@@ -2,6 +2,7 @@
 
 import logging
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional, List
 from datetime import datetime
 
@@ -24,12 +25,35 @@ class Scanner:
     def __init__(
         self,
         nmap_path: str = "nmap",
-        ssh_username: str = "root",
+        ssh_username: Optional[str] = None,
         ssh_key_path: Optional[str] = None,
         ssh_password: Optional[str] = None,
+        nmap_args: str = "-sV",
+        scan_timeout: int = 300,
+        ssh_max_workers: int = 16,
     ):
-        self.device_scanner = DeviceScanner(nmap_path)
+        """
+        Args:
+            nmap_path: Path to the nmap binary
+            ssh_username: SSH username for config grabbing. No default is
+                provided deliberately - using a privileged account like
+                "root" against arbitrary discovered devices should be an
+                explicit, conscious choice, not a silent default. If unset,
+                SSH config grabbing is skipped with a warning.
+            ssh_key_path: SSH private key path (preferred over password auth)
+            ssh_password: SSH password. Prefer PYNETWORKINTEL_SSH_PASSWORD /
+                --ssh-key instead - passwords passed directly are never
+                persisted by this class, but callers should avoid putting
+                them on a command line where they leak into shell history.
+            nmap_args: nmap flags to use for service scanning (from ScanConfig.nmap_args)
+            scan_timeout: Per-target nmap timeout in seconds (from ScanConfig.timeout)
+            ssh_max_workers: Max concurrent SSH connections when grabbing
+                configs from multiple devices (bounded thread pool; this is
+                I/O-bound work so threads are an appropriate fit)
+        """
+        self.device_scanner = DeviceScanner(nmap_path, nmap_args=nmap_args, timeout=scan_timeout)
         self.ssh_grabber = SSHConfigGrabber(ssh_username, ssh_key_path, ssh_password)
+        self.ssh_max_workers = max(1, ssh_max_workers)
 
     def scan(self, target: str, grab_configs: bool = True) -> ScanResult:
         """
@@ -47,13 +71,30 @@ class Scanner:
         logger.info(f"Starting network scan for {target}")
         devices = self.device_scanner.discover(target)
 
-        if grab_configs and devices:
-            logger.info(f"Attempting to grab configs from {len(devices)} devices")
-            for device in devices:
-                if self.ssh_grabber.grab_configs(device):
-                    logger.debug(f"Successfully grabbed configs from {device.ip}")
-                else:
-                    logger.debug(f"Could not grab configs from {device.ip}")
+        if grab_configs and devices and self.ssh_grabber.username:
+            logger.info(
+                f"Attempting to grab configs from {len(devices)} devices "
+                f"(up to {self.ssh_max_workers} concurrent SSH connections)"
+            )
+            with ThreadPoolExecutor(max_workers=self.ssh_max_workers) as executor:
+                future_to_device = {
+                    executor.submit(self.ssh_grabber.grab_configs, device): device
+                    for device in devices
+                }
+                for future in as_completed(future_to_device):
+                    device = future_to_device[future]
+                    try:
+                        if future.result():
+                            logger.debug(f"Successfully grabbed configs from {device.ip}")
+                        else:
+                            logger.debug(f"Could not grab configs from {device.ip}")
+                    except Exception as e:
+                        logger.warning(f"Error grabbing configs from {device.ip}: {e}")
+        elif grab_configs and devices:
+            logger.warning(
+                "Skipping SSH config grab for all devices: no SSH username configured. "
+                "Pass --ssh-user (or set PYNETWORKINTEL_SSH_USER) to enable it."
+            )
 
         duration = time.time() - start_time
 
@@ -125,12 +166,21 @@ class Pipeline:
     def __init__(
         self,
         nmap_path: str = "nmap",
-        ssh_username: str = "root",
+        ssh_username: Optional[str] = None,
         ssh_key_path: Optional[str] = None,
         ssh_password: Optional[str] = None,
         anthropic_api_key: Optional[str] = None,
+        nmap_args: str = "-sV",
+        scan_timeout: int = 300,
     ):
-        self.scanner = Scanner(nmap_path, ssh_username, ssh_key_path, ssh_password)
+        self.scanner = Scanner(
+            nmap_path,
+            ssh_username,
+            ssh_key_path,
+            ssh_password,
+            nmap_args=nmap_args,
+            scan_timeout=scan_timeout,
+        )
         self.analyzer = Analyzer(anthropic_api_key)
 
     def run(self, target: str, grab_configs: bool = True, summarize: bool = False) -> dict:
@@ -157,6 +207,7 @@ class Pipeline:
             "devices": [d.to_dict() for d in scan_result.devices],
             "findings": [f.to_dict() for f in scan_result.findings],
             "summary": self.analyzer.get_summary(scan_result),
+            "topology": scan_result.topology().to_dict(),
             "scan_time": scan_result.scan_time.isoformat(),
             "scan_duration_seconds": scan_result.scan_duration_seconds,
         }

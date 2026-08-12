@@ -1,5 +1,6 @@
 """Network device discovery engine."""
 
+import re
 import subprocess
 import json
 import logging
@@ -12,12 +13,65 @@ from pynetworkintel.models import Device, Service
 
 logger = logging.getLogger(__name__)
 
+# Conservative allow-list for scan targets: IPv4/IPv6 literals, IPv4/IPv6
+# CIDR ranges, and hostnames (RFC 1123-ish, dotted labels of letters,
+# digits and hyphens). This exists to prevent argument injection into the
+# nmap argv - e.g. a target of "--script=..." or "-oN=/etc/passwd" being
+# interpreted as an nmap flag rather than a literal target. It intentionally
+# rejects anything starting with "-" outright, since no legitimate target
+# ever starts with a dash.
+_HOSTNAME_RE = re.compile(
+    r"^(?=.{1,253}$)(?!-)[A-Za-z0-9-]{1,63}(?<!-)"
+    r"(\.(?!-)[A-Za-z0-9-]{1,63}(?<!-))*$"
+)
+
+
+def validate_target(target: str) -> str:
+    """Validate a scan target before it ever reaches a subprocess argv.
+
+    Accepts IPv4/IPv6 addresses, IPv4/IPv6 CIDR ranges, and hostnames.
+    Raises ValueError for anything else, including any string starting
+    with "-" (which nmap/most CLI tools would otherwise interpret as a
+    flag rather than a positional target).
+
+    Returns the validated target string unchanged.
+    """
+    import ipaddress
+
+    if not target or not isinstance(target, str):
+        raise ValueError("Target must be a non-empty string")
+
+    target = target.strip()
+
+    if target.startswith("-"):
+        raise ValueError(
+            f"Invalid target {target!r}: targets may not start with '-' "
+            "(this would be interpreted as a command-line flag)"
+        )
+
+    # IP address or CIDR range (covers both IPv4 and IPv6)
+    try:
+        ipaddress.ip_network(target, strict=False)
+        return target
+    except ValueError:
+        pass
+
+    # Hostname
+    if _HOSTNAME_RE.match(target):
+        return target
+
+    raise ValueError(
+        f"Invalid target {target!r}: expected an IP address, CIDR range, or hostname"
+    )
+
 
 class NmapScanner:
     """Wrapper around nmap for service discovery."""
 
-    def __init__(self, nmap_path: str = "nmap"):
+    def __init__(self, nmap_path: str = "nmap", nmap_args: str = "-sV", timeout: int = 300):
         self.nmap_path = nmap_path
+        self.nmap_args = nmap_args
+        self.timeout = timeout
         self._check_nmap_available()
 
     def _check_nmap_available(self):
@@ -26,12 +80,14 @@ class NmapScanner:
         except (subprocess.TimeoutExpired, FileNotFoundError):
             logger.warning(f"nmap not found at {self.nmap_path}. Some discovery features will be limited.")
 
-    def scan(self, target: str) -> List[Device]:
+    def scan(self, target: str, timeout: Optional[int] = None) -> List[Device]:
         """
         Scan target subnet/host for active devices and services.
 
         Args:
             target: IP address, CIDR range (10.0.0.0/24), or hostname
+            timeout: Per-scan timeout in seconds (overrides the instance
+                default set from ScanConfig.timeout)
 
         Returns:
             List of discovered devices with service information
@@ -39,16 +95,24 @@ class NmapScanner:
         devices = []
 
         try:
-            cmd = [
-                self.nmap_path,
-                "-sV",
+            target = validate_target(target)
+        except ValueError as e:
+            logger.error(str(e))
+            return devices
+
+        effective_timeout = timeout if timeout is not None else self.timeout
+
+        try:
+            cmd = [self.nmap_path]
+            cmd.extend(self.nmap_args.split())
+            cmd.extend([
                 "--script=smb-os-discovery",
                 "-oX",
                 "-",
                 target,
-            ]
+            ])
 
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=effective_timeout)
 
             if result.returncode not in (0, 1):
                 logger.error(f"nmap scan failed: {result.stderr}")
@@ -206,8 +270,8 @@ class ARPScanner:
 class DeviceScanner:
     """High-level device discovery orchestrator."""
 
-    def __init__(self, nmap_path: str = "nmap"):
-        self.nmap_scanner = NmapScanner(nmap_path)
+    def __init__(self, nmap_path: str = "nmap", nmap_args: str = "-sV", timeout: int = 300):
+        self.nmap_scanner = NmapScanner(nmap_path, nmap_args=nmap_args, timeout=timeout)
         self.arp_scanner = ARPScanner()
 
     def discover(self, target: str) -> List[Device]:

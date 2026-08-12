@@ -7,7 +7,9 @@ import logging
 import os
 from typing import Optional
 
-from pynetworkintel import Scanner, Analyzer
+AUTH_ENV_VAR = "PYNETWORKINTEL_I_AM_AUTHORIZED"
+
+from pynetworkintel import Scanner, Analyzer, __version__
 from pynetworkintel.core import Pipeline
 from pynetworkintel.config import ConfigManager
 from pynetworkintel.progress import ProgressIndicator, OutputFormatter
@@ -58,7 +60,7 @@ Examples:
     parser.add_argument(
         "--version",
         action="version",
-        version="%(prog)s 1.0.1",
+        version=f"%(prog)s {__version__}",
     )
     parser.add_argument(
         "--verbose",
@@ -106,16 +108,16 @@ Examples:
     )
     scan_parser.add_argument(
         "--ssh-user",
-        default="root",
-        help="SSH username for config grabbing (default: root)",
+        default=None,
+        help=(
+            "SSH username for config grabbing. No default - you must opt in "
+            "explicitly (e.g. --ssh-user admin). Using 'root' requires "
+            "typing it out; it is never assumed."
+        ),
     )
     scan_parser.add_argument(
         "--ssh-key",
-        help="SSH private key path for authentication",
-    )
-    scan_parser.add_argument(
-        "--ssh-password",
-        help="SSH password (if not using key-based auth)",
+        help="SSH private key path for authentication (preferred over password)",
     )
     scan_parser.add_argument(
         "--output",
@@ -132,6 +134,15 @@ Examples:
         action="store_true",
         help="Launch stats dashboard in separate terminal",
     )
+    scan_parser.add_argument(
+        "--i-am-authorized",
+        action="store_true",
+        help=(
+            "Confirm you are authorized to scan this target, skipping the "
+            f"interactive confirmation prompt (or set {AUTH_ENV_VAR}=1). "
+            "Required for non-interactive/CI use."
+        ),
+    )
     scan_parser.set_defaults(func=handle_scan)
 
     # Analyze command
@@ -141,16 +152,15 @@ Examples:
     analyze_parser.add_argument("target", help="Target IP, CIDR range, or hostname")
     analyze_parser.add_argument(
         "--ssh-user",
-        default="root",
-        help="SSH username (default: root)",
+        default=None,
+        help=(
+            "SSH username for config grabbing. No default - you must opt in "
+            "explicitly (e.g. --ssh-user admin)."
+        ),
     )
     analyze_parser.add_argument(
         "--ssh-key",
-        help="SSH private key path",
-    )
-    analyze_parser.add_argument(
-        "--ssh-password",
-        help="SSH password",
+        help="SSH private key path (preferred over password)",
     )
     analyze_parser.add_argument(
         "--summarize",
@@ -175,6 +185,15 @@ Examples:
         "--dashboard",
         action="store_true",
         help="Launch stats dashboard in separate terminal",
+    )
+    analyze_parser.add_argument(
+        "--i-am-authorized",
+        action="store_true",
+        help=(
+            "Confirm you are authorized to scan this target, skipping the "
+            f"interactive confirmation prompt (or set {AUTH_ENV_VAR}=1). "
+            "Required for non-interactive/CI use."
+        ),
     )
     analyze_parser.set_defaults(func=handle_analyze)
 
@@ -201,6 +220,54 @@ Examples:
         progress.error(f"{e}")
         logger.exception("Unhandled error")
         return 1
+
+
+def confirm_authorization(target: str, args) -> bool:
+    """Require explicit confirmation of scan authorization before touching
+    the network.
+
+    This tool actively probes/connects to whatever target it's given. To
+    avoid it silently scanning a target with zero friction (which is a real
+    concern for a dual-use network scanning tool - unauthorized scanning of
+    networks you don't own or have permission to test can be illegal), we
+    require one of:
+      - the --i-am-authorized CLI flag, or
+      - the PYNETWORKINTEL_I_AM_AUTHORIZED=1 environment variable
+        (for scripted/CI use where an interactive prompt isn't possible), or
+      - an interactive "yes" response to a confirmation prompt (the default
+        path when neither of the above is set and stdin is a TTY).
+
+    Returns True if the scan is authorized to proceed.
+    """
+    if getattr(args, "i_am_authorized", False):
+        return True
+
+    if os.getenv(AUTH_ENV_VAR, "").strip().lower() in ("1", "true", "yes"):
+        return True
+
+    if not sys.stdin.isatty():
+        progress.error(
+            f"Refusing to scan {target}: no authorization confirmation available. "
+            f"Pass --i-am-authorized or set {AUTH_ENV_VAR}=1 for non-interactive use."
+        )
+        return False
+
+    prompt = (
+        f"\nYou are about to actively scan: {target}\n"
+        "Only scan networks and devices you own or have explicit permission to test.\n"
+        "Unauthorized scanning may be illegal in your jurisdiction.\n"
+        "Continue? [y/N] "
+    )
+    try:
+        response = input(prompt).strip().lower()
+    except EOFError:
+        response = ""
+
+    if response not in ("y", "yes"):
+        progress.error("Scan not authorized by user. Aborting.")
+        return False
+
+    return True
 
 
 def handle_init_config(args) -> int:
@@ -236,6 +303,12 @@ def handle_scan(args) -> int:
     """Handle scan command."""
     progress.section(f"Scanning {args.target}")
 
+    if not confirm_authorization(args.target, args):
+        return 1
+
+    config_manager = ConfigManager()
+    scan_config = config_manager.config.scan
+
     # Launch dashboard if requested
     dashboard_process = None
     stats_server = None
@@ -249,7 +322,11 @@ def handle_scan(args) -> int:
     scanner = Scanner(
         ssh_username=args.ssh_user,
         ssh_key_path=args.ssh_key,
-        ssh_password=args.ssh_password,
+        # SSH password is never accepted as a CLI flag (would leak into
+        # shell history / process listings) - env var only.
+        ssh_password=os.getenv("PYNETWORKINTEL_SSH_PASSWORD"),
+        nmap_args=scan_config.nmap_args,
+        scan_timeout=scan_config.timeout,
     )
 
     progress.status(f"Starting scan of {args.target}...")
@@ -310,6 +387,12 @@ def handle_analyze(args) -> int:
 
     progress.section(f"Analyzing {args.target}")
 
+    if not confirm_authorization(args.target, args):
+        return 1
+
+    config_manager = ConfigManager()
+    scan_config = config_manager.config.scan
+
     # Launch dashboard if requested
     dashboard_process = None
     stats_server = None
@@ -323,8 +406,11 @@ def handle_analyze(args) -> int:
     pipeline = Pipeline(
         ssh_username=args.ssh_user,
         ssh_key_path=args.ssh_key,
-        ssh_password=args.ssh_password,
+        # SSH password is never accepted as a CLI flag - env var only.
+        ssh_password=os.getenv("PYNETWORKINTEL_SSH_PASSWORD"),
         anthropic_api_key=api_key,
+        nmap_args=scan_config.nmap_args,
+        scan_timeout=scan_config.timeout,
     )
 
     progress.status(f"Scanning network {args.target}...")

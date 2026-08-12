@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class SSHConfigGrabber:
     """Grab configuration files from remote devices via SSH."""
 
-    def __init__(self, username: str, key_path: Optional[str] = None, password: Optional[str] = None):
+    def __init__(self, username: Optional[str], key_path: Optional[str] = None, password: Optional[str] = None):
         self.username = username
         self.key_path = key_path
         self.password = password
@@ -29,6 +29,13 @@ class SSHConfigGrabber:
         Returns:
             True if successful, False otherwise
         """
+        if not self.username:
+            logger.warning(
+                f"No SSH username configured; skipping config grab for {device.ip}. "
+                "Pass --ssh-user (or set PYNETWORKINTEL_SSH_USER) to enable config grabbing."
+            )
+            return False
+
         try:
             client = self._connect(device.ip, timeout)
             self._grab_linux_configs(client, device)
@@ -40,9 +47,26 @@ class SSHConfigGrabber:
             return False
 
     def _connect(self, ip: str, timeout: int) -> paramiko.SSHClient:
-        """Establish SSH connection to device."""
+        """Establish SSH connection to device.
+
+        Host key policy: we use WarningPolicy (log + accept) rather than
+        AutoAddPolicy (silently accept) or RejectPolicy (silently trusting
+        ~/.ssh/known_hosts, which most scanned devices won't be in).
+
+        Tradeoff: this tool is scanning arbitrary/unknown devices across a
+        network it doesn't control the known_hosts for, so a strict
+        known-hosts-only policy would make config grabbing fail for nearly
+        every first-contact device - not a usable default for a discovery
+        tool. WarningPolicy still accepts unknown/changed host keys (so a
+        MITM on the local network segment can still intercept a first
+        connection), but it surfaces a loud warning in the logs instead of
+        silently proceeding, so a MITM attempt is at least visible in
+        verbose/debug output. Operators who need real host-key assurance
+        should pre-populate known_hosts and use a stricter policy via the
+        Python API directly.
+        """
         client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.set_missing_host_key_policy(paramiko.WarningPolicy())
 
         if self.key_path:
             client.connect(

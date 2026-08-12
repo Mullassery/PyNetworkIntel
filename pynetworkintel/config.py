@@ -15,16 +15,27 @@ CONFIG_FILE = CONFIG_DIR / "config.yaml"
 
 @dataclass
 class SSHConfig:
-    username: str = "root"
+    # No default username: root (or any) must be an explicit, conscious choice.
+    # See cli.py --ssh-user / PYNETWORKINTEL_SSH_USER.
+    username: Optional[str] = None
     key_path: Optional[str] = None
+    # SSH password is intentionally NEVER persisted to disk (see to_dict()/
+    # ConfigManager.save_config below). It only ever lives in-process, sourced
+    # from the PYNETWORKINTEL_SSH_PASSWORD environment variable. Prefer
+    # key-based auth wherever possible.
     password: Optional[str] = None
     timeout: int = 10
 
     def to_dict(self) -> Dict[str, Any]:
+        """Serialize for persistence to disk.
+
+        Deliberately excludes `password`: credentials must never be written
+        to the config file in plaintext. Use PYNETWORKINTEL_SSH_PASSWORD (or
+        better, --ssh-key) instead.
+        """
         return {
             "username": self.username,
             "key_path": self.key_path,
-            "password": self.password,
             "timeout": self.timeout,
         }
 
@@ -122,7 +133,9 @@ class ConfigManager:
             config.ssh = SSHConfig(
                 username=ssh_data.get("username", config.ssh.username),
                 key_path=ssh_data.get("key_path"),
-                password=ssh_data.get("password"),
+                # `password` is intentionally not read back from disk even if an
+                # old/hand-edited config file still has it - env var only.
+                password=None,
                 timeout=ssh_data.get("timeout", config.ssh.timeout),
             )
 
@@ -156,11 +169,23 @@ class ConfigManager:
         return config
 
     def save_config(self, config: AppConfig):
-        """Save configuration to file."""
+        """Save configuration to file.
+
+        The config file may contain an SSH username, key *path*, and other
+        non-secret settings. SSH passwords are never written here (see
+        SSHConfig.to_dict()). The file is chmod'd 0600 (owner read/write
+        only) since it can still reveal usernames/paths that are useful to
+        an attacker profiling the host.
+        """
         self.config_dir.mkdir(parents=True, exist_ok=True)
 
         with open(self.config_file, "w") as f:
             yaml.dump(config.to_dict(), f, default_flow_style=False)
+
+        try:
+            os.chmod(self.config_file, 0o600)
+        except OSError as e:
+            logger.warning(f"Could not set restrictive permissions on {self.config_file}: {e}")
 
         logger.info(f"Config saved to {self.config_file}")
 
