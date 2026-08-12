@@ -54,8 +54,17 @@ class Device:
     last_seen: datetime = field(default_factory=datetime.now)
     is_online: bool = True
 
-    def add_service(self, port: int, name: str, version: Optional[str] = None):
-        self.services.append(Service(port=port, name=name, version=version))
+    def add_service(
+        self,
+        port: int,
+        name: str,
+        version: Optional[str] = None,
+        protocol: str = "tcp",
+        state: str = "open",
+    ):
+        self.services.append(
+            Service(port=port, name=name, version=version, protocol=protocol, state=state)
+        )
 
     def add_config(self, path: str, content: str, device_type: str):
         self.configs.append(ConfigFile(path=path, content=content, device_type=device_type))
@@ -109,13 +118,23 @@ class ScanResult:
             "findings": [f.to_dict() for f in self.findings],
             "scan_time": self.scan_time.isoformat(),
             "scan_duration_seconds": self.scan_duration_seconds,
+            "topology": self.topology().to_dict(),
         }
+
+    def topology(self):
+        """Build a NetworkTopology graph (nodes/edges/subnets) from the
+        devices in this scan. See pynetworkintel.topology for details."""
+        # Imported lazily to avoid a models<->topology circular import.
+        from pynetworkintel.topology import TopologyMapper
+
+        return TopologyMapper().build(self.devices)
 
     def summary(self) -> Dict[str, Any]:
         return {
             "total_devices": len(self.devices),
             "online_devices": sum(1 for d in self.devices if d.is_online),
             "total_findings": len(self.findings),
+            "subnets_detected": len(self.topology().subnets),
             "critical_findings": sum(1 for f in self.findings if f.severity == Severity.CRITICAL),
             "high_findings": sum(1 for f in self.findings if f.severity == Severity.HIGH),
         }

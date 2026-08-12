@@ -108,7 +108,12 @@ class CVEChecker:
             for vuln in vulnerabilities:
                 cve_data = vuln.get("cve", {})
                 cve_id = cve_data.get("id")
-                description = cve_data.get("descriptions", [{}])[0].get("value", "")
+                # NVD can return a CVE with an explicitly empty "descriptions"
+                # list (e.g. reserved/rejected CVEs) - `.get(..., [{}])` only
+                # covers the *missing* key case, not an empty-list value, so
+                # `or [{}]` is needed to avoid an IndexError on `[0]`.
+                descriptions = cve_data.get("descriptions") or [{}]
+                description = descriptions[0].get("value", "")
                 cvss_score = self._extract_cvss_score(cve_data)
 
                 if cve_id:

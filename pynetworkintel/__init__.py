@@ -1,6 +1,6 @@
 """PyNetworkIntel: AI-powered network intelligence platform."""
 
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 
 # Core scanning and analysis
 from pynetworkintel.core import Scanner, Analyzer, Pipeline
@@ -36,6 +36,9 @@ from pynetworkintel.alerts import (
 # Change detection and reporting
 from pynetworkintel.changes import ChangeDetector, ChangeReporter
 from pynetworkintel.reporting import ReportGenerator
+
+# Topology mapping
+from pynetworkintel.topology import TopologyMapper, NetworkTopology, TopologyNode, TopologyEdge
 
 # Dashboard and monitoring
 from pynetworkintel.dashboard import Dashboard, DashboardServer, DashboardClient
@@ -76,6 +79,11 @@ __all__ = [
     "ChangeReporter",
     # Reporting
     "ReportGenerator",
+    # Topology
+    "TopologyMapper",
+    "NetworkTopology",
+    "TopologyNode",
+    "TopologyEdge",
     # Dashboard
     "Dashboard",
     "DashboardServer",
