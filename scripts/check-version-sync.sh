@@ -2,10 +2,13 @@
 
 # Version Sync Verification Script
 # This script verifies that version numbers are consistent across all sources:
-# - setup.py
-# - pyproject.toml
+# - pyproject.toml (single source of truth for the package version)
 # - GitHub releases (via git tags)
 # - README.md (status line)
+#
+# NOTE: setup.py was removed - pyproject.toml's [project] table is the only
+# build metadata source now (avoids two files disagreeing about version/
+# license/dependencies, which happened in the past).
 
 set -e
 
@@ -20,9 +23,6 @@ echo ""
 # Extract versions from each source
 echo "Checking version sources..."
 echo ""
-
-SETUP_VERSION=$(grep 'version=' setup.py | head -1 | sed 's/.*version="\([^"]*\)".*/\1/')
-echo "✓ setup.py version:        $SETUP_VERSION"
 
 PYPROJECT_VERSION=$(grep 'version = ' pyproject.toml | head -1 | sed 's/.*version = "\([^"]*\)".*/\1/')
 echo "✓ pyproject.toml version:  $PYPROJECT_VERSION"
@@ -49,15 +49,14 @@ echo "======================================"
 echo ""
 
 # Check if all versions match
-if [ "$SETUP_VERSION" == "$PYPROJECT_VERSION" ] && [ "$SETUP_VERSION" == "$README_VERSION" ] && [ "$SETUP_VERSION" == "$GIT_TAG" ]; then
+if [ "$PYPROJECT_VERSION" == "$README_VERSION" ] && [ "$PYPROJECT_VERSION" == "$GIT_TAG" ]; then
     echo "✅ All versions are in sync!"
     echo ""
-    echo "Current version: $SETUP_VERSION"
+    echo "Current version: $PYPROJECT_VERSION"
     exit 0
 else
     echo "❌ Version mismatch detected!"
     echo ""
-    echo "Setup.py:       $SETUP_VERSION"
     echo "Pyproject.toml: $PYPROJECT_VERSION"
     echo "README.md:      v$README_VERSION"
     echo "Git tag:        v$GIT_TAG"

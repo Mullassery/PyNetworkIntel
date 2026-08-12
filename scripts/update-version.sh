@@ -30,11 +30,6 @@ fi
 echo "Updating files..."
 echo ""
 
-# Update setup.py
-echo "Updating setup.py..."
-sed -i "" "s/version=\"[^\"]*\"/version=\"$NEW_VERSION\"/" setup.py
-echo "✓ setup.py updated"
-
 # Update pyproject.toml
 echo "Updating pyproject.toml..."
 sed -i "" "s/version = \"[^\"]*\"/version = \"$NEW_VERSION\"/" pyproject.toml
@@ -51,7 +46,6 @@ echo "Version Updated Successfully"
 echo "======================================"
 echo ""
 echo "Summary:"
-echo "- setup.py: v$NEW_VERSION"
 echo "- pyproject.toml: v$NEW_VERSION"
 echo "- README.md: v$NEW_VERSION"
 echo ""
