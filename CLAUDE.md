@@ -54,7 +54,7 @@ target (IP / CIDR / hostname)
 [pynetworkintel.reporting / pynetworkintel.alerts / pynetworkintel.dashboard]
   - ReportGenerator: Markdown/JSON reports from the SQLAlchemy-backed
     scan history DB (pynetworkintel/db.py)
-  - AlertManager: Slack/email/webhook notification channels
+  - AlertManager: chat-webhook/email/generic webhook notification channels
   - Dashboard: terminal (Rich-based) live-scan viewer over a Unix socket
 ```
 

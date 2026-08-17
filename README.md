@@ -65,8 +65,8 @@ print(result.topology().to_dict())  # subnet groupings + inferred gateway edges
   etc. from devices you have credentials for, concurrently across devices
 - **Change tracking** - detects new/removed devices across scans, backed by
   a local SQLite/SQLAlchemy history (`pynetworkintel.changes`, `pynetworkintel.db`)
-- **Reports & alerts** - Markdown/JSON reports, Slack/email/webhook alert
-  channels (`pynetworkintel.reporting`, `pynetworkintel.alerts`)
+- **Reports & alerts** - Markdown/JSON reports, chat-webhook/email/generic
+  webhook alert channels (`pynetworkintel.reporting`, `pynetworkintel.alerts`)
 - **Optional AI summary** - plain-English findings summary via the
   Anthropic API, only when `--summarize` / `summarize=True` is used
 
@@ -179,7 +179,7 @@ shipped at all:
 |---|---|---|
 | `discovery`, `analysis`, `models`, `topology`, `core`, `cli`, `config` | **Core, tested** | The scan -> analyze -> topology path; primary test coverage lives here |
 | `reporting`, `alerts`, `changes`, `dashboard`, `scheduler`, `db` | **Core, tested** | Report generation, change tracking, live terminal dashboard |
-| `cloud` (AWS/Azure/GCP asset discovery) | Shipped, lighter-tested | Real code, lazy-imports SDKs via the `cloud` extra |
+| `cloud` (major cloud provider asset discovery) | Shipped, lighter-tested | Real code, lazy-imports SDKs (boto3, azure-mgmt-*, google-cloud-*) via the `cloud` extra |
 | `kubernetes` (cluster/RBAC/pod security) | Shipped, lighter-tested | Real code, lazy-imports the `kubernetes` client via the `kubernetes` extra |
 | `iot` (MQTT/CoAP/Modbus/S7comm discovery) | Shipped, lighter-tested | Real socket-based probing; arguably core to "everything connected to your network," just less exercised |
 | `ml` (statistical baselines/anomaly detection) | Shipped, lighter-tested | Real `statistics`-based logic, not a trained model - "ML" in the name overstates it |
@@ -206,6 +206,24 @@ shipped at all:
 stale/placeholder documents from earlier planning and are not kept in sync
 with the implementation; refer to [CLAUDE.md](CLAUDE.md) for an accurate
 architecture description instead.
+
+---
+
+## Known Issues
+
+- **Lighter-tested modules**: `cloud`, `kubernetes`, `iot`, `ml`, and
+  `devops` are real, shipped code but have less test coverage than the
+  core scan -> analyze -> topology path; see [Module status](#module-status).
+- **Stale planning docs**: `docs/ARCHITECTURE.md`, `docs/PRODUCT_VISION.md`,
+  and `docs/ROADMAP.md` predate the current implementation and are not kept
+  in sync - use [CLAUDE.md](CLAUDE.md) for an accurate description instead.
+- **No committed performance benchmarks.** There is no benchmark script or
+  results file in this repo, so no throughput/latency numbers are claimed
+  anywhere in this README.
+- **No open GitHub issues** and no `TODO`/`FIXME` markers in `pynetworkintel/`
+  as of this pass.
+- Published version on PyPI (`1.3.0`) matches this repo's `pyproject.toml`;
+  no version drift.
 
 ---
 
