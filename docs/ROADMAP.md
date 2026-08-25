@@ -38,7 +38,7 @@ None - v2.0.0 production-ready
 - [ ] Retry logic with exponential backoff
 - [ ] Graceful degradation
 - [ ] Fallback mechanisms
-- [ ] Per-record error isolation in nmap XML parsing — `_parse_host`/`_parse_service` (`pynetworkintel/discovery/scanner.py:151-204`) have no per-record try/except, so one malformed `<port>`/`<host>` element propagates to the outer `except Exception` in `scan()`, which discards the entire device list for that scan instead of just the bad record. (Note: the other two related external-critique items — bounded ring buffers, payload sanitization in logs — don't apply; there's no raw packet/socket ingestion loop or binary payload logging anywhere in this codebase, only nmap XML wrapping.)
+- [x] Per-record error isolation in nmap XML parsing — **Done.** `_parse_nmap_xml`'s per-host loop now wraps `_parse_host(host)` in try/except (logs the host's IP if parseable, then continues to the next host), and `_parse_host`'s per-port loop wraps `_parse_service(port_elem)` the same way (logs ip+portid, continues to the next port). A malformed `<port>` no longer loses the rest of its host's valid services, and a malformed `<host>` no longer loses the rest of the scan's devices — previously either propagated to `scan()`'s outer `except Exception`, discarding the entire device list. Covered by `TestPerRecordErrorIsolation` in `tests/test_scanner.py` (per-port isolation, per-host isolation, and an end-to-end `scan()` case). (Note: the other two related external-critique items — bounded ring buffers, payload sanitization in logs — don't apply; there's no raw packet/socket ingestion loop or binary payload logging anywhere in this codebase, only nmap XML wrapping.)
 
 #### Architecture
 - [ ] Code refactoring (simplify hot paths)

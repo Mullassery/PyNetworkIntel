@@ -109,6 +109,18 @@ class TestParseService:
         )
         assert scanner._parse_service(port_elem) is None
 
+    def test_malformed_portid_raises_in_parse_service(self, scanner):
+        """_parse_service itself should still surface the error -- isolation
+        happens one level up, in _parse_host's per-port try/except."""
+        import xml.etree.ElementTree as ET
+
+        port_elem = ET.fromstring(
+            '<port protocol="tcp" portid="not-a-number">'
+            '<state state="open"/></port>'
+        )
+        with pytest.raises(ValueError):
+            scanner._parse_service(port_elem)
+
     def test_add_service_accepts_parsed_dict(self, scanner, sample_xml):
         """Regression test: _parse_service()'s output dict (including
         'protocol') must be directly usable with Device.add_service(**dict) -
@@ -119,6 +131,120 @@ class TestParseService:
         assert len(devices) == 2
         for device in devices:
             assert len(device.services) >= 1
+
+
+class TestPerRecordErrorIsolation:
+    """A malformed <port> or <host> element must not discard the rest of
+    the scan's results -- only the one bad record."""
+
+    def test_malformed_port_does_not_drop_the_rest_of_the_host(self, scanner, caplog):
+        xml = """<?xml version="1.0"?>
+        <nmaprun>
+          <host>
+            <status state="up"/>
+            <address addr="192.168.1.20" addrtype="ipv4"/>
+            <ports>
+              <port protocol="tcp" portid="22">
+                <state state="open"/>
+                <service name="ssh" version="8.9"/>
+              </port>
+              <port protocol="tcp" portid="not-a-number">
+                <state state="open"/>
+                <service name="broken"/>
+              </port>
+              <port protocol="tcp" portid="80">
+                <state state="open"/>
+                <service name="http" version="1.0"/>
+              </port>
+            </ports>
+          </host>
+        </nmaprun>"""
+
+        devices = scanner._parse_nmap_xml(xml)
+
+        # The host itself, and its two well-formed ports, must survive --
+        # only the single malformed <port> is dropped.
+        assert len(devices) == 1
+        device = devices[0]
+        assert device.ip == "192.168.1.20"
+        service_ports = {s.port for s in device.services}
+        assert service_ports == {22, 80}
+        assert any("portid" in r.message for r in caplog.records)
+
+    def test_malformed_host_does_not_drop_other_hosts_in_the_scan(self, scanner, caplog):
+        xml = """<?xml version="1.0"?>
+        <nmaprun>
+          <host>
+            <status state="up"/>
+            <address addr="192.168.1.30" addrtype="ipv4"/>
+            <ports>
+              <port protocol="tcp" portid="oops">
+                <state state="open"/>
+              </port>
+            </ports>
+          </host>
+          <host>
+            <status state="up"/>
+            <address addr="192.168.1.31" addrtype="ipv4"/>
+            <ports>
+              <port protocol="tcp" portid="22">
+                <state state="open"/>
+                <service name="ssh" version="9.0"/>
+              </port>
+            </ports>
+          </host>
+        </nmaprun>"""
+
+        devices = scanner._parse_nmap_xml(xml)
+
+        # Before per-port isolation, host .30's malformed port would raise
+        # inside _parse_host, but that alone wouldn't drop host .31 since
+        # each host is independent -- this test's real point is combined
+        # with the previous one: .30 keeps existing (with zero services,
+        # since its only port was malformed) and .31 is unaffected.
+        assert {d.ip for d in devices} == {"192.168.1.30", "192.168.1.31"}
+        host_30 = next(d for d in devices if d.ip == "192.168.1.30")
+        assert host_30.services == []
+        host_31 = next(d for d in devices if d.ip == "192.168.1.31")
+        assert {s.port for s in host_31.services} == {22}
+
+    def test_scan_still_returns_valid_devices_when_one_host_is_unparseable(
+        self, scanner
+    ):
+        """End-to-end through scan(): previously, a single malformed record
+        anywhere in the XML propagated to scan()'s outer except Exception,
+        discarding the entire device list for the scan -- not just the bad
+        record."""
+        xml = """<?xml version="1.0"?>
+        <nmaprun>
+          <host>
+            <status state="up"/>
+            <address addr="192.168.1.40" addrtype="ipv4"/>
+            <ports>
+              <port protocol="tcp" portid="broken">
+                <state state="open"/>
+              </port>
+            </ports>
+          </host>
+          <host>
+            <status state="up"/>
+            <address addr="192.168.1.41" addrtype="ipv4"/>
+            <ports>
+              <port protocol="tcp" portid="443">
+                <state state="open"/>
+                <service name="https" version="1.1"/>
+              </port>
+            </ports>
+          </host>
+        </nmaprun>"""
+
+        completed = MagicMock(returncode=0, stdout=xml, stderr="")
+        with patch("subprocess.run", return_value=completed):
+            devices = scanner.scan("192.168.1.0/24")
+
+        assert {d.ip for d in devices} == {"192.168.1.40", "192.168.1.41"}
+        host_41 = next(d for d in devices if d.ip == "192.168.1.41")
+        assert {s.port for s in host_41.services} == {443}
 
 
 class TestValidateTarget:

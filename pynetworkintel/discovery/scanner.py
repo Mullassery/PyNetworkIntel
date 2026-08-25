@@ -142,7 +142,19 @@ class NmapScanner:
             if status is None or status.get("state") != "up":
                 continue
 
-            device = self._parse_host(host)
+            try:
+                device = self._parse_host(host)
+            except Exception as e:
+                # A malformed <host> (e.g. an unparseable <port portid="...">
+                # inside it) used to propagate all the way up to scan()'s
+                # outer except, which discarded every device from this scan
+                # -- not just the bad one. Isolate it to this host so the
+                # rest of the scan's results are still usable.
+                address_elem = host.find("address")
+                ip = address_elem.get("addr") if address_elem is not None else "unknown"
+                logger.warning(f"Skipping unparseable host (ip={ip}): {e}")
+                continue
+
             if device:
                 devices.append(device)
 
@@ -173,7 +185,20 @@ class NmapScanner:
         # Parse services
         ports = host_elem.findall(".//port")
         for port_elem in ports:
-            service_data = self._parse_service(port_elem)
+            try:
+                service_data = self._parse_service(port_elem)
+            except Exception as e:
+                # e.g. a <port> with a missing/non-numeric portid attribute
+                # (int(None) or int("abc") both raise). Without this,
+                # one bad port would propagate out of _parse_host and lose
+                # this host entirely, including every other valid port on
+                # it -- isolate it to just the one malformed port instead.
+                portid = port_elem.get("portid", "unknown")
+                logger.warning(
+                    f"Skipping unparseable port (ip={ip}, portid={portid}): {e}"
+                )
+                continue
+
             if service_data:
                 device.add_service(**service_data)
 

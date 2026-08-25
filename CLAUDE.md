@@ -1,6 +1,6 @@
 # PyNetworkIntel: Network Discovery, Topology Mapping & Vulnerability Scanning
 
-**Status:** v1.3.0 | **License:** Proprietary (free to use with attribution)
+**Status:** v1.3.1 | **License:** Proprietary (free to use with attribution)
 
 This file documents what the codebase actually does, for engineers (human
 or AI) working on it. Previous versions of this file made claims that did

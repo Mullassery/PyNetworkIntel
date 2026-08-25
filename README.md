@@ -222,7 +222,7 @@ architecture description instead.
   anywhere in this README.
 - **No open GitHub issues** and no `TODO`/`FIXME` markers in `pynetworkintel/`
   as of this pass.
-- Published version on PyPI (`1.3.0`) matches this repo's `pyproject.toml`;
+- Published version on PyPI (`1.3.1`) matches this repo's `pyproject.toml`;
   no version drift.
 
 ---
