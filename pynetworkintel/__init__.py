@@ -39,6 +39,7 @@ from pynetworkintel.reporting import ReportGenerator
 
 # Topology mapping
 from pynetworkintel.topology import TopologyMapper, NetworkTopology, TopologyNode, TopologyEdge
+from pynetworkintel.topology_export import to_node_link_json, to_graphml, export_topology
 
 # Dashboard and monitoring
 from pynetworkintel.dashboard import Dashboard, DashboardServer, DashboardClient
@@ -84,6 +85,9 @@ __all__ = [
     "NetworkTopology",
     "TopologyNode",
     "TopologyEdge",
+    "to_node_link_json",
+    "to_graphml",
+    "export_topology",
     # Dashboard
     "Dashboard",
     "DashboardServer",

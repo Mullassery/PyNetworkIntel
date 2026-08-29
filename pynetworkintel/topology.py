@@ -70,6 +70,18 @@ class NetworkTopology:
             "subnets": self.subnets,
         }
 
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "NetworkTopology":
+        """Reconstruct a NetworkTopology from the shape produced by
+        `to_dict()`. Used by callers (e.g. the CLI) that only have the
+        already-serialized dict form (such as a Pipeline result) but still
+        want to feed it into one of the graph export formats."""
+        return cls(
+            nodes=[TopologyNode(**n) for n in data.get("nodes", [])],
+            edges=[TopologyEdge(**e) for e in data.get("edges", [])],
+            subnets=list(data.get("subnets", [])),
+        )
+
     def adjacency(self) -> Dict[str, List[str]]:
         """Return an adjacency-list view of the graph (undirected)."""
         adj: Dict[str, List[str]] = {n.ip: [] for n in self.nodes}

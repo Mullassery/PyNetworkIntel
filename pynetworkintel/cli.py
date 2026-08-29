@@ -45,6 +45,12 @@ Examples:
   # Get findings in JSON format
   pynetworkintel scan 192.168.1.0/24 --output json
 
+  # Export the topology graph for Gephi/yEd
+  pynetworkintel scan 192.168.1.0/24 --output graphml --output-file topology.graphml
+
+  # Export the topology graph for D3.js/vis.js visualizations
+  pynetworkintel scan 192.168.1.0/24 --output d3-json --output-file topology.json
+
   # Save results to file
   pynetworkintel analyze 192.168.1.0/24 --output-file results.json
 
@@ -121,9 +127,14 @@ Examples:
     )
     scan_parser.add_argument(
         "--output",
-        choices=["text", "json"],
+        choices=["text", "json", "graphml", "d3-json"],
         default="text",
-        help="Output format",
+        help=(
+            "Output format. 'graphml' and 'd3-json' export the scan's "
+            "topology graph only (nodes/edges), for visualization tools "
+            "(Gephi/yEd for graphml, D3.js/vis.js for d3-json) rather than "
+            "the full scan results."
+        ),
     )
     scan_parser.add_argument(
         "--output-file",
@@ -169,9 +180,14 @@ Examples:
     )
     analyze_parser.add_argument(
         "--output",
-        choices=["text", "json"],
+        choices=["text", "json", "graphml", "d3-json"],
         default="text",
-        help="Output format",
+        help=(
+            "Output format. 'graphml' and 'd3-json' export the scan's "
+            "topology graph only (nodes/edges), for visualization tools "
+            "(Gephi/yEd for graphml, D3.js/vis.js for d3-json) rather than "
+            "the full analysis results."
+        ),
     )
     analyze_parser.add_argument(
         "--api-key",
@@ -355,6 +371,8 @@ def handle_scan(args) -> int:
         if args.output == "json":
             output = scan_result.to_dict()
             result_str = json.dumps(output, indent=2, default=str)
+        elif args.output in ("graphml", "d3-json"):
+            result_str = render_topology_output(scan_result.topology(), args.output)
         else:
             result_str = format_scan_output(scan_result)
 
@@ -448,6 +466,11 @@ def handle_analyze(args) -> int:
 
         if args.output == "json":
             result_str = json.dumps(result, indent=2, default=str)
+        elif args.output in ("graphml", "d3-json"):
+            from pynetworkintel.topology import NetworkTopology
+
+            topology = NetworkTopology.from_dict(result.get("topology", {}))
+            result_str = render_topology_output(topology, args.output)
         else:
             result_str = format_analysis_output(result, args.summarize)
 
@@ -471,6 +494,18 @@ def handle_analyze(args) -> int:
                 time.sleep(2)
             except KeyboardInterrupt:
                 pass
+
+
+def render_topology_output(topology, output_format: str) -> str:
+    """Render a NetworkTopology in one of the graph-visualization export
+    formats ("graphml" or "d3-json") for the --output flag."""
+    from pynetworkintel.topology_export import node_link_json_str, to_graphml
+
+    if output_format == "graphml":
+        return to_graphml(topology)
+    if output_format == "d3-json":
+        return node_link_json_str(topology)
+    raise ValueError(f"Unknown topology output format: {output_format}")
 
 
 def format_scan_output(scan_result) -> str:
