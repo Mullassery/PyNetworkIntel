@@ -10,7 +10,7 @@ hidden network calls beyond nmap/SSH/NVD/(optional) Anthropic.
 
 [![PyPI](https://img.shields.io/pypi/v/pynetworkintel)](https://pypi.org/project/pynetworkintel)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org)
-[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-blue.svg)](./LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
 
 ---
 
@@ -229,4 +229,4 @@ architecture description instead.
 
 ## License
 
-Proprietary License - free to use with explicit attribution. See [LICENSE](LICENSE).
+This project is licensed under the [Apache License 2.0](LICENSE).
