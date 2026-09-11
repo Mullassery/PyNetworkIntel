@@ -104,4 +104,4 @@ server.stop()
 
 - [Full Dashboard Docs](DASHBOARD.md)
 - [PyNetworkIntel README](../README.md)
-- [Implementation Details](../DASHBOARD_IMPLEMENTATION.md)
+- [Implementation Details](archive/DASHBOARD_IMPLEMENTATION.md) (historical)

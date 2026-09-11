@@ -51,6 +51,21 @@ print(result.topology().to_dict())  # subnet groupings + inferred gateway edges
 
 ---
 
+## Use cases
+
+- **A one-off network inventory** — `pynetworkintel scan <subnet>` for
+  "what's actually on this network right now," with a real topology graph,
+  not a flat list.
+- **Recurring drift/change detection** — repeated scans against the same
+  SQLite history to catch new/removed devices between runs.
+- **Pairing discovery with vulnerability triage** — `analyze` cross-checks
+  discovered services against config-based rules and live NVD CVE lookups
+  in one pass.
+- **Not yet a good fit for:** enterprise multitenancy/HA/auth/REST API, or
+  a conversational architecture advisor — both are explicitly excluded
+  from the package (see [Module status](#module-status)), not partially
+  built.
+
 ## Key Features
 
 - **Device discovery** - `nmap -sV` based host/port/service discovery
@@ -222,7 +237,7 @@ architecture description instead.
   anywhere in this README.
 - **No open GitHub issues** and no `TODO`/`FIXME` markers in `pynetworkintel/`
   as of this pass.
-- Published version on PyPI (`1.3.1`) matches this repo's `pyproject.toml`;
+- Published version on PyPI (`1.4.0`) matches this repo's `pyproject.toml`;
   no version drift.
 
 ---
