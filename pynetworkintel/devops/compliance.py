@@ -1,5 +1,5 @@
 """Compliance framework mapping and reporting."""
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 import logging
 
 logger = logging.getLogger(__name__)

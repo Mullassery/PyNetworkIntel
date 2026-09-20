@@ -1,7 +1,6 @@
 """Container and workload security analysis for Kubernetes."""
 from typing import Dict, List, Any, Optional
 import logging
-import re
 
 logger = logging.getLogger(__name__)
 

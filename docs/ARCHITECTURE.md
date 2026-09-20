@@ -1,5 +1,11 @@
 # PyNetworkIntel Architecture
 
+> **This document is stale and not kept in sync with the implementation.**
+> It predates the current codebase and does not describe what is actually
+> built. For an accurate architecture description, see
+> [`CLAUDE.md`](../CLAUDE.md) and the [README's Key Features /
+> Module status](../README.md#key-features) sections instead.
+
 ## Overview
 
 This document describes the architecture and design of PyNetworkIntel.

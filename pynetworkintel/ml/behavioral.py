@@ -1,8 +1,7 @@
 """Device behavioral baseline learning."""
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-import statistics
+from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)

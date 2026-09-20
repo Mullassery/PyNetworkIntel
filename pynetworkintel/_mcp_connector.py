@@ -118,7 +118,6 @@ class NetworkIntelligence:
         return {}
 
     def start_mcp_connector(self, port: int = 8773) -> str:
-        from pynetworkintel._mcp_tools import PyNetworkIntelMCPHandler, PyNetworkIntelMCPTools
         self.mcp_connector = _MCPNetworkConnector(network_intel=self, port=port)
         return self.mcp_connector.start_mcp_connector()
 

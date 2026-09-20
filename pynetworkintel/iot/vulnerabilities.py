@@ -1,5 +1,5 @@
 """IoT device vulnerability analysis."""
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 import logging
 import re
 

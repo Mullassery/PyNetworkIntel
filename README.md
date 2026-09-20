@@ -8,6 +8,7 @@ against known vulnerability rules and the NVD CVE database, and derives a
 subnet/gateway topology graph from the results - in plain Python, with no
 hidden network calls beyond nmap/SSH/NVD/(optional) Anthropic.
 
+[![Tests](https://github.com/Mullassery/PyNetworkIntel/actions/workflows/tests.yml/badge.svg)](https://github.com/Mullassery/PyNetworkIntel/actions/workflows/tests.yml)
 [![PyPI](https://img.shields.io/pypi/v/pynetworkintel)](https://pypi.org/project/pynetworkintel)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
@@ -192,15 +193,18 @@ shipped at all:
 
 | Module | Status | Notes |
 |---|---|---|
-| `discovery`, `analysis`, `models`, `topology`, `core`, `cli`, `config` | **Core, tested** | The scan -> analyze -> topology path; primary test coverage lives here |
-| `reporting`, `alerts`, `changes`, `dashboard`, `scheduler`, `db` | **Core, tested** | Report generation, change tracking, live terminal dashboard |
-| `cloud` (major cloud provider asset discovery) | Shipped, lighter-tested | Real code, lazy-imports SDKs (boto3, azure-mgmt-*, google-cloud-*) via the `cloud` extra |
-| `kubernetes` (cluster/RBAC/pod security) | Shipped, lighter-tested | Real code, lazy-imports the `kubernetes` client via the `kubernetes` extra |
-| `iot` (MQTT/CoAP/Modbus/S7comm discovery) | Shipped, lighter-tested | Real socket-based probing; arguably core to "everything connected to your network," just less exercised |
-| `ml` (statistical baselines/anomaly detection) | Shipped, lighter-tested | Real `statistics`-based logic, not a trained model - "ML" in the name overstates it |
-| `devops` (CI/CD & IaC static scanning) | Shipped, lighter-tested | Real regex-based Terraform/GitHub Actions scanning, self-contained |
+| `models`, `topology`, `topology_export`, `analysis/cve`, `analysis/rules`, `db`, `config` | **Core, well-tested** | 83-100% line coverage (measured with `pytest --cov`); this is where the primary, meaningful test coverage lives |
+| `discovery/scanner` | **Core, tested** | 64% line coverage; XML parsing, target validation, and per-record error isolation are covered, some subprocess edge cases aren't |
+| `core`, `discovery/ssh_config`, `analysis/llm` | **Core, partially tested** | 34-48% line coverage - the security-relevant paths (auth gate, SSH defaults, no-password-flag) are well covered by `tests/test_security.py`, but general code paths in these files have real gaps |
+| `cli`, `dashboard`, `scheduler`, `alerts`, `changes`, `reporting` | **Core, thin test coverage** | 10-52% line coverage measured directly - previous versions of this README called these "tested" alongside the 90-100%-covered modules above; that conflated very different actual coverage levels. `reporting.py` in particular is 10% covered. |
+| `cloud` (major cloud provider asset discovery) | Shipped, lighter-tested | Real code, lazy-imports SDKs (boto3, azure-mgmt-*, google-cloud-*) via the `cloud` extra; 12-34% line coverage |
+| `kubernetes` (cluster/RBAC/pod security) | Shipped, lighter-tested | Real code, lazy-imports the `kubernetes` client via the `kubernetes` extra; 11-25% line coverage |
+| `iot` (MQTT/CoAP/Modbus/S7comm discovery) | Shipped, lighter-tested | Real socket-based probing; 19-41% line coverage |
+| `ml` (statistical baselines/anomaly detection) | Shipped, lighter-tested | Real `statistics`-based logic, not a trained model - "ML" in the name overstates it; 38-45% line coverage |
+| `devops` (CI/CD & IaC static scanning) | Shipped, lighter-tested | Real regex-based Terraform/GitHub Actions scanning, self-contained; 18-44% line coverage |
 | `enterprise` (multitenancy, HA, auth, REST API) | **Not shipped** | Excluded from the package entirely - enterprise-platform scope, unrelated to network discovery, untested |
 | `architect` (conversational architecture advisor) | **Not shipped** | Excluded from the package entirely - unrelated to network discovery |
+| `_mcp_connector.py` / `_mcp_tools.py` (`NetworkIntelligence`, exported from `pynetworkintel.__init__`) | **Shipped but fake - do not use** | Every method returns hardcoded fake data (e.g. a hardcoded `"src_ip": "192.168.1.100"`), not real analysis. Untested, undocumented until this pass, references a `dab` binary and `statguardian` package this project does not depend on. See `ROADMAP_HONEST.md`. |
 
 ---
 
@@ -216,29 +220,53 @@ shipped at all:
 ## Documentation
 
 - [Dashboard](docs/DASHBOARD.md) - the live terminal stats viewer (`--dashboard`)
+- [CLAUDE.md](CLAUDE.md) - accurate architecture description for engineers
+  (human or AI) working on this codebase
+- [ROADMAP_HONEST.md](ROADMAP_HONEST.md) - current honest status: what's
+  fixed, what's broken, what's a fake stub, what's genuinely pending, and
+  technical debt with file:line specifics
+- [CHANGELOG.md](CHANGELOG.md), [CONTRIBUTING.md](CONTRIBUTING.md),
+  [SECURITY.md](SECURITY.md)
 
 `docs/ARCHITECTURE.md`, `docs/PRODUCT_VISION.md`, and `docs/ROADMAP.md` are
 stale/placeholder documents from earlier planning and are not kept in sync
-with the implementation; refer to [CLAUDE.md](CLAUDE.md) for an accurate
-architecture description instead.
+with the implementation (each now has an in-file banner saying so); refer
+to [CLAUDE.md](CLAUDE.md) and [ROADMAP_HONEST.md](ROADMAP_HONEST.md)
+instead. `docs/VERSION_MANAGEMENT.md` was corrected in this pass and is
+accurate.
 
 ---
 
 ## Known Issues
 
+- **Fake stub shipped in the public API**: `pynetworkintel.NetworkIntelligence`
+  (`_mcp_connector.py`/`_mcp_tools.py`) returns hardcoded fake data, not real
+  analysis - see [Module status](#module-status) and `ROADMAP_HONEST.md`.
 - **Lighter-tested modules**: `cloud`, `kubernetes`, `iot`, `ml`, and
   `devops` are real, shipped code but have less test coverage than the
   core scan -> analyze -> topology path; see [Module status](#module-status).
 - **Stale planning docs**: `docs/ARCHITECTURE.md`, `docs/PRODUCT_VISION.md`,
   and `docs/ROADMAP.md` predate the current implementation and are not kept
-  in sync - use [CLAUDE.md](CLAUDE.md) for an accurate description instead.
+  in sync - each now carries an in-file banner saying so; use
+  [CLAUDE.md](CLAUDE.md) and `ROADMAP_HONEST.md` for accurate descriptions
+  instead.
+- **Misleading git tag**: the local `v2.0.0` tag points at a commit older
+  and less complete than `v1.4.0` (an out-of-order/mislabeled tag from
+  earlier history) - don't trust tag names as a version indicator; see
+  `ROADMAP_HONEST.md`.
+- **`paramiko` 3.5.1 has an open advisory** (PYSEC-2026-2858, SHA-1 allowed
+  in `rsakey.py`) with no fixed release available yet as of this pass; see
+  `ROADMAP_HONEST.md` for tracking.
 - **No committed performance benchmarks.** There is no benchmark script or
   results file in this repo, so no throughput/latency numbers are claimed
   anywhere in this README.
 - **No open GitHub issues** and no `TODO`/`FIXME` markers in `pynetworkintel/`
-  as of this pass.
-- Published version on PyPI (`1.4.0`) matches this repo's `pyproject.toml`;
-  no version drift.
+  as of this pass (though there is real lint debt - 23 bare `except:`
+  clauses and ~48 files not `black`-formatted; see `ROADMAP_HONEST.md`).
+- `pynetworkintel/__init__.py`'s `__version__` had drifted to `1.3.1` while
+  `pyproject.toml` moved on to `1.4.0` - fixed in this pass, and
+  `scripts/check-version-sync.sh` now checks both files so it won't
+  silently recur.
 
 ---
 

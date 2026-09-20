@@ -1,5 +1,5 @@
 """CI/CD pipeline security scanning."""
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 import logging
 import re
 

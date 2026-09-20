@@ -84,7 +84,6 @@ class AuthenticationManager:
             return False, None
 
         # Create session
-        import uuid
         session_token = self._generate_session_token()
         self.sessions[session_token] = {
             "user_id": user.user_id,

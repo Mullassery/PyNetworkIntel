@@ -5,10 +5,9 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
 
-from pynetworkintel.models import Device, ScanResult
+from pynetworkintel.models import Device
 from pynetworkintel.db import (
-    Database, DeviceChange, VulnerabilityChange, Finding,
-    Device as DBDevice, Finding as DBFinding
+    Database, DeviceChange, VulnerabilityChange, Device as DBDevice, Finding as DBFinding
 )
 
 logger = logging.getLogger(__name__)

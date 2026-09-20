@@ -1,6 +1,6 @@
 # PyNetworkIntel: Network Discovery, Topology Mapping & Vulnerability Scanning
 
-**Status:** v1.3.1 | **License:** Proprietary (free to use with attribution)
+**Status:** v1.4.0 | **License:** Apache License 2.0
 
 This file documents what the codebase actually does, for engineers (human
 or AI) working on it. Previous versions of this file made claims that did
@@ -58,6 +58,30 @@ target (IP / CIDR / hostname)
   - Dashboard: terminal (Rich-based) live-scan viewer over a Unix socket
 ```
 
+## Fake stub warning: `pynetworkintel.NetworkIntelligence` / `_mcp_connector.py` / `_mcp_tools.py`
+
+`pynetworkintel/_mcp_connector.py` and `pynetworkintel/_mcp_tools.py` are
+real, shipped, and exported in `__init__.py.__all__` (`NetworkIntelligence`)
+- but every method is a hardcoded fake. `_mcp_tools.py`'s
+`PyNetworkIntelMCPHandler.analyze_network_flow`, `detect_anomalies`, etc.
+return literal hardcoded values (e.g. `"src_ip": "192.168.1.100"`,
+`"dst_ip": "8.8.8.8"`, `"anomaly_score": 0.15`) regardless of input, and
+`NetworkIntelligence`'s own methods just return `{}` / `{"anomalies": []}`
+/ etc. `_mcp_connector.py` also references an external `statguardian`
+package and a `dab` CLI binary that are not dependencies of this project
+and are not verified to exist. None of this is tested (no `test_mcp*.py`
+in `tests/`), none of it is documented in README.md, and it is not wired
+into the CLI at all. `examples/mcp_pynetworkintel.py` used to be the only
+caller and has been deleted in this pass - it imported a `PerceptionEngine`
+class that has never existed in this package (unmodified boilerplate from
+an unrelated project). Even a corrected caller would either silently
+return fake data or fail on the missing `dab` binary. This directly
+violates a "no fake stubs" policy: it
+pretends to do real network intelligence analysis and doesn't. See
+`ROADMAP_HONEST.md` for the disposition of this (delete vs. implement for
+real) - do not treat its output as real, and do not extend it further
+without addressing this first.
+
 ## Entry points
 
 - CLI: `pynetworkintel scan <target>` / `pynetworkintel analyze <target>`
@@ -91,15 +115,25 @@ target (IP / CIDR / hostname)
   plausible IP/CIDR/hostname (in particular, anything starting with `-`,
   which would otherwise be interpreted as an nmap flag).
 
-## Module status (see README.md "Module status" for the full table)
+## Module status (see README.md "Module status" for the full table with coverage numbers)
 
-`discovery/`, `analysis/`, `models.py`, `topology.py`, `core.py`, `cli.py`,
-`config.py`, `db.py`, `reporting.py`, `alerts.py`, `changes.py`,
-`dashboard.py`, `scheduler.py` are the tested core.
+Coverage varies a lot within what earlier docs lumped together as "the
+tested core" - measured with `pytest --cov` during the 2026-09
+standardization pass:
+
+- `models.py`, `topology.py`, `topology_export.py`, `analysis/cve.py`,
+  `analysis/rules.py`, `db.py`, `config.py`: 83-100% - genuinely
+  well-tested.
+- `discovery/scanner.py`: 64%.
+- `core.py`, `discovery/ssh_config.py`, `analysis/llm.py`: 34-48% (the
+  security-relevant paths in these are covered by `tests/test_security.py`
+  specifically; general code paths have real gaps).
+- `cli.py`, `dashboard.py`, `scheduler.py`, `alerts.py`, `changes.py`,
+  `reporting.py`: 10-52% - thin. `reporting.py` is 10%.
 
 `cloud/`, `kubernetes/`, `iot/`, `ml/`, `devops/` are real, working, but
-lighter-tested extensions shipped in the package - see their module
-docstrings for what's covered.
+lighter-tested extensions shipped in the package (11-45% coverage) - see
+their module docstrings for what's covered.
 
 `enterprise/` and `architect/` are **not shipped** in the distributed
 package (excluded in `pyproject.toml`'s `[tool.setuptools] packages`) - see

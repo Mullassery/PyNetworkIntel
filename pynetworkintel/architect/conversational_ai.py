@@ -1,5 +1,5 @@
 """Conversational AI interface for architectural guidance."""
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 import logging
 
 logger = logging.getLogger(__name__)
@@ -96,7 +96,7 @@ class ConversationalArchitect:
         """Handle pattern recommendation requests."""
         patterns = self.knowledge_base.get_all_patterns()
 
-        return f"I can help design architectures using these patterns:\n" + \
+        return "I can help design architectures using these patterns:\n" + \
                "\n".join([f"- {p}" for p in patterns]) + \
                "\n\nTell me about your requirements and I'll suggest the best pattern."
 

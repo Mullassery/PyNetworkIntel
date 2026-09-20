@@ -1,5 +1,5 @@
 """Architecture graph engine and modeling."""
-from typing import Dict, List, Any, Optional, Set, Tuple
+from typing import Dict, List, Any, Tuple
 from dataclasses import dataclass
 import logging
 

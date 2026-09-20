@@ -1,5 +1,13 @@
 # PyNetworkIntel v2.0.0: Task Roadmap
 
+> **This document is stale/fictional and does not reflect reality.** The
+> "v2.0.0 Production Ready / MCP 2.0 Platform member" status below is not
+> true - the actual current version is in `pyproject.toml` (currently
+> 1.4.0), and there is no "MCP 2.0 Platform." For the real, current,
+> honestly-assessed status and pending work, see
+> [`ROADMAP_HONEST.md`](../ROADMAP_HONEST.md) at the repo root instead of
+> this file.
+
 ## Current Status: Production Ready
 
 **Version:** 2.0.0  

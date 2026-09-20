@@ -1,7 +1,7 @@
 """SSH-based configuration retrieval from devices."""
 
 import logging
-from typing import Optional, List, Dict, Any
+from typing import Optional
 import paramiko
 from paramiko.ssh_exception import SSHException, AuthenticationException
 

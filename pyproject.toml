@@ -47,9 +47,15 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.4,<9.0",
+    # Lower bounds on pytest/black were raised to the first version that
+    # fixes PYSEC-2026-1845 / PYSEC-2026-2120 / PYSEC-2026-2121 respectively
+    # (pip-audit flagged 8.4.2/24.10.0, previously the newest versions
+    # allowed by these bounds, as vulnerable - dev-only tooling, not a
+    # runtime dependency, but fixed here since a fix exists and the bump
+    # is low-risk).
+    "pytest>=9.0.3,<10.0",
     "pytest-cov>=4.1,<7.0",
-    "black>=23.7,<25.0",
+    "black>=26.3.1,<27.0",
     "ruff>=0.0.280,<0.9",
     "build>=0.10,<2.0",
     "twine>=4.0,<7.0",

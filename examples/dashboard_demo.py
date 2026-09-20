@@ -6,14 +6,15 @@ This example demonstrates how to use the dashboard in your own scripts
 without going through the CLI.
 """
 
-import time
 import sys
+import time
 from datetime import datetime
 from threading import Thread
 
-# Add parent directory to path
-sys.path.insert(0, '/Users/georgimullassery/PyNetworkIntel')
-
+# Requires pynetworkintel to be installed (e.g. `pip install -e .` from the
+# repo root) - no sys.path hacking needed. A previous version of this file
+# hardcoded the original author's local absolute path here, which broke
+# this example for every other clone of the repo.
 from pynetworkintel.dashboard import StatsCollector, DashboardServer, Dashboard, TerminalLauncher
 
 

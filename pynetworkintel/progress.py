@@ -1,9 +1,7 @@
 """Progress indicators and formatted output."""
 
 import sys
-import time
 from typing import Optional, Iterable
-from datetime import datetime
 
 try:
     from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeRemainingColumn

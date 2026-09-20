@@ -50,3 +50,5 @@ dmypy.json
 .pyre/
 dist/
 *.whl
+.ruff_cache/
+.deepeval/

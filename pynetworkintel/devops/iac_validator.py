@@ -1,5 +1,5 @@
 """Infrastructure as Code validation and security scanning."""
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 import json
 import logging
 import re

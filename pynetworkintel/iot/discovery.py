@@ -3,7 +3,6 @@ from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, asdict
 import logging
 import socket
-import threading
 
 logger = logging.getLogger(__name__)
 

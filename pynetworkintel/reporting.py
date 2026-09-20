@@ -2,8 +2,7 @@
 
 import logging
 from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional
-from sqlalchemy.orm import Session
+from typing import Dict, Any
 
 from pynetworkintel.db import Database, ScanSession, Finding as DBFinding, Device as DBDevice, DeviceChange
 
@@ -165,7 +164,7 @@ class ReportGenerator:
         changes = self.generate_change_report(hours)
 
         md = []
-        md.append(f"# Network Security Report")
+        md.append("# Network Security Report")
         md.append(f"\nGenerated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}")
         md.append(f"Period: {summary['period']}\n")
 

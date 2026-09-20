@@ -5,18 +5,15 @@ import json
 import sys
 import logging
 import os
-from typing import Optional
 
 AUTH_ENV_VAR = "PYNETWORKINTEL_I_AM_AUTHORIZED"
 
-from pynetworkintel import Scanner, Analyzer, __version__
+from pynetworkintel import Scanner, __version__
 from pynetworkintel.core import Pipeline
 from pynetworkintel.config import ConfigManager
 from pynetworkintel.progress import ProgressIndicator, OutputFormatter
 from pynetworkintel.dashboard import (
     launch_stats_dashboard,
-    StatsCollector,
-    DashboardServer,
 )
 
 logger = logging.getLogger(__name__)
@@ -534,7 +531,7 @@ def format_scan_output(scan_result) -> str:
             output.append(f"  OS: {os_info}")
 
             if device.services:
-                output.append(f"  Services:")
+                output.append("  Services:")
                 for service in device.services:
                     version = f" {service.version}" if service.version else ""
                     output.append(f"    - Port {service.port}: {service.name}{version}")

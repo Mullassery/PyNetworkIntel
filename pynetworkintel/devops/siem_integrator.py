@@ -1,6 +1,5 @@
 """SIEM integration for centralized logging and alerting."""
-from typing import Dict, List, Any, Optional
-import json
+from typing import Dict, Any
 import logging
 from datetime import datetime
 

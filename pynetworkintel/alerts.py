@@ -3,9 +3,8 @@
 import logging
 import json
 from datetime import datetime
-from typing import List, Dict, Any, Optional, Callable
+from typing import List, Dict, Any, Optional
 from abc import ABC, abstractmethod
-from sqlalchemy.orm import Session
 
 from pynetworkintel.db import Database, Alert as DBAlert
 

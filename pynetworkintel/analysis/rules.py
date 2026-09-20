@@ -2,7 +2,7 @@
 
 import logging
 import re
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from dataclasses import dataclass
 
 from pynetworkintel.models import Device, SecurityFinding, Severity, FindingType

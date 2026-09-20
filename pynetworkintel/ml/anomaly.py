@@ -1,6 +1,6 @@
 """Network traffic and behavior anomaly detection."""
-from typing import Dict, List, Any, Optional, Tuple
-from datetime import datetime, timedelta
+from typing import Dict, List, Any, Tuple
+from datetime import datetime
 import statistics
 import logging
 

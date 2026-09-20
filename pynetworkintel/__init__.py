@@ -1,6 +1,6 @@
 """PyNetworkIntel: AI-powered network intelligence platform."""
 
-__version__ = "1.3.1"
+__version__ = "1.4.0"
 
 # Core scanning and analysis
 from pynetworkintel.core import Scanner, Analyzer, Pipeline

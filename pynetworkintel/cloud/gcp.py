@@ -1,5 +1,4 @@
 """Google Cloud Platform discovery and inventory management."""
-import json
 from typing import Any, Dict, List, Optional
 from dataclasses import dataclass, asdict
 import logging

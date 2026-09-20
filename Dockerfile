@@ -10,13 +10,11 @@ WORKDIR /app
 
 # Copy application files
 COPY pynetworkintel/ /app/pynetworkintel/
-COPY setup.py requirements.txt /app/
+COPY pyproject.toml README.md LICENSE /app/
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Install the application
-RUN pip install --no-cache-dir -e .
+# Install the application (pyproject.toml is the sole build metadata source;
+# there is no setup.py or requirements.txt install path anymore)
+RUN pip install --no-cache-dir .
 
 # Create config directory
 RUN mkdir -p ~/.pynetworkintel

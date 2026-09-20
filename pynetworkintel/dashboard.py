@@ -7,10 +7,9 @@ import time
 import platform
 import subprocess
 import tempfile
-from pathlib import Path
 from typing import Optional, Dict, Any, Tuple
 from datetime import datetime
-from threading import Thread, Event
+from threading import Thread
 import socket
 
 try:
@@ -436,10 +435,10 @@ class Dashboard:
         medium_style = "bold cyan" if medium > 0 else "dim cyan"
 
         table.add_row("Total Findings", f"[bold magenta]{total_findings}[/bold magenta]")
-        table.add_row(f"Critical", f"[{critical_style}]{critical}[/{critical_style}]")
-        table.add_row(f"High", f"[{high_style}]{high}[/{high_style}]")
+        table.add_row("Critical", f"[{critical_style}]{critical}[/{critical_style}]")
+        table.add_row("High", f"[{high_style}]{high}[/{high_style}]")
         table.add_row(
-            f"Medium", f"[{medium_style}]{medium}[/{medium_style}]"
+            "Medium", f"[{medium_style}]{medium}[/{medium_style}]"
         )
         table.add_row("Low", f"[dim green]{low}[/dim green]")
         table.add_row("Info", f"[dim blue]{info}[/dim blue]")

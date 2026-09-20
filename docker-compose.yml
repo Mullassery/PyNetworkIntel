@@ -1,9 +1,7 @@
-version: '3.8'
-
 services:
   pynetworkintel:
     build: .
-    image: pynetworkintel:0.2.0
+    image: pynetworkintel:latest
     container_name: pynetworkintel
     environment:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
@@ -11,12 +9,10 @@ services:
       - ~/.ssh:/root/.ssh:ro
       - ~/.pynetworkintel:/root/.pynetworkintel
       - ./results:/app/results
-    networks:
-      - host
+    # Real host networking (not a custom "host"-driver network, which does
+    # not give the container the host's actual network view) - required so
+    # nmap can actually see the LAN being scanned.
+    network_mode: host
     # Uncomment to keep container running for interactive use
     # stdin_open: true
     # tty: true
-
-networks:
-  host:
-    driver: host

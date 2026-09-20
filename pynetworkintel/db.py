@@ -1,10 +1,9 @@
 """Database models and ORM configuration."""
 
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, Float, ForeignKey, Text, JSON, Index
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship, Session
+from sqlalchemy.orm import declarative_base, sessionmaker, relationship, Session
 from sqlalchemy.pool import StaticPool
 
 Base = declarative_base()

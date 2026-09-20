@@ -3,10 +3,9 @@
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Optional, List
-from datetime import datetime
+from typing import Optional
 
-from pynetworkintel.models import ScanResult, Device
+from pynetworkintel.models import ScanResult
 from pynetworkintel.discovery import DeviceScanner, SSHConfigGrabber
 from pynetworkintel.analysis import RuleChecker, CVEChecker, LLMAnalyzer
 

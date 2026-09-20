@@ -2,14 +2,12 @@
 
 import re
 import subprocess
-import json
 import logging
 import socket
-from typing import List, Optional, Set
-from datetime import datetime
+from typing import List, Optional
 import xml.etree.ElementTree as ET
 
-from pynetworkintel.models import Device, Service
+from pynetworkintel.models import Device
 
 logger = logging.getLogger(__name__)
 

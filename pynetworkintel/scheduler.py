@@ -4,7 +4,7 @@ import logging
 import signal
 import sys
 from typing import Optional, Dict, Any
-from datetime import datetime, timedelta
+from datetime import datetime
 from threading import Event
 
 try:
@@ -18,7 +18,7 @@ except ImportError:
 
 from pynetworkintel.core import Pipeline
 from pynetworkintel.db import Database
-from pynetworkintel.changes import ChangeDetector, ChangeReporter
+from pynetworkintel.changes import ChangeDetector
 from pynetworkintel.alerts import AlertManager
 from pynetworkintel.progress import ProgressIndicator
 
@@ -122,7 +122,7 @@ class MonitoringScheduler:
 
     def _save_scan_results(self, target: str, result: Dict[str, Any]):
         """Save scan results to database."""
-        from pynetworkintel.db import ScanSession, Device as DBDevice, Service, Finding as DBFinding
+        from pynetworkintel.db import ScanSession, Device as DBDevice, Finding as DBFinding
 
         session = self.db.get_session()
 

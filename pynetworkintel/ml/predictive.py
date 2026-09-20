@@ -1,5 +1,5 @@
 """Predictive analytics for vulnerability and risk forecasting."""
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 from datetime import datetime, timedelta
 import statistics
 import logging

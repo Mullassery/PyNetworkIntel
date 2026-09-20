@@ -1,5 +1,5 @@
 """Knowledge base for architectural intelligence."""
-from typing import Dict, List, Any, Optional, Set
+from typing import Dict, List, Any, Optional
 import logging
 
 logger = logging.getLogger(__name__)

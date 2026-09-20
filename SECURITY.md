@@ -1,5 +1,36 @@
 # Security Policy
 
+## Authorized use only
+
+PyNetworkIntel actively probes network hosts (`nmap` port/service scanning,
+and optionally SSH connections to pull config files). **Only run it against
+networks and devices you own or have explicit written permission to test.**
+Scanning networks or devices without authorization may be illegal under
+computer-crime laws in your jurisdiction (e.g. the US Computer Fraud and
+Abuse Act, UK Computer Misuse Act, and equivalents elsewhere), independent
+of intent.
+
+The tool enforces a gate on this: `scan`/`analyze` refuse to run without
+`--i-am-authorized`, `PYNETWORKINTEL_I_AM_AUTHORIZED=1`, or an interactive
+confirmation (see `pynetworkintel/cli.py:confirm_authorization`). This is a
+speed bump, not a technical control - it does not verify you actually have
+authorization, it only ensures the tool never scans a target silently. You
+are responsible for having real authorization before you bypass or answer
+yes to that prompt.
+
+Other security-relevant defaults, verified in the current code:
+- No default SSH username (`--ssh-user` must be passed explicitly).
+- No `--ssh-password` CLI flag (use `--ssh-key` or the
+  `PYNETWORKINTEL_SSH_PASSWORD` environment variable) - avoids credentials
+  in shell history/`ps` output.
+- SSH passwords are never written to the persisted config file.
+- Scan targets are validated before reaching the `nmap` command line to
+  reject anything that looks like an injected flag.
+
+See [README.md's Security section](README.md#security) for the full,
+current list, and `ROADMAP_HONEST.md` for the one known open dependency
+advisory (`paramiko`, no fix available yet) affecting the SSH code path.
+
 ## Reporting Security Issues
 
 Please do not open public GitHub issues for security vulnerabilities.

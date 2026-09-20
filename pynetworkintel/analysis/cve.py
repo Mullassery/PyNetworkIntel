@@ -4,8 +4,6 @@ import logging
 import requests
 import time
 from typing import List, Optional, Dict, Any
-from functools import lru_cache
-from datetime import datetime, timedelta
 
 from pynetworkintel.models import Device, Service, SecurityFinding, Severity, FindingType
 
