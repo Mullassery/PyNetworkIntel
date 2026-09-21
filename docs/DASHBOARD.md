@@ -258,5 +258,5 @@ pynetworkintel scan 192.168.1.0/24 --dashboard
 ## See Also
 
 - [README.md](../README.md) - Main documentation
-- [CLI Documentation](CLI.md) - Command-line interface guide
+- [CLI Documentation](../README.md#cli-usage) - Command-line interface guide
 - [Rich Library](https://rich.readthedocs.io/) - Terminal rendering library

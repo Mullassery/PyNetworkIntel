@@ -12,6 +12,22 @@ git history itself verifies.
 ## [Unreleased]
 
 ### Fixed
+- `pynetworkintel/architect/recommendation_engine.py:76`: `generate_roi_analysis`
+  referenced an undefined `monthly_benefit` variable, which would raise
+  `NameError` on any call where `cost_impact > 0` (flagged by
+  `ruff --select F821` and documented in `ROADMAP_HONEST.md`). Defined
+  `monthly_benefit = annual_savings / 12` before use and fixed the payback
+  guard to check `monthly_benefit > 0` instead of a redundant
+  `cost_impact / 12 > 0` check. Verified with a new
+  `tests/test_architect_recommendation_engine.py` (3 tests covering
+  positive-cost, negative-cost/savings, and zero-cost paths) plus a manual
+  run confirming no crash.
+- `pynetworkintel/cli.py`: 5 `E402` findings (imports placed after the
+  `AUTH_ENV_VAR` module-level constant). Moved the constant below the
+  import block; no behavior change, `ruff --select E402` now clean.
+- `docs/DASHBOARD.md`: "See Also" section linked to a `CLI.md` file that
+  does not exist anywhere in the repo. Pointed it at `README.md`'s real
+  "CLI Usage" section instead.
 - `pynetworkintel/__init__.py` `__version__` had drifted to `1.3.1` while
   `pyproject.toml` had moved on to `1.4.0`; corrected to `1.4.0` and
   `scripts/check-version-sync.sh` now checks both files so this can't

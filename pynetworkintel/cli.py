@@ -6,8 +6,6 @@ import sys
 import logging
 import os
 
-AUTH_ENV_VAR = "PYNETWORKINTEL_I_AM_AUTHORIZED"
-
 from pynetworkintel import Scanner, __version__
 from pynetworkintel.core import Pipeline
 from pynetworkintel.config import ConfigManager
@@ -15,6 +13,8 @@ from pynetworkintel.progress import ProgressIndicator, OutputFormatter
 from pynetworkintel.dashboard import (
     launch_stats_dashboard,
 )
+
+AUTH_ENV_VAR = "PYNETWORKINTEL_I_AM_AUTHORIZED"
 
 logger = logging.getLogger(__name__)
 

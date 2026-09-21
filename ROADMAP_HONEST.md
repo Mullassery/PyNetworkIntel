@@ -15,7 +15,8 @@ and **Accepted gaps (not bugs)**.
 ## 1. Fixed in this pass (small, safe, verified)
 
 All of the following were verified by re-running the full test suite
-(`pytest tests/ -v`, 168 tests) after the change, unless noted otherwise.
+(`pytest tests/ -v`, 168 tests, later 171 after a 2026-09-21 quick-fix pass
+added 3 tests) after the change, unless noted otherwise.
 
 - **Version drift bug**: `pynetworkintel/__init__.py`'s `__version__` was
   `"1.3.1"` while `pyproject.toml` said `"1.4.0"` - anyone doing
@@ -92,6 +93,25 @@ All of the following were verified by re-running the full test suite
   under "Core, tested" alongside modules at 90-100% coverage. Measured
   actual coverage with `pytest --cov`: these are 10-52%
   (`reporting.py` is 10%). Rewrote the table into honest coverage tiers.
+- **`pynetworkintel/architect/recommendation_engine.py:76`** `NameError`
+  bug (see section 3 below, formerly listed as documented-not-fixed):
+  `generate_roi_analysis` referenced an undefined `monthly_benefit`.
+  Defined it as `annual_savings / 12` and fixed the payback guard
+  (`monthly_benefit > 0` instead of a redundant `cost_impact / 12 > 0`
+  check that could never be false when the first half of the `and` was
+  true). Verified with new `tests/test_architect_recommendation_engine.py`
+  and a full `pytest tests/ -v` run (171 passed, up from 168 - the 3 new
+  tests). `architect/` is still unshipped/untested-in-CI, so this is fixed
+  as a landmine-removal, not a claim that the module is now production
+  ready.
+- **5 `E402` findings in `pynetworkintel/cli.py`**: `AUTH_ENV_VAR` was
+  assigned between two import blocks. Moved it below the imports;
+  `ruff --select E402 pynetworkintel/` is now clean. Purely mechanical,
+  verified with the full test suite.
+- **Broken doc link**: `docs/DASHBOARD.md`'s "See Also" section linked to
+  `CLI.md`, which does not exist anywhere in the repo (confirmed via
+  `find . -iname "CLI*.md"`). Repointed to `README.md`'s real "CLI Usage"
+  section.
 
 ---
 
@@ -238,23 +258,17 @@ version without dedicated testing.
   especially `reporting.py` and `changes.py`, which are user-facing output
   paths - is real, warranted follow-up work, but is a multi-file test
   writing effort, not a docs-pass fix.
-- **`pynetworkintel/architect/recommendation_engine.py:76`**: real bug -
-  `ruff --select F821` flags `monthly_benefit` as undefined
-  (`payback_months = (-cost_impact / monthly_benefit if ...)`) - this
-  would raise `NameError` if this code path executes. Lower severity only
-  because `architect/` is explicitly excluded from the distributed package
-  (`pyproject.toml`'s `[tool.setuptools] packages` list) and already
-  disclosed in README as "Not shipped... untested" - but if anyone ever
-  decides to ship `architect/`, this is a landmine.
 - **7 unused local variables** (`ruff --select F841`), e.g.
   `pynetworkintel/scheduler.py:179` (`detector = ChangeDetector(self.db)`
   assigned then never used - suggests the change-detection call in
   `_detect_changes` may be incomplete/a no-op; worth checking whether this
   function actually does anything useful), plus similar unused-assignment
-  spots in `pynetworkintel/architect/` (excluded module).
-- **5 `E402` (module-level import not at top of file)** in
-  `pynetworkintel/cli.py` (imports after a module-level constant
-  assignment) - cosmetic, not a bug, but inconsistent style.
+  spots in `pynetworkintel/architect/` (excluded module). Left alone in
+  this pass: several of these (`scheduler.py:179`,
+  `pynetworkintel/config.py:200`'s unused `api_key` walrus assignment)
+  look like symptoms of genuinely incomplete features, not dead code that
+  can be mechanically deleted - removing the assignment without addressing
+  the underlying no-op would just silence the lint warning.
 - **5 remaining `F401` unused imports** in conditional/optional-dependency
   `try`/`except ImportError` blocks (e.g. `pynetworkintel/iot/discovery.py`
   importing `paho.mqtt.client` just to probe availability) - these are
@@ -302,6 +316,12 @@ version without dedicated testing.
   `1.4.0` between `pyproject.toml` and `pynetworkintel/__init__.py`).
 - `ruff check pynetworkintel/` - went from 109 to 41 findings (68 safe
   auto-fixes applied and verified); remaining 41 documented above.
+- **2026-09-21 quick-fix follow-up pass**: fixed the `monthly_benefit`
+  `NameError` (section 1) and the 5 `E402` findings in `cli.py`, bringing
+  `ruff check pynetworkintel/` down to 40 then 35 findings (23 `E722` + 7
+  `F841` + 5 `F401`, all still deliberately deferred per section 2.4/3
+  above). `pytest tests/ -v` - **171 passed** (168 + 3 new tests in
+  `tests/test_architect_recommendation_engine.py`), 0 failed.
 - `black --check --diff pynetworkintel/` - 48/62 files would reformat;
   not applied (see 2.3).
 - `pip-audit` - went from 7 findings in 3 packages to 2 findings in 1

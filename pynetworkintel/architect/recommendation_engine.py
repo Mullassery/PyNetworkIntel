@@ -70,16 +70,17 @@ class RecommendationEngine:
         """Calculate ROI for recommendation."""
         cost_impact = recommendation.get("cost_impact", 0)
         annual_savings = -cost_impact if cost_impact < 0 else 0
+        monthly_benefit = annual_savings / 12
         period_benefit = (annual_savings / 12) * timeframe_months
 
         payback_months = (
-            -cost_impact / monthly_benefit if cost_impact > 0 and (cost_impact / 12) > 0 else 0
+            -cost_impact / monthly_benefit if cost_impact > 0 and monthly_benefit > 0 else 0
         )
 
         return {
             "recommendation": recommendation.get("action"),
             "upfront_cost": cost_impact if cost_impact > 0 else 0,
-            "monthly_savings": annual_savings / 12,
+            "monthly_savings": monthly_benefit,
             "total_benefit_period": period_benefit,
             "roi_percent": (period_benefit / cost_impact * 100) if cost_impact > 0 else 0,
             "payback_period_months": payback_months,
