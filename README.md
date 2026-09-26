@@ -88,6 +88,43 @@ print(result.topology().to_dict())  # subnet groupings + inferred gateway edges
 
 ---
 
+## vs nmap
+
+PyNetworkIntel doesn't replace nmap - its own discovery step *is* an
+`nmap -sV` subprocess call (`pynetworkintel/discovery/scanner.py`). The
+honest comparison isn't "who scans faster," it's "what do you get beyond
+raw nmap output for roughly the same scan time."
+
+Measured live against this machine's own local `/24` (2026-09-22, 2 hosts
+up: a gateway router and this laptop - a small real network, not a lab
+fixture):
+
+| | `nmap -sV 192.168.1.0/24` (raw) | `pynetworkintel scan 192.168.1.0/24` |
+|---|---|---|
+| Hosts found | 2 | 2 (identical) |
+| Scan time | 134.4s | 146.1s (+~9%, parsing/topology/DB overhead) |
+| Output | Text/XML port+service list | Structured JSON: devices, services, topology graph, scan history |
+| Topology graph | No (traceroute is separate, manual) | Yes - inferred gateway/subnet edges, `--output graphml`/`d3-json` for Gephi/yEd/D3 |
+| CVE cross-referencing | No (NSE `--script vuln` exists but is a separate manual step, offline rule set) | Yes - live NVD REST lookups by service+version, plus config-based rule checks (weak SSH, telnet exposure) via optional SSH grab |
+| Change tracking across runs | No (external diffing required) | Yes - SQLite-backed history, detects new/removed devices |
+| Scan-authorization gate | No | Yes - refuses to run without `--i-am-authorized` or interactive confirmation |
+
+On this run, neither tool recovered version strings for the services found
+(router's `https`/`pharos` ports, laptop's `postgresql`/`rtsp`/`http-proxy`
+ports all fingerprinted as bare service names by nmap's own `-sV` probe) -
+so the live NVD CVE check correctly returned 0 findings rather than
+guessing. That's a real limitation of this specific network's service
+fingerprints, not a PyNetworkIntel bug - worth knowing before expecting CVE
+hits on a quiet home network.
+
+**Bottom line:** if you just want "what's listening where," raw nmap is
+lighter-weight and has no Python dependency. PyNetworkIntel is worth it
+when you want the same scan turned into a structured, versioned,
+CVE-annotated, graphable asset inventory instead of scrollback text - at
+roughly a 9% time cost on top of the nmap call it already makes.
+
+---
+
 ## Installation
 
 ```bash
