@@ -53,3 +53,5 @@ dist/
 .ruff_cache/
 .deepeval/
 .venv-test/
+
+graphify-out/
