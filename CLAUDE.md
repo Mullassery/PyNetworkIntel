@@ -58,29 +58,38 @@ target (IP / CIDR / hostname)
   - Dashboard: terminal (Rich-based) live-scan viewer over a Unix socket
 ```
 
-## Fake stub warning: `pynetworkintel.NetworkIntelligence` / `_mcp_connector.py` / `_mcp_tools.py`
+## `pynetworkintel.NetworkIntelligence` / `_mcp_connector.py` / `_mcp_tools.py`
 
 `pynetworkintel/_mcp_connector.py` and `pynetworkintel/_mcp_tools.py` are
-real, shipped, and exported in `__init__.py.__all__` (`NetworkIntelligence`)
-- but every method is a hardcoded fake. `_mcp_tools.py`'s
-`PyNetworkIntelMCPHandler.analyze_network_flow`, `detect_anomalies`, etc.
-return literal hardcoded values (e.g. `"src_ip": "192.168.1.100"`,
-`"dst_ip": "8.8.8.8"`, `"anomaly_score": 0.15`) regardless of input, and
-`NetworkIntelligence`'s own methods just return `{}` / `{"anomalies": []}`
-/ etc. `_mcp_connector.py` also references an external `statguardian`
-package and a `dab` CLI binary that are not dependencies of this project
-and are not verified to exist. None of this is tested (no `test_mcp*.py`
-in `tests/`), none of it is documented in README.md, and it is not wired
-into the CLI at all. `examples/mcp_pynetworkintel.py` used to be the only
-caller and has been deleted in this pass - it imported a `PerceptionEngine`
-class that has never existed in this package (unmodified boilerplate from
-an unrelated project). Even a corrected caller would either silently
-return fake data or fail on the missing `dab` binary. This directly
-violates a "no fake stubs" policy: it
-pretends to do real network intelligence analysis and doesn't. See
-`ROADMAP_HONEST.md` for the disposition of this (delete vs. implement for
-real) - do not treat its output as real, and do not extend it further
-without addressing this first.
+real, shipped, and exported in `__init__.py.__all__` (`NetworkIntelligence`).
+
+`NetworkIntelligence` is **DB-backed** (defaults to `pynetworkintel.db.get_db()`)
+and computes everything from scan history and the derived topology graph:
+`analyze_network_flow` (topology reachability), `detect_anomalies` (diffs the
+two most recent scans of a target via `ChangeDetector`),
+`threat_correlation`/`get_threat_intelligence` (CVEs matched per indicator),
+`get_asset_inventory`, `check_port_exposure` (observed ports/services),
+`analyze_dns_records` (system resolver A/AAAA + DGA entropy heuristic),
+`get_geolocation_analysis` (RFC 1918/public/reserved classification via
+`ipaddress` only - no bundled geo DB), `behavioral_profiling`,
+`remediation_recommendations`, `network_segmentation_analysis`
+(`TopologyMapper` subnets), and `export_security_report`
+(`ReportGenerator` markdown/json).
+
+Capabilities without backing infrastructure raise `NotImplementedError`
+instead of returning fabricated data: packet-flow `protocol_analysis`, the
+`start_mcp_connector`/`stop_mcp_connector` MCP gateway (the old `dab`
+subprocess is gone - use `PyNetworkIntelMCPHandler` directly),
+geolocation/VPN lookups, and PDF output. The MCP handlers in `_mcp_tools.py`
+delegate to `NetworkIntelligence` and surface `NotImplementedError` as an
+explicit `not_implemented: true` result via `_with_error_result`. There are
+**no external threat-intel, geolocation, or packet-flow data sources** in
+this project - anything that would need one is either computed from local
+scan data or refused.
+
+Tested in `tests/test_mcp.py` (18 tests). The root `pynetworkintel.toml`
+MCP-to-toole configuration file is not referenced by any code (see
+`ROADMAP_HONEST.md` section 4).
 
 ## Entry points
 

@@ -117,58 +117,74 @@ added 3 tests) after the change, unless noted otherwise.
 
 ## 2. Critical - needs a dedicated follow-up session
 
-### 2.1 `pynetworkintel.NetworkIntelligence` is a fake stub shipped in the public API
+### 2.1 ~~`pynetworkintel.NetworkIntelligence` is a fake stub shipped in the public API~~ - RESOLVED
 
-`pynetworkintel/_mcp_connector.py` and `pynetworkintel/_mcp_tools.py` are
+`pynetworkintel/_mcp_connector.py` and `pynetworkintel/_mcp_tools.py` were
 real, shipped files. `NetworkIntelligence` is exported in
-`pynetworkintel/__init__.py`'s `__all__`. But:
+`pynetworkintel/__init__.py`'s `__all__`. But every method returned `{}` /
+`{"anomalies": []}` / etc., the MCP handler returned **hardcoded fake data
+that looked real** (`"src_ip": "192.168.1.100"`, `"anomaly_score": 0.15`,
+`"packets": 5240`, regardless of input), and `_mcp_connector.py` imported a
+non-existent `statguardian` package (with a local fallback stub) and shelled
+out to a `dab` CLI binary that is not a dependency of this project. It was
+untested (no `test_mcp*.py`) and undocumented.
 
-- `NetworkIntelligence.analyze_network_flow()`, `.detect_anomalies()`,
-  `.threat_correlation()`, `.get_asset_inventory()`, etc. (12 methods)
-  each just `return {}` or `return {"anomalies": []}` etc. - no logic at
-  all.
-- The MCP tool handler (`pynetworkintel/_mcp_tools.py:213-225`,
-  `PyNetworkIntelMCPHandler.analyze_network_flow`) returns **hardcoded
-  fake data that looks real**: `"src_ip": "192.168.1.100"`,
-  `"dst_ip": "8.8.8.8"`, `"anomaly_score": 0.15`, `"packets": 5240`,
-  regardless of the input arguments. Same pattern in `detect_anomalies`
-  (hardcoded `"anomalies_detected": 3`, a fabricated `anom_001` record)
-  and, by inspection, the rest of the 12 tools in that file.
-- `_mcp_connector.py` references an external `statguardian` package
-  (`from statguardian._mcp_connector import BaseMCPConnector`, falls back
-  to a local stub `BaseMCPConnector` if the import fails) and shells out
-  to a `dab` CLI binary (`subprocess.Popen(["dab", "start", ...])`).
-  Neither `statguardian` nor `dab` are dependencies of this project or
-  verified to exist anywhere.
-- **Not tested**: no `test_mcp*.py` in `tests/`.
-- **Not documented** anywhere prior to this pass.
-- **Orphaned config**: `pynetworkintel.toml` at the repo root configures
-  MCP tool toggles/port/auth for this feature and isn't referenced by any
-  Python code.
-- The only caller, `examples/mcp_pynetworkintel.py`, was itself broken
-  (imported a nonexistent `PerceptionEngine` class) and has been deleted
-  in this pass rather than "fixed" to call the fake stub, since fixing the
-  import would just make it easier to accidentally rely on fabricated
-  data.
+Resolved in the 2026-10 pass by implementing it for real against the
+SQLAlchemy scan database (option (b) below) rather than deleting it:
 
-**This is a direct violation of a "no fake stubs" policy**: it presents
-itself as real network intelligence/threat analysis and returns
-convincing-looking fabricated data instead. Given it's in the public
-`__all__`, anyone who does `from pynetworkintel import NetworkIntelligence`
-and calls it in good faith gets silently wrong answers with no error, no
-warning, and no test coverage to catch regressions either way.
+- `NetworkIntelligence` is now DB-backed (`db: Database = None` defaults to
+  `pynetworkintel.db.get_db()`). Every method computes from scan history
+  and/or the derived topology graph:
+  - `analyze_network_flow` - real reachability from `TopologyMapper` output.
+  - `detect_anomalies` - diffs the two most recent scans of a target via
+    `ChangeDetector` (device discovered/removed, CVE discovered/resolved).
+    Live-traffic anomaly types (ddos, ...) are reported unavailable, not
+    guessed.
+  - `threat_correlation` / `get_threat_intelligence` - real CVEs matched per
+    indicator (IP/hostname) from scan history.
+  - `get_asset_inventory` - real devices/findings from the latest scan.
+  - `check_port_exposure` - real observed ports/services.
+  - `analyze_dns_records` - system `getaddrinfo` A/AAAA, plus a DGA entropy
+    heuristic; empty history is reported honestly (no provider).
+  - `get_geolocation_analysis` - RFC 1918 / public / reserved classification
+    via `ipaddress` only; explicitly notes no bundled geo database.
+  - `behavioral_profiling` - first/last seen, scan count, device types,
+    observed ports from scan history.
+  - `remediation_recommendations` - from the stored finding's own guidance
+    plus severity rules.
+  - `network_segmentation_analysis` - real inferred subnets via
+    `TopologyMapper`, with an explicit heuristic note.
+  - `export_security_report` - real `ReportGenerator` markdown/json output.
+- Capabilities with no backing infrastructure raise `NotImplementedError`
+  instead of inventing data: `protocol_analysis`, the
+  `start_mcp_connector`/`stop_mcp_connector` gateway (the `dab` subprocess
+  is gone; tools are meant to be used directly via `PyNetworkIntelMCPHandler`),
+  geolocation/country/VPN-lookup, and PDF report output.
+- `_mcp_tools.py` handlers delegate to the same `NetworkIntelligence` object
+  (the class takes it in its constructor and the handler validates it is an
+  instance). `_with_error_result` turns `NotImplementedError` into an
+  explicit `not_implemented: true` result. Descriptions no longer claim
+  deep-packet-inspection or live threat-intel feeds.
+- The `statguardian` import and the `dab` subprocess were removed.
+- `scheduler.py` now surfaces these results too: `_detect_changes` returns
+  `{"devices": ..., "vulnerabilities": ...}` from the real `ChangeDetector`
+  (scoped to the same scan target, excluding the current scan), and
+  `_generate_alerts` raises `device_discovered` / `new_vulnerability` alerts
+  from actual scan diffs.
+- Tested: `tests/test_mcp.py` (18 tests) covers every method, the
+  `not_implemented` error surfacing, per-target change-detection scoping,
+  and that tool descriptions don't overclaim. Full suite green.
+- Still orphaned, unchanged: `pynetworkintel.toml` (MCP tool toggles/port/
+  auth) is still not referenced by any Python code - see section 4.
+- `examples/mcp_pynetworkintel.py` was deleted in the earlier pass (imported
+  a nonexistent `PerceptionEngine`) and remains deleted - the new tests
+  exercise the handler directly instead.
 
-**Recommendation for the dedicated session**: decide between (a) deleting
-`_mcp_connector.py`, `_mcp_tools.py`, `pynetworkintel.toml`, and the
-`NetworkIntelligence` export entirely, since none of it is wired into
-anything real, or (b) actually implementing it against real data (would
-require deciding what "network flow"/"anomaly"/"threat correlation" even
-means in this project's context, since none of that infrastructure -
-flow capture, sensors, threat intel feeds - exists anywhere else in the
-codebase). Given the rest of this project is a synchronous CLI/library
-tool with no persistent flow-monitoring infrastructure, deletion is
-almost certainly the right call, but that's a decision for whoever owns
-this project's direction, not something to do silently in a docs pass.
+**Disposition note**: option (a) "delete the whole layer" from the original
+recommendation was considered, but the "no fake stubs" policy is satisfied by
+making the layer real against the data this project actually has; anyone doing
+`from pynetworkintel import NetworkIntelligence` now gets genuine scan-derived
+answers or an explicit `NotImplementedError`, never fabricated results.
 
 ### 2.2 Mislabeled/out-of-order git tag `v2.0.0`
 
@@ -305,6 +321,10 @@ version without dedicated testing.
   concrete bug was found, in case they're ever revisited.)
 - **NVD CVE lookups are a live network call, not offline/bundled data**
   (`pynetworkintel/analysis/cve.py`) - by design, disclosed in CLAUDE.md.
+- **`pynetworkintel.toml` at the repo root is unused** - it configures MCP
+  tool toggles/port/auth for an MCP gateway this project no longer seeks to
+  run (the `dab` subprocess layer was removed). Deleting it is safe but
+  deferred to avoid touching anything a consumer might have wired to it.
 
 ---
 
@@ -326,6 +346,12 @@ version without dedicated testing.
   not applied (see 2.3).
 - `pip-audit` - went from 7 findings in 3 packages to 2 findings in 1
   package (`paramiko`, no fix available - see 2.5).
+- **2026-10-11 MCP-implementation pass**: implemented `NetworkIntelligence`
+  and the MCP tool handlers for real against the scan-history DB and
+  `ChangeDetector` (section 2.1), plus `scheduler.py`
+  `_detect_changes`/`_generate_alerts` wiring. Added `tests/test_mcp.py`
+  (18 tests). `pytest tests/ -v` - **189 passed**, 0 failed. Only
+  pre-existing lint findings remain (section 2.3/2.4/3).
 - `actionlint .github/workflows/tests.yml` - clean (was 1 finding,
   `setup-python@v4` too old).
 - `docker build .` - reproduced the real `COPY setup.py` failure, fixed

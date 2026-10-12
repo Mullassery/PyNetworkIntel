@@ -100,10 +100,10 @@ class MonitoringScheduler:
             result = pipeline.run(target, grab_configs=True, summarize=False)
 
             # Save to database
-            self._save_scan_results(target, result)
+            scan_id = self._save_scan_results(target, result)
 
             # Detect changes
-            changes = self._detect_changes(target, result)
+            changes = self._detect_changes(target, result, scan_id)
 
             # Generate alerts for critical changes
             self._generate_alerts(target, result, changes)
@@ -120,8 +120,8 @@ class MonitoringScheduler:
                 device_ip=target,
             )
 
-    def _save_scan_results(self, target: str, result: Dict[str, Any]):
-        """Save scan results to database."""
+    def _save_scan_results(self, target: str, result: Dict[str, Any]) -> int:
+        """Save scan results to database and return the scan session id."""
         from pynetworkintel.db import ScanSession, Device as DBDevice, Finding as DBFinding
 
         session = self.db.get_session()
@@ -174,13 +174,58 @@ class MonitoringScheduler:
         finally:
             session.close()
 
-    def _detect_changes(self, target: str, result: Dict[str, Any]) -> Dict[str, Any]:
-        """Detect changes from previous scan."""
+        return scan.id
+
+    def _detect_changes(self, target: str, result: Dict[str, Any], scan_id: int) -> Dict[str, Any]:
+        """Detect real changes between this scan and the previous scans of
+        the same target, via `ChangeDetector`."""
+        from pynetworkintel.models import (
+            Device,
+            FindingType,
+            SecurityFinding,
+            Severity,
+        )
+
         detector = ChangeDetector(self.db)
 
-        # Would compare with previous scan results
-        # For now, just return empty
-        return {"devices": [], "vulnerabilities": []}
+        devices = [
+            Device(
+                ip=device_data.get("ip", ""),
+                hostname=device_data.get("hostname"),
+                os=device_data.get("os"),
+                device_type=device_data.get("device_type", "linux"),
+                is_online=device_data.get("is_online", True),
+            )
+            for device_data in result.get("devices", [])
+        ]
+
+        findings = []
+        for finding_data in result.get("findings", []):
+            if not finding_data.get("cve_id"):
+                continue
+            findings.append(
+                SecurityFinding(
+                    device=finding_data.get("device", finding_data.get("device_ip", "")),
+                    finding_type=FindingType(finding_data.get("finding_type", "cve")),
+                    severity=Severity(finding_data.get("severity", "info")),
+                    title=finding_data.get("title", ""),
+                    description=finding_data.get("description", ""),
+                    evidence=finding_data.get("evidence", ""),
+                    recommendation=finding_data.get("recommendation", ""),
+                    business_impact=finding_data.get("business_impact", ""),
+                    cve_id=finding_data.get("cve_id"),
+                    cvss_score=finding_data.get("cvss_score"),
+                    exploit_available=finding_data.get("exploit_available", False),
+                )
+            )
+
+        device_changes = detector.detect_device_changes(devices, scan_id=scan_id, target=target)
+        previous_findings = detector.get_previous_scan_findings(
+            exclude_scan_id=scan_id, target=target
+        )
+        vuln_changes = detector.detect_vulnerability_changes(findings, previous_findings)
+
+        return {"devices": device_changes, "vulnerabilities": vuln_changes}
 
     def _generate_alerts(self, target: str, result: Dict[str, Any], changes: Dict[str, Any]):
         """Generate alerts based on findings and changes."""
@@ -205,6 +250,32 @@ class MonitoringScheduler:
                 description=f"Scan of {target} found {summary['high_findings']} high priority issues",
                 device_ip=target,
             )
+
+        # Alert on newly discovered high/critical vulnerabilities
+        for change in changes.get("vulnerabilities", []):
+            if (
+                change.get("type") == "vulnerability_discovered"
+                and change.get("severity") in ("high", "critical")
+            ):
+                self.alert_manager.create_alert(
+                    alert_type="new_vulnerability",
+                    severity=change["severity"],
+                    title=f"New {change['severity']} vulnerability: {change.get('cve_id')}",
+                    description=change.get("title", "New vulnerability discovered"),
+                    device_ip=change.get("device_ip"),
+                    cve_id=change.get("cve_id"),
+                )
+
+        # Alert on devices newly discovered in this target
+        for change in changes.get("devices", []):
+            if change.get("type") == "device_discovered":
+                self.alert_manager.create_alert(
+                    alert_type="device_discovered",
+                    severity="info",
+                    title=f"New device discovered: {change.get('ip')}",
+                    description=f"A new device appeared on {target}",
+                    device_ip=change.get("ip"),
+                )
 
     def start(self):
         """Start the scheduler."""

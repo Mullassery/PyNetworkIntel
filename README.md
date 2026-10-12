@@ -241,7 +241,7 @@ shipped at all:
 | `devops` (CI/CD & IaC static scanning) | Shipped, lighter-tested | Real regex-based Terraform/GitHub Actions scanning, self-contained; 18-44% line coverage |
 | `enterprise` (multitenancy, HA, auth, REST API) | **Not shipped** | Excluded from the package entirely - enterprise-platform scope, unrelated to network discovery, untested |
 | `architect` (conversational architecture advisor) | **Not shipped** | Excluded from the package entirely - unrelated to network discovery |
-| `_mcp_connector.py` / `_mcp_tools.py` (`NetworkIntelligence`, exported from `pynetworkintel.__init__`) | **Shipped but fake - do not use** | Every method returns hardcoded fake data (e.g. a hardcoded `"src_ip": "192.168.1.100"`), not real analysis. Untested, undocumented until this pass, references a `dab` binary and `statguardian` package this project does not depend on. See `ROADMAP_HONEST.md`. |
+| `_mcp_connector.py` / `_mcp_tools.py` (`NetworkIntelligence`, exported from `pynetworkintel.__init__`) | Shipped, DB-backed | Real scan-history/topology implementation (implemented 2026-10; previously every method returned hardcoded fake data). Infra-dependent capabilities (packet-flow analysis, the MCP gateway, geo/VPN lookups, PDF output) raise `NotImplementedError` rather than fabricate results. Covered by `tests/test_mcp.py` (18 tests). See `ROADMAP_HONEST.md` section 2.1. |
 
 ---
 
@@ -276,9 +276,6 @@ accurate.
 
 ## Known Issues
 
-- **Fake stub shipped in the public API**: `pynetworkintel.NetworkIntelligence`
-  (`_mcp_connector.py`/`_mcp_tools.py`) returns hardcoded fake data, not real
-  analysis - see [Module status](#module-status) and `ROADMAP_HONEST.md`.
 - **Lighter-tested modules**: `cloud`, `kubernetes`, `iot`, `ml`, and
   `devops` are real, shipped code but have less test coverage than the
   core scan -> analyze -> topology path; see [Module status](#module-status).

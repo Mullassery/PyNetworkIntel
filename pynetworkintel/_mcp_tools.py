@@ -1,21 +1,55 @@
-"""MCP 2.0 Tools for PyNetworkIntel - Network Security Intelligence"""
+"""MCP 2.0 tools for PyNetworkIntel.
 
+The handlers previously returned hardcoded, fabricated data regardless of
+their inputs (e.g. `analyze_network_flow` always reported `"src_ip":
+"192.168.1.100"`, `"anomaly_score": 0.15`, ...). They now delegate to
+`NetworkIntelligence`, which computes real answers from stored scan
+history and raises `NotImplementedError` for capabilities this project has
+no infrastructure for (packet capture, geolocation databases, external
+threat-intel feeds). The tool descriptions below describe what the tools
+actually do; removed all "deep packet inspection", "live threat feeds" and
+similar claims that never backed a real implementation.
+"""
+
+import logging
 from typing import Any, Dict, List, Optional
+
+from pynetworkintel._mcp_connector import NetworkIntelligence
+
+logger = logging.getLogger(__name__)
+
+
+def _with_error_result(func):
+    """Run `func` and convert NotImplementedError into an explicit
+    `not_implemented` result instead of letting it crash the caller with
+    no explanation."""
+
+    async def wrapped(self, *args, **kwargs):
+        try:
+            return await func(self, *args, **kwargs)
+        except NotImplementedError as exc:
+            return {
+                "error": str(exc),
+                "not_implemented": True,
+            }
+
+    return wrapped
 
 
 class PyNetworkIntelMCPTools:
-    """12 MCP tools for network analysis, threat detection, anomaly detection"""
+    """13 MCP tools for network analysis, threat detection, anomaly detection"""
 
     @staticmethod
     def get_tools() -> Dict[str, Any]:
         return {
             "analyze_network_flow": {
                 "name": "analyze_network_flow",
-                "description": "Analyze network traffic flows for patterns and anomalies",
+                "description": "Analyze the inferred reachability/connectivity graph "
+                "of a scanned target from stored topology (no packet-flow capture exists)",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
-                        "flow_id": {"type": "string"},
+                        "flow_id": {"type": "string", "description": "Scanned target (IP, CIDR, or hostname)"},
                         "time_window_seconds": {"type": "integer"},
                         "include_geolocation": {"type": "boolean"},
                     },
@@ -24,14 +58,16 @@ class PyNetworkIntelMCPTools:
             },
             "detect_anomalies": {
                 "name": "detect_anomalies",
-                "description": "Detect network anomalies using statistical models",
+                "description": "Diff the two most recent scans of a target to detect "
+                "baseline drift (new/removed devices, new/resolved CVEs)",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
-                        "sensor_id": {"type": "string"},
+                        "sensor_id": {"type": "string", "description": "Monitored target to diff"},
                         "anomaly_type": {
                             "type": "string",
-                            "enum": ["ddos", "exfiltration", "reconnaissance", "lateral_movement", "botnet"],
+                            "enum": ["device_discovered", "device_removed",
+                                     "vulnerability_discovered", "vulnerability_resolved"],
                         },
                         "sensitivity": {"type": "number", "minimum": 0.0, "maximum": 1.0},
                     },
@@ -40,19 +76,19 @@ class PyNetworkIntelMCPTools:
             },
             "threat_correlation": {
                 "name": "threat_correlation",
-                "description": "Correlate threat indicators across multiple data sources",
+                "description": "Correlate indicators (IPs/hostnames) against CVEs found "
+                "in scan history for those devices",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
                         "indicators": {
                             "type": "array",
                             "items": {"type": "string"},
-                            "description": "IPs, domains, hashes to correlate"
+                            "description": "IPs or hostnames to correlate against scan findings"
                         },
                         "threat_intel_sources": {
                             "type": "array",
                             "items": {"type": "string"},
-                            "enum": ["abuse.ch", "virustotal", "shodan", "censys", "misp"],
                         },
                     },
                     "required": ["indicators"],
@@ -60,15 +96,16 @@ class PyNetworkIntelMCPTools:
             },
             "get_asset_inventory": {
                 "name": "get_asset_inventory",
-                "description": "Get network asset inventory with vulnerability status",
+                "description": "Get real network asset inventory from the latest scan "
+                "of the target, with optional vulnerability status",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
-                        "subnet": {"type": "string", "description": "CIDR notation or hostname"},
+                        "subnet": {"type": "string", "description": "Scanned target (CIDR or hostname)"},
                         "include_vulnerabilities": {"type": "boolean"},
                         "vulnerability_severity": {
                             "type": "string",
-                            "enum": ["critical", "high", "medium", "low"],
+                            "enum": ["critical", "high", "medium", "low", "info"],
                         },
                     },
                     "required": ["subnet"],
@@ -76,7 +113,8 @@ class PyNetworkIntelMCPTools:
             },
             "check_port_exposure": {
                 "name": "check_port_exposure",
-                "description": "Check which ports are exposed to external networks",
+                "description": "Report which ports/services were observed open on a host "
+                "in the latest scan that included it",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
@@ -89,20 +127,24 @@ class PyNetworkIntelMCPTools:
             },
             "analyze_dns_records": {
                 "name": "analyze_dns_records",
-                "description": "Analyze DNS records for suspicious patterns",
+                "description": "Resolve A/AAAA records for a domain via the system "
+                "resolver and optionally apply a DGA heuristic",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
                         "domain": {"type": "string"},
-                        "include_dns_history": {"type": "boolean"},
-                        "check_dga": {"type": "boolean", "description": "Check for domain generation algorithm"},
+                        "include_dns_history": {"type": "boolean",
+                                                "description": "No history provider exists; always empty"},
+                        "check_dga": {"type": "boolean",
+                                      "description": "Real entropy+length DGA heuristic"},
                     },
                     "required": ["domain"],
                 },
             },
             "get_geolocation_analysis": {
                 "name": "get_geolocation_analysis",
-                "description": "Analyze geographic distribution of network traffic",
+                "description": "Classify IPs as private/public/reserved via ipaddress "
+                "(no geolocation database is bundled)",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
@@ -115,28 +157,26 @@ class PyNetworkIntelMCPTools:
             },
             "protocol_analysis": {
                 "name": "protocol_analysis",
-                "description": "Deep packet inspection and protocol anomaly detection",
+                "description": "Not available: requires packet-capture infrastructure "
+                "this project does not provide",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
                         "pcap_id": {"type": "string"},
-                        "protocols": {
-                            "type": "array",
-                            "items": {"type": "string"},
-                            "enum": ["dns", "http", "https", "ssh", "smtp", "tls"],
-                        },
+                        "protocols": {"type": "array", "items": {"type": "string"}},
                     },
                     "required": ["pcap_id"],
                 },
             },
             "behavioral_profiling": {
                 "name": "behavioral_profiling",
-                "description": "Build behavioral profiles of network entities",
+                "description": "Build a behavioral profile of a host from scan history "
+                "(first/last seen, scan count, ports observed)",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
-                        "entity_id": {"type": "string", "description": "IP, hostname, or user"},
-                        "entity_type": {"type": "string", "enum": ["host", "user", "application"]},
+                        "entity_id": {"type": "string", "description": "IP address"},
+                        "entity_type": {"type": "string", "enum": ["host"]},
                         "time_window_days": {"type": "integer"},
                     },
                     "required": ["entity_id", "entity_type"],
@@ -144,14 +184,15 @@ class PyNetworkIntelMCPTools:
             },
             "get_threat_intelligence": {
                 "name": "get_threat_intelligence",
-                "description": "Get threat intelligence from integrated feeds",
+                "description": "Return the real CVEs tied to an indicator (IP/hostname/CVE) "
+                "in scan history (no external feeds)",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
-                        "indicator": {"type": "string", "description": "IP, domain, or hash"},
+                        "indicator": {"type": "string", "description": "IP, hostname, or CVE id"},
                         "threat_level": {
                             "type": "string",
-                            "enum": ["any", "critical", "high", "medium"],
+                            "enum": ["any", "critical", "high", "medium", "low"],
                         },
                     },
                     "required": ["indicator"],
@@ -159,11 +200,11 @@ class PyNetworkIntelMCPTools:
             },
             "remediation_recommendations": {
                 "name": "remediation_recommendations",
-                "description": "Get remediation recommendations for detected threats",
+                "description": "Get remediation guidance for a CVE found in scan history",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
-                        "threat_id": {"type": "string"},
+                        "threat_id": {"type": "string", "description": "CVE id"},
                         "remediation_priority": {
                             "type": "string",
                             "enum": ["immediate", "urgent", "high", "standard"],
@@ -174,11 +215,12 @@ class PyNetworkIntelMCPTools:
             },
             "network_segmentation_analysis": {
                 "name": "network_segmentation_analysis",
-                "description": "Analyze network segmentation effectiveness",
+                "description": "Segment the discovered topology of a target into its "
+                "inferred subnets and score placement diversity",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
-                        "network_id": {"type": "string"},
+                        "network_id": {"type": "string", "description": "Scanned target"},
                         "check_microsegmentation": {"type": "boolean"},
                         "security_zone": {"type": "string"},
                     },
@@ -187,16 +229,17 @@ class PyNetworkIntelMCPTools:
             },
             "export_security_report": {
                 "name": "export_security_report",
-                "description": "Export comprehensive security report",
+                "description": "Generate a real report from scan history (markdown or json)",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
                         "report_type": {
                             "type": "string",
-                            "enum": ["executive_summary", "threat_assessment", "vulnerability_scan", "forensics"],
+                            "enum": ["executive_summary", "threat_assessment",
+                                     "vulnerability_scan", "forensics"],
                         },
                         "time_period": {"type": "string", "enum": ["last_24h", "last_7d", "last_30d"]},
-                        "format": {"type": "string", "enum": ["pdf", "json", "csv"]},
+                        "format": {"type": "string", "enum": ["markdown", "json"]},
                     },
                     "required": ["report_type"],
                 },
@@ -205,164 +248,102 @@ class PyNetworkIntelMCPTools:
 
 
 class PyNetworkIntelMCPHandler:
-    """Async handlers for PyNetworkIntel MCP tools"""
+    """Async handlers for PyNetworkIntel MCP tools, backed by
+    `NetworkIntelligence` real scan-history analysis."""
 
-    def __init__(self, network_intel: Any):
+    def __init__(self, network_intel: NetworkIntelligence):
         self.intel = network_intel
 
+    @_with_error_result
     async def analyze_network_flow(self, flow_id: str, time_window_seconds: int = 300,
                                   include_geolocation: bool = False) -> Dict[str, Any]:
-        return {
-            "flow_id": flow_id,
-            "packets": 5240,
-            "bytes_total": 2154320,
-            "src_ip": "192.168.1.100",
-            "dst_ip": "8.8.8.8",
-            "protocol": "DNS",
-            "duration_seconds": time_window_seconds,
-            "anomaly_score": 0.15,
-            "is_anomalous": False,
-        }
+        return self.intel.analyze_network_flow(
+            flow_id, time_window_seconds=time_window_seconds,
+            include_geolocation=include_geolocation,
+        )
 
+    @_with_error_result
     async def detect_anomalies(self, sensor_id: str, anomaly_type: Optional[str] = None,
                               sensitivity: float = 0.7) -> Dict[str, Any]:
-        return {
-            "sensor_id": sensor_id,
-            "anomalies_detected": 3,
-            "anomaly_type": anomaly_type or "unknown",
-            "sensitivity": sensitivity,
-            "anomalies": [
-                {"id": "anom_001", "type": anomaly_type, "confidence": 0.92, "severity": "high"},
-            ],
-        }
+        return self.intel.detect_anomalies(sensor_id, anomaly_type=anomaly_type,
+                                           sensitivity=sensitivity)
 
+    @_with_error_result
     async def threat_correlation(self, indicators: List[str],
                                 threat_intel_sources: Optional[List[str]] = None) -> Dict[str, Any]:
-        return {
-            "indicators": indicators,
-            "correlated_threats": 2,
-            "threat_level": "high",
-            "related_campaigns": ["APT28", "FIN7"],
-            "sources": threat_intel_sources or [],
-        }
+        return self.intel.threat_correlation(indicators, threat_intel_sources=threat_intel_sources)
 
+    @_with_error_result
     async def get_asset_inventory(self, subnet: str, include_vulnerabilities: bool = False,
                                  vulnerability_severity: Optional[str] = None) -> Dict[str, Any]:
-        return {
-            "subnet": subnet,
-            "total_assets": 42,
-            "responsive_hosts": 38,
-            "os_breakdown": {"Windows": 25, "Linux": 13},
-            "vulnerabilities": [
-                {"host": "192.168.1.10", "cve": "CVE-2024-1234", "severity": "critical"}
-            ] if include_vulnerabilities else [],
-        }
+        return self.intel.get_asset_inventory(
+            subnet,
+            include_vulnerabilities=include_vulnerabilities,
+            vulnerability_severity=vulnerability_severity,
+        )
 
+    @_with_error_result
     async def check_port_exposure(self, host: str, port_range: Optional[str] = None,
-                                 check_services: bool = False) -> Dict[str, Any]:
-        return {
-            "host": host,
-            "exposed_ports": ["22", "80", "443"],
-            "port_count": 3,
-            "services": [
-                {"port": 22, "service": "ssh", "version": "OpenSSH 7.4"}
-            ] if check_services else [],
-        }
+                                 check_services: bool = True) -> Dict[str, Any]:
+        return self.intel.check_port_exposure(
+            host, port_range=port_range, check_services=check_services
+        )
 
+    @_with_error_result
     async def analyze_dns_records(self, domain: str, include_dns_history: bool = False,
                                  check_dga: bool = False) -> Dict[str, Any]:
-        return {
-            "domain": domain,
-            "records": [
-                {"type": "A", "value": "93.184.216.34"},
-                {"type": "MX", "value": "mail.example.com"},
-            ],
-            "is_dga": False if check_dga else None,
-            "dns_history": [] if include_dns_history else None,
-        }
+        return self.intel.analyze_dns_records(
+            domain, include_dns_history=include_dns_history, check_dga=check_dga
+        )
 
+    @_with_error_result
     async def get_geolocation_analysis(self, ip_addresses: List[str],
                                       time_window_hours: int = 24,
                                       detect_vpn_proxies: bool = False) -> Dict[str, Any]:
-        return {
-            "ips": ip_addresses,
-            "geographic_distribution": {
-                "US": 45,
-                "CN": 20,
-                "RU": 15,
-                "Other": 20,
-            },
-            "suspicious_locations": 2 if detect_vpn_proxies else 0,
-            "vpn_proxies_detected": [] if detect_vpn_proxies else None,
-        }
+        return self.intel.get_geolocation_analysis(
+            ip_addresses,
+            time_window_hours=time_window_hours,
+            detect_vpn_proxies=detect_vpn_proxies,
+        )
 
+    @_with_error_result
     async def protocol_analysis(self, pcap_id: str,
                                protocols: Optional[List[str]] = None) -> Dict[str, Any]:
-        return {
-            "pcap_id": pcap_id,
-            "protocols_found": protocols or ["DNS", "HTTP"],
-            "anomalies": [
-                {"protocol": "DNS", "anomaly": "High query volume", "confidence": 0.88}
-            ],
-            "total_packets": 12450,
-        }
+        return self.intel.protocol_analysis(pcap_id, protocols=protocols)
 
+    @_with_error_result
     async def behavioral_profiling(self, entity_id: str, entity_type: str,
                                   time_window_days: int = 30) -> Dict[str, Any]:
-        return {
-            "entity_id": entity_id,
-            "entity_type": entity_type,
-            "profile": {
-                "avg_traffic_bytes_per_day": 524288,
-                "peak_hours": ["09:00-10:00", "14:00-15:00"],
-                "primary_destinations": ["1.2.3.4", "5.6.7.8"],
-            },
-            "deviations_detected": 1,
-        }
+        return self.intel.behavioral_profiling(
+            entity_id, entity_type, time_window_days=time_window_days
+        )
 
+    @_with_error_result
     async def get_threat_intelligence(self, indicator: str,
                                      threat_level: str = "any") -> Dict[str, Any]:
-        return {
-            "indicator": indicator,
-            "threat_level": "high",
-            "threat_names": ["Trojan.Generic", "PUP.Unwanted"],
-            "first_seen": "2024-01-15T00:00:00Z",
-            "last_seen": "2024-07-31T00:00:00Z",
-            "sources": 5,
-        }
+        return self.intel.get_threat_intelligence(indicator, threat_level=threat_level)
 
+    @_with_error_result
     async def remediation_recommendations(self, threat_id: str,
                                          remediation_priority: str = "high") -> Dict[str, Any]:
-        return {
-            "threat_id": threat_id,
-            "priority": remediation_priority,
-            "recommendations": [
-                "Isolate affected system immediately",
-                "Revoke compromised credentials",
-                "Restore from clean backup",
-            ],
-            "estimated_remediation_time_minutes": 45,
-        }
+        return self.intel.remediation_recommendations(
+            threat_id, remediation_priority=remediation_priority
+        )
 
+    @_with_error_result
     async def network_segmentation_analysis(self, network_id: str,
                                            check_microsegmentation: bool = False,
                                            security_zone: Optional[str] = None) -> Dict[str, Any]:
-        return {
-            "network_id": network_id,
-            "segmentation_score": 0.78,
-            "security_zones": 5 if security_zone else None,
-            "microsegmentation_enabled": check_microsegmentation,
-            "findings": ["Zone overlap detected in DMZ", "Weak rules in internal zone"],
-        }
+        return self.intel.network_segmentation_analysis(
+            network_id,
+            check_microsegmentation=check_microsegmentation,
+            security_zone=security_zone,
+        )
 
+    @_with_error_result
     async def export_security_report(self, report_type: str,
                                     time_period: str = "last_7d",
-                                    format: str = "pdf") -> Dict[str, Any]:
-        return {
-            "report_type": report_type,
-            "time_period": time_period,
-            "format": format,
-            "filename": f"security_report_{report_type}_{time_period}.{format}",
-            "size_mb": 2.5,
-            "generated_at": "2024-07-31T00:00:00Z",
-        }
+                                    format: str = "markdown") -> Dict[str, Any]:
+        return self.intel.export_security_report(
+            report_type, time_period=time_period, format=format
+        )

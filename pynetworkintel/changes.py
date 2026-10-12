@@ -7,7 +7,8 @@ from sqlalchemy.orm import Session
 
 from pynetworkintel.models import Device
 from pynetworkintel.db import (
-    Database, DeviceChange, VulnerabilityChange, Device as DBDevice, Finding as DBFinding
+    Database, DeviceChange, VulnerabilityChange, Device as DBDevice,
+    Finding as DBFinding, ScanSession,
 )
 
 logger = logging.getLogger(__name__)
@@ -19,9 +20,19 @@ class ChangeDetector:
     def __init__(self, db: Database):
         self.db = db
 
-    def detect_device_changes(self, current_devices: List[Device], scan_id: int) -> List[Dict[str, Any]]:
+    def detect_device_changes(
+        self,
+        current_devices: List[Device],
+        scan_id: int,
+        target: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
         """
         Detect device additions, removals, and status changes.
+
+        Comparison is against the previous scans of the *same* target only
+        (so scanning unrelated targets never flips this target's devices to
+        "removed"), and the scan being compared (`scan_id`) is excluded --
+        its devices are already persisted when this runs.
 
         Returns:
             List of change dictionaries
@@ -30,12 +41,21 @@ class ChangeDetector:
         session = self.db.get_session()
 
         try:
+            if target is None:
+                current_scan = session.query(ScanSession).filter_by(id=scan_id).first()
+                target = current_scan.target if current_scan else None
+
             current_ips = {d.ip for d in current_devices}
 
-            # Find previously seen devices
-            previous_ips = set(
-                ip[0] for ip in session.query(DBDevice.ip).distinct().all()
+            # IPs seen in previous scans of this target (never the current one).
+            prev_q = (
+                session.query(DBDevice.ip)
+                .join(ScanSession, ScanSession.id == DBDevice.scan_id)
+                .filter(DBDevice.scan_id != scan_id)
             )
+            if target is not None:
+                prev_q = prev_q.filter(ScanSession.target == target)
+            previous_ips = {ip[0] for ip in prev_q.distinct().all()}
 
             # New devices
             for ip in current_ips - previous_ips:
@@ -125,16 +145,35 @@ class ChangeDetector:
 
         return changes
 
-    def get_previous_scan_findings(self) -> Dict[tuple, Any]:
-        """Get findings from previous scan grouped by (device_ip, cve_id)."""
+    def get_previous_scan_findings(
+        self,
+        exclude_scan_id: Optional[int] = None,
+        target: Optional[str] = None,
+    ) -> Dict[tuple, Any]:
+        """Get findings from previous scans grouped by (device_ip, cve_id).
+
+        Optionally excludes one scan id (the current scan, whose findings
+        are already persisted) and scopes to a single target so scans of
+        unrelated networks don't leak into the comparison.
+        """
         session = self.db.get_session()
 
         try:
-            findings = session.query(DBFinding).order_by(DBFinding.found_at.desc()).all()
+            query = session.query(
+                DBFinding, ScanSession.target
+            ).join(ScanSession, ScanSession.id == DBFinding.scan_id)
+            query = query.order_by(DBFinding.found_at.desc())
 
-            # Keep only the most recent findings for each device
+            if exclude_scan_id is not None:
+                query = query.filter(DBFinding.scan_id != exclude_scan_id)
+            if target is not None:
+                query = query.filter(ScanSession.target == target)
+
+            rows = query.all()
+
+            # Keep only the most recent finding for each (device, cve_id)
             grouped = {}
-            for finding in findings:
+            for finding, _target in rows:
                 key = (finding.device_ip, finding.cve_id)
                 if key not in grouped:
                     grouped[key] = finding

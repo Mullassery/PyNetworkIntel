@@ -9,7 +9,31 @@ messages - they are not a full feature-by-feature history, since no
 changelog was kept at the time. Nothing here is fabricated beyond what the
 git history itself verifies.
 
-## [Unreleased]
+## [1.5.0] - 2026-10-11
+
+### Added
+- `pynetworkintel.NetworkIntelligence` (and the `_mcp_tools.py` MCP handler
+  layer) is no longer a hardcoded fake. Every method is now implemented
+  against the SQLAlchemy scan-history database and the derived topology
+  graph: `analyze_network_flow`, `detect_anomalies` (two-scan diff via
+  `ChangeDetector`), `threat_correlation`, `get_asset_inventory`,
+  `check_port_exposure`, `analyze_dns_records`, `get_geolocation_analysis`,
+  `behavioral_profiling`, `get_threat_intelligence`,
+  `remediation_recommendations`, `network_segmentation_analysis`, and
+  `export_security_report`. Capabilities with no backing infrastructure
+  (packet-flow `protocol_analysis`, the MCP gateway
+  `start_mcp_connector`/`stop_mcp_connector`, geo/VPN lookups, PDF output)
+  raise `NotImplementedError` rather than returning fabricated data. The
+  `statguardian` import and `dab` subprocess were removed. See
+  `ROADMAP_HONEST.md` section 2.1.
+- `tests/test_mcp.py` - 18 tests covering every `NetworkIntelligence`
+  method, the `not_implemented` error surfacing in the MCP handlers, and
+  per-target change-detection scoping.
+- `scheduler.py` `_detect_changes` now returns real
+  `{"devices": ..., "vulnerabilities": ...}` results from `ChangeDetector`
+  (previous-IP/findings scoped to the same scan `target`), and
+  `_generate_alerts` raises `device_discovered` / `new_vulnerability`
+  alerts from actual scan diffs.
 
 ### Fixed
 - `pynetworkintel/architect/recommendation_engine.py:76`: `generate_roi_analysis`
@@ -73,7 +97,7 @@ git history itself verifies.
   import the real `NetworkIntelligence` class instead, it would still not
   do anything real - see the fake-stub finding above.
 
-### Added
+### Added (meta)
 - `.github/dependabot.yml` (pip + github-actions ecosystems, weekly).
 - `pip-audit` CI job in `.github/workflows/tests.yml` (advisory/non-blocking
   for now - see that file and `ROADMAP_HONEST.md` for why).
@@ -86,14 +110,7 @@ git history itself verifies.
   `README.md` and not in the files themselves.
 - CI badge in `README.md` linking to the real `tests.yml` workflow.
 
-### Documented (no code change)
-- `pynetworkintel.NetworkIntelligence` (`_mcp_connector.py`/`_mcp_tools.py`)
-  is a shipped-but-fake stub returning hardcoded data, not real analysis -
-  flagged in `README.md`, `CLAUDE.md`, and `ROADMAP_HONEST.md`.
-- Local git tag `v2.0.0` points at a commit older and less complete than
-  `v1.4.0` (mislabeled/out-of-order tag) - flagged in `ROADMAP_HONEST.md`.
-- `paramiko` 3.5.1 has an open advisory (PYSEC-2026-2858) with no fixed
-  release available yet.
+## [Unreleased]
 
 ## [1.4.0] - 2026-08-30
 D3/vis.js node-link JSON and GraphML topology export formats added

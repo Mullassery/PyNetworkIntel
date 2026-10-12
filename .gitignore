@@ -52,3 +52,4 @@ dist/
 *.whl
 .ruff_cache/
 .deepeval/
+.venv-test/
