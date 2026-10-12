@@ -1,5 +1,7 @@
 # PyNetworkIntel
 
+[![Grapify](https://img.shields.io/badge/Grapify-Code%20Scan-purple)](https://grapify.ai)
+
 **Discover what's on your network. Map how it's connected. Find what's vulnerable.**
 
 PyNetworkIntel scans a network target with `nmap`, optionally pulls
