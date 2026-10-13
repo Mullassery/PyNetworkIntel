@@ -13,6 +13,29 @@ Discover what's on your network, map how it's connected, and triage vulnerabilit
 > refuse to run without `--i-am-authorized`, `PYNETWORKINTEL_I_AM_AUTHORIZED=1`,
 > or an interactive confirmation.
 
+> **Not to be confused with [PyAPICheck](https://github.com/Mullassery/PyAPICheck):** PyNetworkIntel maps devices, services, and vulnerabilities on a network; PyAPICheck focuses on API security and policy.
+
+## Which project do I need?
+
+Part of the Mullassery open-source family. These tools have similar names — here is the short version of who does what:
+
+| If you need to… | Use |
+| --- | --- |
+| Build a repository's dependency graph and match it against vulnerability advisories (Python, Rust, Node, containers) | [PyDeepMesh](https://github.com/Mullassery/PyDeepMesh) |
+| Understand *why* a Python dependency exists, who added it, and whether it is actually used | [PyDependencyCheck](https://github.com/Mullassery/PyDependencyCheck) |
+| Statically analyze a **dbt** project (risky tests, test blast radius, cost) | [PyDBTGuard](https://github.com/Mullassery/PyDBTGuard) |
+| Statically analyze **Apache Beam / Dataflow** pipelines (cost, hot keys, reliability) | [PyBeamGuard](https://github.com/Mullassery/PyBeamGuard) |
+| Validate **Airflow** DAGs and dbt runs | [PyAirflowTester](https://github.com/Mullassery/PyAirflowTester) |
+| Simulate cascading-failure **blast radius** across infrastructure, data pipelines, and AI systems | [PyBlastRadius](https://github.com/Mullassery/PyBlastRadius) |
+| Check the **quality of the data itself** at runtime (schema, drift, anomalies) | [StatGuardian](https://github.com/Mullassery/StatGuardian) |
+| Discover **devices, services, and vulnerabilities on a network** | [PyNetworkIntel](https://github.com/Mullassery/PyNetworkIntel) |
+| Discover and score **API security** risk (real traffic, agent/MCP, Cedar policy) | [PyAPICheck](https://github.com/Mullassery/PyAPICheck) |
+| Trace and root-cause **AI agent** failures | [PyAgentHound](https://github.com/Mullassery/PyAgentHound) |
+| Diagnose **RAG retrieval** failures | [PyVectorHound](https://github.com/Mullassery/PyVectorHound) |
+| Orchestrate **local, dependency-aware tasks** (DAG scheduler + content-addressed cache) | [PyTaskWireCheck](https://github.com/Mullassery/PyTaskWireCheck) |
+
+[Browse all projects →](https://github.com/Mullassery?tab=repositories)
+
 ## What it is
 
 PyNetworkIntel is a CLI and library that runs `nmap -sV` against a target, parses
@@ -223,16 +246,6 @@ pytest tests/ -v
 
 CI (`.github/workflows/tests.yml`) runs `pytest tests/ -v` on Python 3.10/3.11/3.12
 and fails the build on any test failure.
-
-## Related projects
-
-- [PyAPICheck](https://github.com/Mullassery/PyAPICheck) — API security discovery with cited risk scores
-- [PyBeamGuard](https://github.com/Mullassery/PyBeamGuard) — Apache Beam and Dataflow pipeline analysis
-- [PyNetworkIntel](https://github.com/Mullassery/PyNetworkIntel) — network discovery and anomaly detection
-- [OpenAnchor](https://github.com/Mullassery/OpenAnchor) — LLM token-usage intelligence middleware
-- [PyAgentHound](https://github.com/Mullassery/PyAgentHound) — trace, detect, and explain AI agent failures
-- [PyVectorHound](https://github.com/Mullassery/PyVectorHound) — diagnose RAG retrieval failures
-- [Browse all projects](https://github.com/Mullassery?tab=repositories)
 
 ## License
 
