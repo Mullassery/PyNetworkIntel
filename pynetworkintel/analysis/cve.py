@@ -34,7 +34,7 @@ SERVICE_KEYWORDS = {
 class CVEChecker:
     """Check services for known vulnerabilities via NVD API."""
 
-    def __init__(self, rate_limit_delay: float = 0.6):
+    def __init__(self, rate_limit_delay: float = 6.0):
         self.rate_limit_delay = rate_limit_delay
         self.last_request_time = 0.0
         self._cache = {}

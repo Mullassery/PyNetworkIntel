@@ -72,7 +72,7 @@ class IaCValidator:
             "iac_tool": "Terraform",
             "total_issues": len(issues),
             "issues": issues,
-            "compliance_score": 100 - (len(issues) * 10),
+            "compliance_score": max(0, 100 - (len(issues) * 10)),
         }
 
     def validate_cloudformation(self, cf_content: str) -> Dict[str, Any]:
@@ -128,7 +128,7 @@ class IaCValidator:
             "iac_tool": "CloudFormation",
             "total_issues": len(issues),
             "issues": issues,
-            "compliance_score": 100 - (len(issues) * 10),
+            "compliance_score": max(0, 100 - (len(issues) * 10)),
         }
 
     def validate_kubernetes_manifests(self, manifest_content: str) -> Dict[str, Any]:
@@ -193,7 +193,7 @@ class IaCValidator:
             "iac_tool": "Kubernetes",
             "total_issues": len(issues),
             "issues": issues,
-            "compliance_score": 100 - (len(issues) * 10),
+            "compliance_score": max(0, 100 - (len(issues) * 10)),
         }
 
     def validate_docker_compose(self, compose_content: str) -> Dict[str, Any]:
@@ -248,7 +248,7 @@ class IaCValidator:
             "iac_tool": "Docker Compose",
             "total_issues": len(issues),
             "issues": issues,
-            "compliance_score": 100 - (len(issues) * 10),
+            "compliance_score": max(0, 100 - (len(issues) * 10)),
         }
 
     def generate_remediation_plan(self, validation_results: Dict[str, Any]) -> List[Dict[str, Any]]:
