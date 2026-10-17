@@ -1,8 +1,8 @@
 """High Availability (HA) architecture components."""
-from typing import Dict, List, Any, Optional
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ class NodeStatus:
     state: str
     last_heartbeat: datetime = field(default_factory=datetime.now)
     is_leader: bool = False
-    metrics: Dict[str, Any] = field(default_factory=dict)
+    metrics: dict[str, Any] = field(default_factory=dict)
 
 
 class HAArchitecture:
@@ -29,9 +29,9 @@ class HAArchitecture:
             min_nodes: Minimum nodes for quorum
         """
         self.min_nodes = min_nodes
-        self.nodes: Dict[str, NodeStatus] = {}
-        self.leader_node: Optional[str] = None
-        self.health_checks: List[Dict[str, Any]] = []
+        self.nodes: dict[str, NodeStatus] = {}
+        self.leader_node: str | None = None
+        self.health_checks: list[dict[str, Any]] = []
 
     def register_node(self, node_id: str, ip_address: str, port: int = 8080) -> bool:
         """Register a new node in the cluster."""
@@ -69,7 +69,7 @@ class HAArchitecture:
 
         logger.info(f"Deregistered node: {node_id}")
 
-    def heartbeat(self, node_id: str, metrics: Dict[str, Any]) -> bool:
+    def heartbeat(self, node_id: str, metrics: dict[str, Any]) -> bool:
         """Process heartbeat from a node."""
         if node_id not in self.nodes:
             return False
@@ -113,7 +113,7 @@ class HAArchitecture:
             logger.warning(f"Leader {self.leader_node} is unhealthy, initiating failover")
             self._elect_leader()
 
-    def get_cluster_status(self) -> Dict[str, Any]:
+    def get_cluster_status(self) -> dict[str, Any]:
         """Get overall cluster status."""
         healthy_nodes = 0
         degraded_nodes = 0
@@ -141,7 +141,7 @@ class HAArchitecture:
             "sla_status": "operational" if quorum_met else "degraded",
         }
 
-    def get_load_distribution(self) -> Dict[str, Any]:
+    def get_load_distribution(self) -> dict[str, Any]:
         """Get load distribution across cluster."""
         total_cpu = 0
         total_memory = 0
@@ -163,7 +163,7 @@ class HAArchitecture:
             "load_balanced": total_cpu / avg_nodes < 75,
         }
 
-    def enable_database_replication(self, primary_node: str, standby_nodes: List[str]) -> bool:
+    def enable_database_replication(self, primary_node: str, standby_nodes: list[str]) -> bool:
         """Configure database replication."""
         if primary_node not in self.nodes:
             logger.error(f"Primary node {primary_node} not found")
@@ -243,7 +243,7 @@ class HAArchitecture:
 
         return True
 
-    def get_node_info(self, node_id: str) -> Optional[Dict[str, Any]]:
+    def get_node_info(self, node_id: str) -> dict[str, Any] | None:
         """Get detailed info about a node."""
         if node_id not in self.nodes:
             return None

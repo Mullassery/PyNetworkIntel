@@ -1,8 +1,8 @@
 """Network traffic and behavior anomaly detection."""
-from typing import Dict, List, Any, Tuple
-from datetime import datetime
-import statistics
 import logging
+import statistics
+from datetime import datetime
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -18,10 +18,10 @@ class AnomalyDetector:
             threshold: Anomaly score threshold (0-1)
         """
         self.threshold = threshold
-        self.historical_data: Dict[str, List[Dict[str, Any]]] = {}
-        self.anomalies: List[Dict[str, Any]] = []
+        self.historical_data: dict[str, list[dict[str, Any]]] = {}
+        self.anomalies: list[dict[str, Any]] = []
 
-    def record_traffic(self, device_id: str, traffic_data: Dict[str, Any]):
+    def record_traffic(self, device_id: str, traffic_data: dict[str, Any]):
         """Record traffic data for analysis."""
         if device_id not in self.historical_data:
             self.historical_data[device_id] = []
@@ -33,7 +33,7 @@ class AnomalyDetector:
 
         self.historical_data[device_id].append(traffic_record)
 
-    def detect_port_scan_activity(self, device_id: str, current_ports: List[int]) -> Tuple[bool, float, str]:
+    def detect_port_scan_activity(self, device_id: str, current_ports: list[int]) -> tuple[bool, float, str]:
         """Detect potential port scanning activity."""
         if device_id not in self.historical_data:
             return False, 0.0, "No baseline data"
@@ -51,7 +51,7 @@ class AnomalyDetector:
             return False, 0.0, "Normal port activity"
 
         # Calculate anomaly score
-        expected_new_ports = len(baseline_ports) * 0.1  # Expect ~10% new ports
+        len(baseline_ports) * 0.1  # Expect ~10% new ports
         new_port_ratio = len(new_ports) / len(current_ports) if current_ports else 0
 
         if new_port_ratio > 0.5:
@@ -62,7 +62,7 @@ class AnomalyDetector:
 
         return False, 0.2, "Normal port variation"
 
-    def detect_bandwidth_anomaly(self, device_id: str, current_bandwidth: float) -> Tuple[bool, float, str]:
+    def detect_bandwidth_anomaly(self, device_id: str, current_bandwidth: float) -> tuple[bool, float, str]:
         """Detect unusual bandwidth usage."""
         if device_id not in self.historical_data:
             return False, 0.0, "No baseline data"
@@ -81,7 +81,7 @@ class AnomalyDetector:
         try:
             mean_bandwidth = statistics.mean(bandwidths)
             stdev_bandwidth = statistics.stdev(bandwidths) if len(bandwidths) > 1 else 0
-        except:
+        except Exception:
             return False, 0.0, "Cannot calculate statistics"
 
         # Calculate z-score
@@ -100,7 +100,7 @@ class AnomalyDetector:
         else:
             return False, 0.2, "Normal bandwidth"
 
-    def detect_timing_anomaly(self, device_id: str) -> Tuple[bool, float, str]:
+    def detect_timing_anomaly(self, device_id: str) -> tuple[bool, float, str]:
         """Detect unusual timing patterns."""
         if device_id not in self.historical_data:
             return False, 0.0, "No baseline data"
@@ -117,7 +117,7 @@ class AnomalyDetector:
             return False, 0.0, "No timestamp data"
 
         # Get hours of activity
-        active_hours = set(ts.hour for ts in timestamps)
+        active_hours = {ts.hour for ts in timestamps}
 
         # Standard business hours (9-17)
         business_hours = set(range(9, 18))
@@ -135,7 +135,7 @@ class AnomalyDetector:
 
         return False, 0.2, "Normal activity hours"
 
-    def detect_connection_anomaly(self, device_id: str, dest_ip: str, dest_port: int) -> Tuple[bool, float, str]:
+    def detect_connection_anomaly(self, device_id: str, dest_ip: str, dest_port: int) -> tuple[bool, float, str]:
         """Detect unusual connection patterns."""
         if device_id not in self.historical_data:
             return False, 0.0, "No baseline data"
@@ -163,7 +163,7 @@ class AnomalyDetector:
 
         return False, 0.1, "Known destination"
 
-    def detect_protocol_anomaly(self, device_id: str, protocol: str) -> Tuple[bool, float, str]:
+    def detect_protocol_anomaly(self, device_id: str, protocol: str) -> tuple[bool, float, str]:
         """Detect unusual protocol usage."""
         if device_id not in self.historical_data:
             return False, 0.0, "No baseline data"
@@ -191,7 +191,7 @@ class AnomalyDetector:
 
         return False, 0.1, "Known protocol"
 
-    def analyze_traffic_pattern(self, device_id: str) -> Dict[str, Any]:
+    def analyze_traffic_pattern(self, device_id: str) -> dict[str, Any]:
         """Analyze overall traffic pattern."""
         if device_id not in self.historical_data:
             return {"status": "no_data"}
@@ -233,7 +233,7 @@ class AnomalyDetector:
             "max_bandwidth": max_bandwidth,
         }
 
-    def get_anomalies(self, device_id: str, limit: int = 10) -> List[Dict[str, Any]]:
+    def get_anomalies(self, device_id: str, limit: int = 10) -> list[dict[str, Any]]:
         """Get detected anomalies for device."""
         device_anomalies = [a for a in self.anomalies if a.get("device_id") == device_id]
 
@@ -244,7 +244,7 @@ class AnomalyDetector:
         )[:limit]
 
     @staticmethod
-    def _get_baseline_ports(history: List[Dict[str, Any]]) -> set:
+    def _get_baseline_ports(history: list[dict[str, Any]]) -> set:
         """Extract baseline ports from history."""
         ports = set()
 
@@ -276,7 +276,7 @@ class AnomalyDetector:
                 first_octet = int(parts[0])
                 if first_octet in [0, 10, 127, 255]:
                     return True
-            except:
+            except Exception:
                 pass
 
         return False

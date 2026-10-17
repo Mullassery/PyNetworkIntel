@@ -1,11 +1,11 @@
 """Progress indicators and formatted output."""
 
 import sys
-from typing import Optional, Iterable
+from collections.abc import Iterable
 
 try:
-    from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeRemainingColumn
     from rich.console import Console
+    from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn, TimeRemainingColumn
     RICH_AVAILABLE = True
 except ImportError:
     RICH_AVAILABLE = False
@@ -18,7 +18,7 @@ class ProgressIndicator:
         self.use_rich = use_rich and RICH_AVAILABLE
         self.console = Console() if self.use_rich else None
 
-    def progress(self, iterable: Iterable, total: Optional[int] = None, description: str = ""):
+    def progress(self, iterable: Iterable, total: int | None = None, description: str = ""):
         """Progress bar for iteration."""
         if self.use_rich:
             with Progress(

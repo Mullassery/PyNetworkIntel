@@ -1,6 +1,6 @@
 """Knowledge base for architectural intelligence."""
-from typing import Dict, List, Any, Optional
 import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -10,10 +10,10 @@ class KnowledgeBase:
 
     def __init__(self):
         """Initialize knowledge base."""
-        self.services: Dict[str, Dict[str, Any]] = {}
-        self.patterns: Dict[str, Dict[str, Any]] = {}
-        self.compliance_controls: Dict[str, List[str]] = {}
-        self.best_practices: Dict[str, List[str]] = {}
+        self.services: dict[str, dict[str, Any]] = {}
+        self.patterns: dict[str, dict[str, Any]] = {}
+        self.compliance_controls: dict[str, list[str]] = {}
+        self.best_practices: dict[str, list[str]] = {}
         self._build_knowledge_base()
 
     def _build_knowledge_base(self):
@@ -267,53 +267,51 @@ class KnowledgeBase:
             ],
         }
 
-    def get_service_info(self, service_key: str) -> Optional[Dict[str, Any]]:
+    def get_service_info(self, service_key: str) -> dict[str, Any] | None:
         """Get service information."""
         return self.services.get(service_key)
 
-    def get_services_by_category(self, category: str) -> List[Dict[str, Any]]:
+    def get_services_by_category(self, category: str) -> list[dict[str, Any]]:
         """Get services by category."""
         return [
             service for service in self.services.values()
             if service.get("category") == category
         ]
 
-    def get_services_by_cloud(self, cloud: str) -> List[Dict[str, Any]]:
+    def get_services_by_cloud(self, cloud: str) -> list[dict[str, Any]]:
         """Get services by cloud provider."""
         return [
             service for service in self.services.values()
             if service.get("cloud") == cloud
         ]
 
-    def search_services(self, query: str) -> List[Dict[str, Any]]:
+    def search_services(self, query: str) -> list[dict[str, Any]]:
         """Search for services by use case or description."""
-        results = []
+        query_lower = query.lower()
+        return [
+            service
+            for service in self.services.values()
+            if query_lower in service.get("description", "").lower()
+            or any(query_lower in uc.lower() for uc in service.get("use_cases", []))
+        ]
 
-        for service in self.services.values():
-            if query.lower() in service.get("description", "").lower():
-                results.append(service)
-            elif any(query.lower() in uc.lower() for uc in service.get("use_cases", [])):
-                results.append(service)
-
-        return results
-
-    def get_pattern_info(self, pattern_name: str) -> Optional[Dict[str, Any]]:
+    def get_pattern_info(self, pattern_name: str) -> dict[str, Any] | None:
         """Get pattern information."""
         return self.patterns.get(pattern_name)
 
-    def get_all_patterns(self) -> List[str]:
+    def get_all_patterns(self) -> list[str]:
         """Get all available patterns."""
         return list(self.patterns.keys())
 
-    def get_compliance_controls(self, framework: str) -> List[str]:
+    def get_compliance_controls(self, framework: str) -> list[str]:
         """Get compliance controls for framework."""
         return self.compliance_controls.get(framework, [])
 
-    def get_best_practices(self, category: str) -> List[str]:
+    def get_best_practices(self, category: str) -> list[str]:
         """Get best practices for category."""
         return self.best_practices.get(category, [])
 
-    def get_service_count(self) -> Dict[str, int]:
+    def get_service_count(self) -> dict[str, int]:
         """Get count of services by cloud."""
         counts = {}
 

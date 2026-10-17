@@ -2,10 +2,10 @@
 
 import logging
 import re
-from typing import List, Dict, Any
 from dataclasses import dataclass
+from typing import Any
 
-from pynetworkintel.models import Device, SecurityFinding, Severity, FindingType
+from pynetworkintel.models import Device, FindingType, SecurityFinding, Severity
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ class Rule:
     description: str
     recommendation: str
     business_impact: str
-    checks: List[Dict[str, Any]]
+    checks: list[dict[str, Any]]
 
 
 class RuleChecker:
@@ -27,7 +27,7 @@ class RuleChecker:
     def __init__(self):
         self.rules = self._load_default_rules()
 
-    def _load_default_rules(self) -> List[Rule]:
+    def _load_default_rules(self) -> list[Rule]:
         """Load default security rules."""
         return [
             Rule(
@@ -172,7 +172,7 @@ class RuleChecker:
             ),
         ]
 
-    def check_device(self, device: Device) -> List[SecurityFinding]:
+    def check_device(self, device: Device) -> list[SecurityFinding]:
         """
         Check device against all applicable rules.
 
@@ -205,12 +205,9 @@ class RuleChecker:
 
     def _rule_matches(self, device: Device, rule: Rule) -> bool:
         """Check if device violates any condition in rule."""
-        for check in rule.checks:
-            if self._check_matches(device, check):
-                return True
-        return False
+        return any(self._check_matches(device, check) for check in rule.checks)
 
-    def _check_matches(self, device: Device, check: Dict[str, Any]) -> bool:
+    def _check_matches(self, device: Device, check: dict[str, Any]) -> bool:
         """Evaluate a single check condition against device."""
         config_key = check.get("config_key")
         regex = check.get("regex")
@@ -219,9 +216,10 @@ class RuleChecker:
             return False
 
         for config in device.configs:
-            if config.path == config_key:
-                if re.search(regex, config.content, re.MULTILINE | re.IGNORECASE):
-                    return True
+            if config.path == config_key and re.search(
+                regex, config.content, re.MULTILINE | re.IGNORECASE
+            ):
+                return True
 
         return False
 

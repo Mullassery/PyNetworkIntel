@@ -9,13 +9,13 @@ tests/test_devops.py.
 """
 
 from .cicd_scanner import CICDPipelineScanner
+from .compliance import ComplianceMapper
 from .iac_validator import IaCValidator
 from .siem_integrator import SIEMIntegrator
-from .compliance import ComplianceMapper
 
 __all__ = [
     "CICDPipelineScanner",
+    "ComplianceMapper",
     "IaCValidator",
     "SIEMIntegrator",
-    "ComplianceMapper",
 ]

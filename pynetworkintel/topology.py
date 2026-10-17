@@ -28,8 +28,8 @@ could be layered onto later.
 
 import ipaddress
 import logging
-from dataclasses import dataclass, field, asdict
-from typing import Any, Dict, List, Optional
+from dataclasses import asdict, dataclass, field
+from typing import Any
 
 from pynetworkintel.models import Device
 
@@ -39,11 +39,11 @@ logger = logging.getLogger(__name__)
 @dataclass
 class TopologyNode:
     ip: str
-    hostname: Optional[str] = None
+    hostname: str | None = None
     node_type: str = "device"  # "device" or "gateway"
-    subnet: Optional[str] = None
+    subnet: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -53,17 +53,17 @@ class TopologyEdge:
     target: str
     relationship: str  # "gateway"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
 @dataclass
 class NetworkTopology:
-    nodes: List[TopologyNode] = field(default_factory=list)
-    edges: List[TopologyEdge] = field(default_factory=list)
-    subnets: List[str] = field(default_factory=list)
+    nodes: list[TopologyNode] = field(default_factory=list)
+    edges: list[TopologyEdge] = field(default_factory=list)
+    subnets: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "nodes": [n.to_dict() for n in self.nodes],
             "edges": [e.to_dict() for e in self.edges],
@@ -71,7 +71,7 @@ class NetworkTopology:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "NetworkTopology":
+    def from_dict(cls, data: dict[str, Any]) -> "NetworkTopology":
         """Reconstruct a NetworkTopology from the shape produced by
         `to_dict()`. Used by callers (e.g. the CLI) that only have the
         already-serialized dict form (such as a Pipeline result) but still
@@ -82,9 +82,9 @@ class NetworkTopology:
             subnets=list(data.get("subnets", [])),
         )
 
-    def adjacency(self) -> Dict[str, List[str]]:
+    def adjacency(self) -> dict[str, list[str]]:
         """Return an adjacency-list view of the graph (undirected)."""
-        adj: Dict[str, List[str]] = {n.ip: [] for n in self.nodes}
+        adj: dict[str, list[str]] = {n.ip: [] for n in self.nodes}
         for edge in self.edges:
             adj.setdefault(edge.source, [])
             adj.setdefault(edge.target, [])
@@ -92,9 +92,9 @@ class NetworkTopology:
             adj[edge.target].append(edge.source)
         return adj
 
-    def devices_by_subnet(self) -> Dict[str, List[str]]:
+    def devices_by_subnet(self) -> dict[str, list[str]]:
         """Return {subnet_cidr: [ip, ...]} grouping."""
-        grouped: Dict[str, List[str]] = {}
+        grouped: dict[str, list[str]] = {}
         for node in self.nodes:
             if node.subnet:
                 grouped.setdefault(node.subnet, []).append(node.ip)
@@ -114,10 +114,10 @@ class TopologyMapper:
         self.prefix_len_v4 = prefix_len_v4
         self.prefix_len_v6 = prefix_len_v6
 
-    def build(self, devices: List[Device]) -> NetworkTopology:
+    def build(self, devices: list[Device]) -> NetworkTopology:
         """Derive subnet/gateway edges from a list of discovered devices."""
-        subnets: Dict[str, List[Device]] = {}
-        node_subnet: Dict[str, str] = {}
+        subnets: dict[str, list[Device]] = {}
+        node_subnet: dict[str, str] = {}
 
         for device in devices:
             net = self._infer_subnet(device.ip)
@@ -127,10 +127,10 @@ class TopologyMapper:
             subnets.setdefault(net, []).append(device)
             node_subnet[device.ip] = net
 
-        nodes: List[TopologyNode] = []
-        edges: List[TopologyEdge] = []
+        nodes: list[TopologyNode] = []
+        edges: list[TopologyEdge] = []
 
-        gateways: Dict[str, Device] = {}
+        gateways: dict[str, Device] = {}
         for net, group in subnets.items():
             gateways[net] = self._infer_gateway(group)
 
@@ -160,7 +160,7 @@ class TopologyMapper:
 
         return NetworkTopology(nodes=nodes, edges=edges, subnets=sorted(subnets.keys()))
 
-    def _infer_subnet(self, ip_str: str) -> Optional[str]:
+    def _infer_subnet(self, ip_str: str) -> str | None:
         try:
             ip = ipaddress.ip_address(ip_str)
         except ValueError:
@@ -171,7 +171,7 @@ class TopologyMapper:
         return str(network)
 
     @staticmethod
-    def _infer_gateway(group: List[Device]) -> Device:
+    def _infer_gateway(group: list[Device]) -> Device:
         """Heuristically pick the most gateway-like device in a subnet group.
 
         Preference order: an address whose last octet is 1 (e.g. x.x.x.1,

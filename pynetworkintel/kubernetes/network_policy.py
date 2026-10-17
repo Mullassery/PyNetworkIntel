@@ -1,6 +1,6 @@
 """Kubernetes network policy analysis."""
-from typing import Dict, List, Any, Optional
 import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class NetworkPolicyAnalyzer:
         except Exception as e:
             logger.error(f"Failed to initialize Kubernetes client: {e}")
 
-    def analyze_network_policies(self, namespace: Optional[str] = None) -> List[Dict[str, Any]]:
+    def analyze_network_policies(self, namespace: str | None = None) -> list[dict[str, Any]]:
         """Analyze network policies."""
         if not self._initialized:
             self._initialize_client()
@@ -60,7 +60,7 @@ class NetworkPolicyAnalyzer:
 
         return policies
 
-    def find_namespaces_without_policies(self) -> List[Dict[str, Any]]:
+    def find_namespaces_without_policies(self) -> list[dict[str, Any]]:
         """Find namespaces without network policies."""
         if not self._initialized:
             self._initialize_client()
@@ -85,14 +85,14 @@ class NetworkPolicyAnalyzer:
                             "risk": "high",
                             "recommendation": "Implement network policies for pod-to-pod communication control",
                         })
-                except:
+                except Exception:
                     pass
         except Exception as e:
             logger.error(f"Failed to find unprotected namespaces: {e}")
 
         return vulnerable_namespaces
 
-    def find_overly_permissive_policies(self) -> List[Dict[str, Any]]:
+    def find_overly_permissive_policies(self) -> list[dict[str, Any]]:
         """Find network policies that are overly permissive."""
         if not self._initialized:
             self._initialize_client()
@@ -114,9 +114,8 @@ class NetworkPolicyAnalyzer:
                 if not policy.get('ingress_rules'):
                     issues.append("Policy allows all ingress")
 
-                if "Egress" in policy.get('policy_types', []):
-                    if not policy.get('egress_rules'):
-                        issues.append("Policy allows all egress")
+                if "Egress" in policy.get('policy_types', []) and not policy.get('egress_rules'):
+                    issues.append("Policy allows all egress")
 
                 if issues:
                     permissive_policies.append({
@@ -130,7 +129,7 @@ class NetworkPolicyAnalyzer:
 
         return permissive_policies
 
-    def get_network_policy_coverage(self) -> Dict[str, Any]:
+    def get_network_policy_coverage(self) -> dict[str, Any]:
         """Get network policy coverage summary."""
         if not self._initialized:
             self._initialize_client()
@@ -159,7 +158,7 @@ class NetworkPolicyAnalyzer:
             return {}
 
     @staticmethod
-    def _extract_ingress_rules(ingress_rules) -> List[Dict[str, Any]]:
+    def _extract_ingress_rules(ingress_rules) -> list[dict[str, Any]]:
         """Extract ingress rules."""
         rules = []
 
@@ -200,7 +199,7 @@ class NetworkPolicyAnalyzer:
         return rules
 
     @staticmethod
-    def _extract_egress_rules(egress_rules) -> List[Dict[str, Any]]:
+    def _extract_egress_rules(egress_rules) -> list[dict[str, Any]]:
         """Extract egress rules."""
         rules = []
 

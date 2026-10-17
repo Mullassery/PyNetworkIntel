@@ -1,8 +1,8 @@
 """IoT and edge device discovery."""
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass, asdict
 import logging
 import socket
+from dataclasses import asdict, dataclass
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -17,10 +17,10 @@ class IoTDevice:
     model: str
     firmware_version: str
     state: str
-    protocols: List[str] = None
-    services: List[str] = None
-    tags: Dict[str, str] = None
-    metadata: Dict[str, Any] = None
+    protocols: list[str] = None
+    services: list[str] = None
+    tags: dict[str, str] = None
+    metadata: dict[str, Any] = None
 
     def __post_init__(self):
         if self.protocols is None:
@@ -41,16 +41,16 @@ class IoTDeviceDiscovery:
 
     def __init__(self):
         """Initialize IoT device discovery."""
-        self.devices: List[IoTDevice] = []
+        self.devices: list[IoTDevice] = []
         self.mqtt_brokers = []
         self.iot_platforms = {}
 
-    def discover_mqtt_brokers(self, network_range: str, port: int = 1883, timeout: float = 2.0) -> List[Dict[str, Any]]:
+    def discover_mqtt_brokers(self, network_range: str, port: int = 1883, timeout: float = 2.0) -> list[dict[str, Any]]:
         """Discover MQTT brokers on the network."""
         brokers = []
 
         try:
-            import paho.mqtt.client as mqtt_client
+            import paho.mqtt.client  # noqa: F401  (availability probe)
             mqtt_available = True
         except ImportError:
             mqtt_available = False
@@ -87,7 +87,7 @@ class IoTDeviceDiscovery:
 
         return brokers
 
-    def discover_industrial_controllers(self, network_range: str) -> List[IoTDevice]:
+    def discover_industrial_controllers(self, network_range: str) -> list[IoTDevice]:
         """Discover industrial controllers (PLCs, drives, etc.)."""
         controllers = []
 
@@ -123,12 +123,12 @@ class IoTDeviceDiscovery:
                         )
                         controllers.append(device)
                         self.devices.append(device)
-                except:
+                except Exception:
                     pass
 
         return controllers
 
-    def discover_iot_devices(self, network_range: str) -> List[IoTDevice]:
+    def discover_iot_devices(self, network_range: str) -> list[IoTDevice]:
         """Discover common IoT devices."""
         devices = []
 
@@ -165,12 +165,12 @@ class IoTDeviceDiscovery:
                         )
                         devices.append(device)
                         self.devices.append(device)
-                except:
+                except Exception:
                     pass
 
         return devices
 
-    def discover_gateway_devices(self, network_range: str) -> List[IoTDevice]:
+    def discover_gateway_devices(self, network_range: str) -> list[IoTDevice]:
         """Discover edge gateway devices."""
         gateways = []
 
@@ -192,28 +192,27 @@ class IoTDeviceDiscovery:
                     result = sock.connect_ex((ip, port))
                     sock.close()
 
-                    if result == 0:
-                        # Check if likely a gateway
-                        if self._is_likely_gateway(ip, port):
-                            device = IoTDevice(
-                                device_id=f"{ip}:gateway",
-                                device_type="edge_gateway",
-                                ip_address=ip,
-                                port=port,
-                                manufacturer="Unknown",
-                                model="Unknown",
-                                firmware_version="Unknown",
-                                state="active",
-                                protocols=[protocol],
-                            )
-                            gateways.append(device)
-                            self.devices.append(device)
-                except:
+                    # Check if likely a gateway
+                    if result == 0 and self._is_likely_gateway(ip, port):
+                        device = IoTDevice(
+                            device_id=f"{ip}:gateway",
+                            device_type="edge_gateway",
+                            ip_address=ip,
+                            port=port,
+                            manufacturer="Unknown",
+                            model="Unknown",
+                            firmware_version="Unknown",
+                            state="active",
+                            protocols=[protocol],
+                        )
+                        gateways.append(device)
+                        self.devices.append(device)
+                except Exception:
                     pass
 
         return gateways
 
-    def track_firmware_versions(self) -> Dict[str, List[str]]:
+    def track_firmware_versions(self) -> dict[str, list[str]]:
         """Track firmware versions of discovered devices."""
         firmware_inventory = {}
 
@@ -230,7 +229,7 @@ class IoTDeviceDiscovery:
 
         return firmware_inventory
 
-    def get_device_summary(self) -> Dict[str, Any]:
+    def get_device_summary(self) -> dict[str, Any]:
         """Get summary of discovered IoT devices."""
         by_type = {}
         by_protocol = {}
@@ -254,7 +253,7 @@ class IoTDeviceDiscovery:
         }
 
     @staticmethod
-    def _parse_network_range(network_range: str) -> List[str]:
+    def _parse_network_range(network_range: str) -> list[str]:
         """Parse network range notation to list of IPs."""
         ips = []
 
@@ -264,7 +263,7 @@ class IoTDeviceDiscovery:
                 import ipaddress
                 network = ipaddress.ip_network(network_range, strict=False)
                 ips = [str(ip) for ip in network.hosts()][:256]  # Limit to first 256
-            except:
+            except Exception:
                 ips = [network_range]
         elif "-" in network_range:
             # Range notation (e.g., 192.168.1.1-10)
@@ -274,7 +273,7 @@ class IoTDeviceDiscovery:
                 try:
                     start, end = map(int, range_part.split("-"))
                     ips = [f"{prefix}.{i}" for i in range(start, end + 1)]
-                except:
+                except Exception:
                     ips = [network_range]
         else:
             # Single IP
@@ -283,12 +282,11 @@ class IoTDeviceDiscovery:
         return ips
 
     @staticmethod
-    def _get_mqtt_broker_info(ip: str, port: int) -> Optional[Dict[str, Any]]:
+    def _get_mqtt_broker_info(ip: str, port: int) -> dict[str, Any] | None:
         """Get MQTT broker information."""
         try:
             import paho.mqtt.client as mqtt_client
 
-            info = {"version": None, "topics": []}
 
             def on_connect(client, userdata, flags, rc):
                 userdata["connected"] = rc == 0
@@ -307,11 +305,11 @@ class IoTDeviceDiscovery:
             try:
                 client.connect(ip, port, keepalive=5)
                 client.loop_start()
-            except:
+            except Exception:
                 return None
 
             return None  # Simplified - return None as full implementation needs async handling
-        except:
+        except Exception:
             return None
 
     @staticmethod

@@ -1,6 +1,6 @@
 """Pattern recognition and matching."""
-from typing import Dict, List, Any
 import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +12,7 @@ class PatternEngine:
         """Initialize pattern engine."""
         self.patterns = self._load_patterns()
 
-    def _load_patterns(self) -> Dict[str, Dict[str, Any]]:
+    def _load_patterns(self) -> dict[str, dict[str, Any]]:
         """Load known architecture patterns."""
         return {
             "serverless_web": {
@@ -37,7 +37,7 @@ class PatternEngine:
             },
         }
 
-    def detect_patterns(self, components: List[str]) -> List[Dict[str, Any]]:
+    def detect_patterns(self, components: list[str]) -> list[dict[str, Any]]:
         """Detect which patterns match the architecture."""
         matches = []
 
@@ -57,7 +57,7 @@ class PatternEngine:
 
         return sorted(matches, key=lambda x: x["match_score"], reverse=True)
 
-    def suggest_patterns(self, requirements: List[str]) -> List[Dict[str, Any]]:
+    def suggest_patterns(self, requirements: list[str]) -> list[dict[str, Any]]:
         """Suggest patterns based on requirements."""
         suggestions = []
 
@@ -75,7 +75,7 @@ class PatternEngine:
 
         return sorted(suggestions, key=lambda x: x["match_score"], reverse=True)
 
-    def analyze_anti_patterns(self, architecture: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def analyze_anti_patterns(self, architecture: dict[str, Any]) -> list[dict[str, Any]]:
         """Identify anti-patterns in architecture."""
         anti_patterns = []
 

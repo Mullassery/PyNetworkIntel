@@ -1,7 +1,7 @@
 """AWS cloud platform discovery and inventory management."""
-from typing import Any, Dict, List, Optional
-from dataclasses import dataclass, asdict
 import logging
+from dataclasses import asdict, dataclass
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -13,13 +13,13 @@ class AWSResource:
     region: str
     name: str
     state: str
-    public_ip: Optional[str] = None
-    private_ip: Optional[str] = None
-    security_groups: List[str] = None
-    subnet_id: Optional[str] = None
-    vpc_id: Optional[str] = None
-    tags: Dict[str, str] = None
-    metadata: Dict[str, Any] = None
+    public_ip: str | None = None
+    private_ip: str | None = None
+    security_groups: list[str] = None
+    subnet_id: str | None = None
+    vpc_id: str | None = None
+    tags: dict[str, str] = None
+    metadata: dict[str, Any] = None
 
     def __post_init__(self):
         if self.security_groups is None:
@@ -36,7 +36,7 @@ class AWSResource:
 class AWSDiscovery:
     """Discover and enumerate AWS resources across regions."""
 
-    def __init__(self, access_key_id: str, secret_access_key: str, regions: Optional[List[str]] = None):
+    def __init__(self, access_key_id: str, secret_access_key: str, regions: list[str] | None = None):
         """
         Initialize AWS discovery client.
 
@@ -48,8 +48,8 @@ class AWSDiscovery:
         self.access_key_id = access_key_id
         self.secret_access_key = secret_access_key
         self.regions = regions or self._get_all_regions()
-        self.resources: List[AWSResource] = []
-        self.vpc_mappings: Dict[str, List[str]] = {}
+        self.resources: list[AWSResource] = []
+        self.vpc_mappings: dict[str, list[str]] = {}
 
         # Lazy import boto3 only if available
         try:
@@ -83,7 +83,7 @@ class AWSDiscovery:
             logger.error(f"Failed to initialize AWS clients: {e}")
             self._initialized = False
 
-    def _get_all_regions(self) -> List[str]:
+    def _get_all_regions(self) -> list[str]:
         """Get all available AWS regions."""
         return [
             "us-east-1", "us-east-2", "us-west-1", "us-west-2",
@@ -92,7 +92,7 @@ class AWSDiscovery:
             "ca-central-1", "sa-east-1"
         ]
 
-    def discover_ec2_instances(self, region: Optional[str] = None) -> List[AWSResource]:
+    def discover_ec2_instances(self, region: str | None = None) -> list[AWSResource]:
         """Discover EC2 instances."""
         if not self._initialized:
             self._initialize_clients()
@@ -132,7 +132,7 @@ class AWSDiscovery:
 
         return instances
 
-    def discover_rds_instances(self, region: Optional[str] = None) -> List[AWSResource]:
+    def discover_rds_instances(self, region: str | None = None) -> list[AWSResource]:
         """Discover RDS database instances."""
         if not self._initialized:
             self._initialize_clients()
@@ -170,7 +170,7 @@ class AWSDiscovery:
 
         return databases
 
-    def discover_s3_buckets(self) -> List[AWSResource]:
+    def discover_s3_buckets(self) -> list[AWSResource]:
         """Discover S3 buckets."""
         if not self._initialized:
             self._initialize_clients()
@@ -188,7 +188,7 @@ class AWSDiscovery:
                 try:
                     location = s3.get_bucket_location(Bucket=bucket_name)
                     region = location.get('LocationConstraint', 'us-east-1') or 'us-east-1'
-                except:
+                except Exception:
                     region = 'us-east-1'
 
                 resource = AWSResource(
@@ -208,7 +208,7 @@ class AWSDiscovery:
 
         return buckets
 
-    def discover_security_groups(self, region: Optional[str] = None) -> List[Dict[str, Any]]:
+    def discover_security_groups(self, region: str | None = None) -> list[dict[str, Any]]:
         """Discover security group configurations."""
         if not self._initialized:
             self._initialize_clients()
@@ -238,7 +238,7 @@ class AWSDiscovery:
 
         return sgs
 
-    def discover_vpc_networks(self, region: Optional[str] = None) -> List[Dict[str, Any]]:
+    def discover_vpc_networks(self, region: str | None = None) -> list[dict[str, Any]]:
         """Discover VPC networks and subnets."""
         if not self._initialized:
             self._initialize_clients()
@@ -282,7 +282,7 @@ class AWSDiscovery:
 
         return vpcs
 
-    def discover_all(self) -> Dict[str, List]:
+    def discover_all(self) -> dict[str, list]:
         """Discover all AWS resources."""
         return {
             "ec2_instances": self.discover_ec2_instances(),
@@ -292,7 +292,7 @@ class AWSDiscovery:
             "vpcs": self.discover_vpc_networks(),
         }
 
-    def get_resources_summary(self) -> Dict[str, Any]:
+    def get_resources_summary(self) -> dict[str, Any]:
         """Get summary of discovered resources."""
         by_type = {}
         by_region = {}
@@ -319,7 +319,7 @@ class AWSDiscovery:
         return default
 
     @staticmethod
-    def _tags_to_dict(tags) -> Dict[str, str]:
+    def _tags_to_dict(tags) -> dict[str, str]:
         """Convert AWS tags list to dict."""
         if not tags:
             return {}

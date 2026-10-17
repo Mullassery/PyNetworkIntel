@@ -1,6 +1,6 @@
 """IoT protocol analysis and detection."""
-from typing import Dict, List, Any
 import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ class ProtocolAnalyzer:
             },
         }
 
-    def analyze_protocol_security(self, protocol: str) -> Dict[str, Any]:
+    def analyze_protocol_security(self, protocol: str) -> dict[str, Any]:
         """Analyze security of a specific protocol."""
         if protocol not in self.protocol_info:
             return {"error": f"Unknown protocol: {protocol}"}
@@ -88,46 +88,44 @@ class ProtocolAnalyzer:
             "recommendations": self._get_protocol_recommendations(protocol),
         }
 
-    def detect_unencrypted_protocols(self, devices: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def detect_unencrypted_protocols(self, devices: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Detect devices using unencrypted protocols."""
         unencrypted = []
 
         unencrypted_protocols = ["HTTP", "Modbus TCP", "S7comm"]
 
-        for device in devices:
-            for protocol in device.get("protocols", []):
-                if protocol in unencrypted_protocols:
-                    unencrypted.append({
-                        "device_id": device.get("device_id"),
-                        "ip": device.get("ip_address"),
-                        "protocol": protocol,
-                        "risk": "high",
-                        "recommendation": f"Use encrypted variant: {self._get_encrypted_variant(protocol)}",
-                    })
+        unencrypted.extend({
+            "device_id": device.get("device_id"),
+            "ip": device.get("ip_address"),
+            "protocol": protocol,
+            "risk": "high",
+            "recommendation": f"Use encrypted variant: {self._get_encrypted_variant(protocol)}",
+        } for device in devices
+          for protocol in device.get("protocols", [])
+          if protocol in unencrypted_protocols)
 
         return unencrypted
 
-    def detect_weak_authentication(self, devices: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def detect_weak_authentication(self, devices: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Detect devices with weak or no authentication."""
         weak_auth = []
 
         no_auth_protocols = ["Modbus TCP", "CoAP", "S7comm"]
 
-        for device in devices:
-            for protocol in device.get("protocols", []):
-                if protocol in no_auth_protocols:
-                    weak_auth.append({
-                        "device_id": device.get("device_id"),
-                        "ip": device.get("ip_address"),
-                        "protocol": protocol,
-                        "issue": "No authentication mechanism",
-                        "risk": "critical",
-                        "recommendation": "Implement network-level access controls",
-                    })
+        weak_auth.extend({
+            "device_id": device.get("device_id"),
+            "ip": device.get("ip_address"),
+            "protocol": protocol,
+            "issue": "No authentication mechanism",
+            "risk": "critical",
+            "recommendation": "Implement network-level access controls",
+        } for device in devices
+          for protocol in device.get("protocols", [])
+          if protocol in no_auth_protocols)
 
         return weak_auth
 
-    def analyze_protocol_usage(self, devices: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def analyze_protocol_usage(self, devices: list[dict[str, Any]]) -> dict[str, Any]:
         """Analyze protocol usage across devices."""
         protocol_stats = {}
         security_issues = {"critical": 0, "high": 0, "medium": 0, "low": 0}
@@ -158,7 +156,7 @@ class ProtocolAnalyzer:
             "recommendation": "Prioritize securing critical and high-risk protocols",
         }
 
-    def get_default_credentials(self, protocol: str) -> List[Dict[str, str]]:
+    def get_default_credentials(self, protocol: str) -> list[dict[str, str]]:
         """Get list of known default credentials for protocol."""
         defaults = {
             "MQTT": [
@@ -191,7 +189,7 @@ class ProtocolAnalyzer:
         return scores.get(protocol, 50)
 
     @staticmethod
-    def _get_protocol_recommendations(protocol: str) -> List[str]:
+    def _get_protocol_recommendations(protocol: str) -> list[str]:
         """Get security recommendations for protocol."""
         recommendations = {
             "MQTT": [

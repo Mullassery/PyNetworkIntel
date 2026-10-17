@@ -1,9 +1,9 @@
 """Enterprise authentication and authorization."""
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass
-from datetime import datetime, timedelta
 import hashlib
 import logging
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -13,9 +13,9 @@ class User:
     user_id: str
     username: str
     email: str
-    roles: List[str]
+    roles: list[str]
     created_at: datetime
-    last_login: Optional[datetime] = None
+    last_login: datetime | None = None
     is_active: bool = True
     mfa_enabled: bool = False
     password_hash: str = ""
@@ -26,16 +26,16 @@ class AuthenticationManager:
 
     def __init__(self):
         """Initialize authentication manager."""
-        self.users: Dict[str, User] = {}
-        self.roles: Dict[str, List[str]] = {
+        self.users: dict[str, User] = {}
+        self.roles: dict[str, list[str]] = {
             "admin": ["read", "write", "delete", "manage_users", "manage_tenants"],
             "operator": ["read", "write", "manage_alerts"],
             "analyst": ["read", "analyze"],
             "viewer": ["read"],
         }
-        self.sessions: Dict[str, Dict[str, Any]] = {}
+        self.sessions: dict[str, dict[str, Any]] = {}
 
-    def create_user(self, username: str, email: str, password: str, roles: List[str]) -> Optional[str]:
+    def create_user(self, username: str, email: str, password: str, roles: list[str]) -> str | None:
         """Create a new user."""
         if username in [u.username for u in self.users.values()]:
             logger.error(f"Username {username} already exists")
@@ -61,7 +61,7 @@ class AuthenticationManager:
 
         return user_id
 
-    def authenticate(self, username: str, password: str) -> Tuple[bool, Optional[str]]:
+    def authenticate(self, username: str, password: str) -> tuple[bool, str | None]:
         """Authenticate a user and return session token."""
         # Find user by username
         user = None
@@ -98,7 +98,7 @@ class AuthenticationManager:
 
         return True, session_token
 
-    def validate_session(self, session_token: str) -> Optional[Dict[str, Any]]:
+    def validate_session(self, session_token: str) -> dict[str, Any] | None:
         """Validate a session token."""
         if session_token not in self.sessions:
             return None
@@ -129,7 +129,7 @@ class AuthenticationManager:
 
         return False
 
-    def enable_mfa(self, user_id: str) -> Optional[str]:
+    def enable_mfa(self, user_id: str) -> str | None:
         """Enable MFA for user."""
         if user_id not in self.users:
             return None
@@ -218,7 +218,7 @@ class AuthenticationManager:
 
         return False
 
-    def get_user_info(self, user_id: str) -> Optional[Dict[str, Any]]:
+    def get_user_info(self, user_id: str) -> dict[str, Any] | None:
         """Get user information."""
         if user_id not in self.users:
             return None
@@ -251,7 +251,7 @@ class AuthenticationManager:
             salt, hash_value = password_hash.split("$")
             pwd_hash = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100000)
             return pwd_hash.hex() == hash_value
-        except:
+        except Exception:
             return False
 
     @staticmethod

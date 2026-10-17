@@ -1,9 +1,21 @@
 """Database models and ORM configuration."""
 
 from datetime import datetime
-from typing import Optional
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, Float, ForeignKey, Text, JSON, Index
-from sqlalchemy.orm import declarative_base, sessionmaker, relationship, Session
+
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    create_engine,
+)
+from sqlalchemy.orm import Session, declarative_base, relationship, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 Base = declarative_base()
@@ -197,7 +209,7 @@ class Database:
 
 
 # Singleton database instance
-_db_instance: Optional[Database] = None
+_db_instance: Database | None = None
 
 
 def init_db(database_url: str = "sqlite:///pynetworkintel.db") -> Database:

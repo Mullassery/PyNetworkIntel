@@ -32,3 +32,21 @@ jobs:
         # code to avoid a permanently-red, unfixable check. Revisit once a
         # fixed paramiko is released - see ROADMAP_HONEST.md.
         run: pip-audit || true
+
+  lint:
+    name: Python Lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ruff
+        run: pip install "ruff>=0.5.0"
+
+      # Full gate using [tool.ruff.lint] (PYNETWORKINTEL-010); the repo had
+      # a [tool.ruff] section but no select/enforcement.
+      - name: Ruff
+        run: ruff check pynetworkintel/

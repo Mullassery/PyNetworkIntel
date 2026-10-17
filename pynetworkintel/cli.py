@@ -2,17 +2,17 @@
 
 import argparse
 import json
-import sys
 import logging
 import os
+import sys
 
 from pynetworkintel import Scanner, __version__
-from pynetworkintel.core import Pipeline
 from pynetworkintel.config import ConfigManager
-from pynetworkintel.progress import ProgressIndicator, OutputFormatter
+from pynetworkintel.core import Pipeline
 from pynetworkintel.dashboard import (
     launch_stats_dashboard,
 )
+from pynetworkintel.progress import OutputFormatter, ProgressIndicator
 
 AUTH_ENV_VAR = "PYNETWORKINTEL_I_AM_AUTHORIZED"
 
@@ -323,10 +323,9 @@ def handle_scan(args) -> int:
     scan_config = config_manager.config.scan
 
     # Launch dashboard if requested
-    dashboard_process = None
     stats_server = None
     if getattr(args, "dashboard", False):
-        dashboard_process, stats_server = launch_stats_dashboard(args.target)
+        _dashboard_process, stats_server = launch_stats_dashboard(args.target)
         if stats_server:
             progress.status("Dashboard launched in separate terminal")
         else:
@@ -409,10 +408,9 @@ def handle_analyze(args) -> int:
     scan_config = config_manager.config.scan
 
     # Launch dashboard if requested
-    dashboard_process = None
     stats_server = None
     if getattr(args, "dashboard", False):
-        dashboard_process, stats_server = launch_stats_dashboard(args.target)
+        _dashboard_process, stats_server = launch_stats_dashboard(args.target)
         if stats_server:
             progress.status("Dashboard launched in separate terminal")
         else:

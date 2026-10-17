@@ -3,9 +3,9 @@
 import logging
 import signal
 import sys
-from typing import Optional, Dict, Any
 from datetime import datetime
 from threading import Event
+from typing import Any
 
 try:
     from apscheduler.schedulers.background import BackgroundScheduler
@@ -16,10 +16,10 @@ try:
 except ImportError:
     SCHEDULER_AVAILABLE = False
 
+from pynetworkintel.alerts import AlertManager
+from pynetworkintel.changes import ChangeDetector
 from pynetworkintel.core import Pipeline
 from pynetworkintel.db import Database
-from pynetworkintel.changes import ChangeDetector
-from pynetworkintel.alerts import AlertManager
 from pynetworkintel.progress import ProgressIndicator
 
 logger = logging.getLogger(__name__)
@@ -32,8 +32,8 @@ class MonitoringScheduler:
     def __init__(
         self,
         database_url: str = "sqlite:///pynetworkintel.db",
-        scan_targets: Optional[Dict[str, str]] = None,
-        alert_manager: Optional[AlertManager] = None,
+        scan_targets: dict[str, str] | None = None,
+        alert_manager: AlertManager | None = None,
     ):
         if not SCHEDULER_AVAILABLE:
             raise ImportError("APScheduler required for scheduling. Install with: pip install apscheduler")
@@ -116,13 +116,15 @@ class MonitoringScheduler:
                 alert_type="scan_failure",
                 severity="high",
                 title=f"Scan Failed: {target}",
-                description=f"Network scan for {target} failed: {str(e)}",
+                description=f"Network scan for {target} failed: {e!s}",
                 device_ip=target,
             )
 
-    def _save_scan_results(self, target: str, result: Dict[str, Any]) -> int:
+    def _save_scan_results(self, target: str, result: dict[str, Any]) -> int:
         """Save scan results to database and return the scan session id."""
-        from pynetworkintel.db import ScanSession, Device as DBDevice, Finding as DBFinding
+        from pynetworkintel.db import Device as DBDevice
+        from pynetworkintel.db import Finding as DBFinding
+        from pynetworkintel.db import ScanSession
 
         session = self.db.get_session()
 
@@ -176,7 +178,7 @@ class MonitoringScheduler:
 
         return scan.id
 
-    def _detect_changes(self, target: str, result: Dict[str, Any], scan_id: int) -> Dict[str, Any]:
+    def _detect_changes(self, target: str, result: dict[str, Any], scan_id: int) -> dict[str, Any]:
         """Detect real changes between this scan and the previous scans of
         the same target, via `ChangeDetector`."""
         from pynetworkintel.models import (
@@ -227,7 +229,7 @@ class MonitoringScheduler:
 
         return {"devices": device_changes, "vulnerabilities": vuln_changes}
 
-    def _generate_alerts(self, target: str, result: Dict[str, Any], changes: Dict[str, Any]):
+    def _generate_alerts(self, target: str, result: dict[str, Any], changes: dict[str, Any]):
         """Generate alerts based on findings and changes."""
         summary = result.get("summary", {})
 

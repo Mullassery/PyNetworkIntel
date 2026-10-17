@@ -20,7 +20,7 @@ edges.
 
 import json
 import logging
-from typing import Any, Dict
+from typing import Any
 from xml.dom import minidom
 from xml.etree import ElementTree as ET
 
@@ -35,7 +35,7 @@ GRAPHML_SCHEMA_LOCATION = (
 )
 
 
-def to_node_link_json(topology: NetworkTopology) -> Dict[str, Any]:
+def to_node_link_json(topology: NetworkTopology) -> dict[str, Any]:
     """Convert a NetworkTopology into D3.js / vis.js "node-link" JSON.
 
     Shape: `{"nodes": [{"id": <ip>, "hostname":..., "node_type":...,

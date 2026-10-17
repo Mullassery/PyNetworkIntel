@@ -1,7 +1,7 @@
 """Multi-cloud asset correlation and network path analysis."""
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -12,10 +12,10 @@ class AssetMapping:
     asset_id: str
     asset_name: str
     asset_type: str
-    cloud_sources: Dict[str, str]  # cloud_platform -> resource_id
-    primary_ip: Optional[str] = None
-    backup_ips: List[str] = None
-    related_assets: List[str] = None
+    cloud_sources: dict[str, str]  # cloud_platform -> resource_id
+    primary_ip: str | None = None
+    backup_ips: list[str] = None
+    related_assets: list[str] = None
 
     def __post_init__(self):
         if self.backup_ips is None:
@@ -29,11 +29,11 @@ class CloudCorrelationEngine:
 
     def __init__(self):
         """Initialize correlation engine."""
-        self.assets: Dict[str, AssetMapping] = {}
-        self.ip_to_asset: Dict[str, str] = {}
-        self.name_to_asset: Dict[str, List[str]] = {}
+        self.assets: dict[str, AssetMapping] = {}
+        self.ip_to_asset: dict[str, str] = {}
+        self.name_to_asset: dict[str, list[str]] = {}
 
-    def add_aws_resource(self, resource: Dict[str, Any]):
+    def add_aws_resource(self, resource: dict[str, Any]):
         """Add AWS resource to correlation engine."""
         resource_id = resource.get('resource_id', '')
         resource_type = resource.get('resource_type', '')
@@ -66,7 +66,7 @@ class CloudCorrelationEngine:
         if asset_key not in self.name_to_asset[name]:
             self.name_to_asset[name].append(asset_key)
 
-    def add_azure_resource(self, resource: Dict[str, Any]):
+    def add_azure_resource(self, resource: dict[str, Any]):
         """Add Azure resource to correlation engine."""
         resource_id = resource.get('resource_id', '')
         resource_type = resource.get('resource_type', '')
@@ -97,7 +97,7 @@ class CloudCorrelationEngine:
         if asset_key not in self.name_to_asset[name]:
             self.name_to_asset[name].append(asset_key)
 
-    def add_gcp_resource(self, resource: Dict[str, Any]):
+    def add_gcp_resource(self, resource: dict[str, Any]):
         """Add GCP resource to correlation engine."""
         resource_id = resource.get('resource_id', '')
         resource_type = resource.get('resource_type', '')
@@ -128,7 +128,7 @@ class CloudCorrelationEngine:
         if asset_key not in self.name_to_asset[name]:
             self.name_to_asset[name].append(asset_key)
 
-    def find_duplicate_assets(self) -> List[Dict[str, Any]]:
+    def find_duplicate_assets(self) -> list[dict[str, Any]]:
         """Find assets that exist in multiple cloud platforms."""
         duplicates = []
 
@@ -145,26 +145,26 @@ class CloudCorrelationEngine:
 
         return duplicates
 
-    def find_asset_by_ip(self, ip_address: str) -> Optional[AssetMapping]:
+    def find_asset_by_ip(self, ip_address: str) -> AssetMapping | None:
         """Find asset by IP address."""
         asset_key = self.ip_to_asset.get(ip_address)
         if asset_key:
             return self.assets.get(asset_key)
         return None
 
-    def find_assets_by_name(self, name: str) -> List[AssetMapping]:
+    def find_assets_by_name(self, name: str) -> list[AssetMapping]:
         """Find assets by name."""
         asset_keys = self.name_to_asset.get(name, [])
         return [self.assets.get(key) for key in asset_keys if key in self.assets]
 
-    def get_multi_cloud_inventory(self) -> Dict[str, Any]:
+    def get_multi_cloud_inventory(self) -> dict[str, Any]:
         """Get complete multi-cloud inventory."""
         by_cloud = {'aws': 0, 'azure': 0, 'gcp': 0}
         by_type = {}
         multi_cloud_assets = 0
 
         for asset in self.assets.values():
-            for cloud in asset.cloud_sources.keys():
+            for cloud in asset.cloud_sources:
                 by_cloud[cloud] += 1
 
             if len(asset.cloud_sources) > 1:
@@ -183,13 +183,13 @@ class CloudCorrelationEngine:
             },
         }
 
-    def analyze_network_paths(self) -> Dict[str, Any]:
+    def analyze_network_paths(self) -> dict[str, Any]:
         """Analyze network paths between cloud platforms."""
         cloud_pairs = set()
         path_analysis = {}
 
         for asset in self.assets.values():
-            clouds = sorted(list(asset.cloud_sources.keys()))
+            clouds = sorted(asset.cloud_sources.keys())
             if len(clouds) >= 2:
                 for i in range(len(clouds)):
                     for j in range(i + 1, len(clouds)):
@@ -203,7 +203,7 @@ class CloudCorrelationEngine:
             }
 
         for asset in self.assets.values():
-            clouds = sorted(list(asset.cloud_sources.keys()))
+            clouds = sorted(asset.cloud_sources.keys())
             if len(clouds) >= 2:
                 for i in range(len(clouds)):
                     for j in range(i + 1, len(clouds)):
@@ -218,7 +218,7 @@ class CloudCorrelationEngine:
             "total_cross_cloud_connections": len(cloud_pairs),
         }
 
-    def detect_resource_clusters(self) -> List[Dict[str, Any]]:
+    def detect_resource_clusters(self) -> list[dict[str, Any]]:
         """Detect clusters of related resources."""
         clusters = []
         visited = set()
@@ -263,7 +263,7 @@ class CloudCorrelationEngine:
         return clusters
 
     @staticmethod
-    def _get_asset_key(name: str, private_ip: Optional[str], public_ip: Optional[str]) -> str:
+    def _get_asset_key(name: str, private_ip: str | None, public_ip: str | None) -> str:
         """Generate unique asset key."""
         if private_ip:
             return f"{name}:{private_ip}"

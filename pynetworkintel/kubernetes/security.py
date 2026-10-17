@@ -1,6 +1,6 @@
 """Container and workload security analysis for Kubernetes."""
-from typing import Dict, List, Any, Optional
 import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class ContainerSecurityAnalyzer:
         except Exception as e:
             logger.error(f"Failed to initialize Kubernetes client: {e}")
 
-    def analyze_pod_security(self, namespace: Optional[str] = None) -> List[Dict[str, Any]]:
+    def analyze_pod_security(self, namespace: str | None = None) -> list[dict[str, Any]]:
         """Analyze pod security contexts."""
         if not self._initialized:
             self._initialize_client()
@@ -57,7 +57,7 @@ class ContainerSecurityAnalyzer:
 
         return security_issues
 
-    def scan_container_images(self, namespace: Optional[str] = None) -> List[Dict[str, Any]]:
+    def scan_container_images(self, namespace: str | None = None) -> list[dict[str, Any]]:
         """Scan container images for vulnerabilities."""
         if not self._initialized:
             self._initialize_client()
@@ -88,7 +88,7 @@ class ContainerSecurityAnalyzer:
 
         return images
 
-    def find_privileged_containers(self, namespace: Optional[str] = None) -> List[Dict[str, Any]]:
+    def find_privileged_containers(self, namespace: str | None = None) -> list[dict[str, Any]]:
         """Find privileged containers."""
         if not self._initialized:
             self._initialize_client()
@@ -103,7 +103,7 @@ class ContainerSecurityAnalyzer:
                 pod_list = self.v1.list_pod_for_all_namespaces()
 
             for pod in pod_list.items:
-                for i, container in enumerate(pod.spec.containers or []):
+                for _i, container in enumerate(pod.spec.containers or []):
                     if container.security_context and container.security_context.privileged:
                         privileged.append({
                             "namespace": pod.metadata.namespace,
@@ -116,7 +116,7 @@ class ContainerSecurityAnalyzer:
 
         return privileged
 
-    def find_containers_running_as_root(self, namespace: Optional[str] = None) -> List[Dict[str, Any]]:
+    def find_containers_running_as_root(self, namespace: str | None = None) -> list[dict[str, Any]]:
         """Find containers running as root."""
         if not self._initialized:
             self._initialize_client()
@@ -150,7 +150,7 @@ class ContainerSecurityAnalyzer:
 
         return root_containers
 
-    def check_resource_limits(self, namespace: Optional[str] = None) -> List[Dict[str, Any]]:
+    def check_resource_limits(self, namespace: str | None = None) -> list[dict[str, Any]]:
         """Check if containers have resource limits defined."""
         if not self._initialized:
             self._initialize_client()
@@ -165,20 +165,19 @@ class ContainerSecurityAnalyzer:
                 pod_list = self.v1.list_pod_for_all_namespaces()
 
             for pod in pod_list.items:
-                for container in (pod.spec.containers or []):
-                    if not container.resources or not container.resources.limits:
-                        issues.append({
-                            "namespace": pod.metadata.namespace,
-                            "pod": pod.metadata.name,
-                            "container": container.name,
-                            "issue": "No resource limits defined",
-                        })
+                issues.extend({
+                    "namespace": pod.metadata.namespace,
+                    "pod": pod.metadata.name,
+                    "container": container.name,
+                    "issue": "No resource limits defined",
+                } for container in (pod.spec.containers or [])
+                  if not container.resources or not container.resources.limits)
         except Exception as e:
             logger.error(f"Failed to check resource limits: {e}")
 
         return issues
 
-    def get_security_summary(self) -> Dict[str, Any]:
+    def get_security_summary(self) -> dict[str, Any]:
         """Get comprehensive security summary."""
         pod_issues = self.analyze_pod_security()
         images = self.scan_container_images()
@@ -209,7 +208,7 @@ class ContainerSecurityAnalyzer:
         }
 
     @staticmethod
-    def _check_pod_security(pod) -> List[str]:
+    def _check_pod_security(pod) -> list[str]:
         """Check pod security context."""
         issues = []
         spec = pod.spec
@@ -229,7 +228,7 @@ class ContainerSecurityAnalyzer:
         return issues
 
     @staticmethod
-    def _calculate_pod_risk(issues: List[str]) -> float:
+    def _calculate_pod_risk(issues: list[str]) -> float:
         """Calculate risk score for a pod."""
         risk_score = 0.0
 
@@ -244,7 +243,7 @@ class ContainerSecurityAnalyzer:
         return min(risk_score, 100)
 
     @staticmethod
-    def _check_image(image: str) -> List[str]:
+    def _check_image(image: str) -> list[str]:
         """Check container image for security issues."""
         issues = []
 

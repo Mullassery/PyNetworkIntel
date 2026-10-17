@@ -14,11 +14,12 @@ threat-intel feeds, live traffic baselines).
 """
 
 import ipaddress
+import itertools
 import logging
 import math
 import socket
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import timedelta
+from typing import Any
 
 from pynetworkintel.changes import ChangeDetector
 from pynetworkintel.db import Database, ScanSession, get_db
@@ -38,12 +39,12 @@ class NetworkIntelligence:
             (`pynetworkintel.db.get_db()`).
     """
 
-    def __init__(self, db: Optional[Database] = None):
+    def __init__(self, db: Database | None = None):
         self.db = db or get_db()
 
     # ------------------------------------------------------------------ helpers
 
-    def _latest_scan(self, subnet_or_target: str) -> Optional[ScanSession]:
+    def _latest_scan(self, subnet_or_target: str) -> ScanSession | None:
         session = self.db.get_session()
         try:
             return (
@@ -55,7 +56,7 @@ class NetworkIntelligence:
         finally:
             session.close()
 
-    def _devices_for_target(self, target: str, limit_to_subnet: Optional[str] = None) -> List[Dict[str, Any]]:
+    def _devices_for_target(self, target: str, limit_to_subnet: str | None = None) -> list[dict[str, Any]]:
         """Devices from the most recent scan of `target`, optionally clipped
         to an `ipaddress`-interpretable subnet."""
         from pynetworkintel.db import Device as DBDevice
@@ -112,7 +113,7 @@ class NetworkIntelligence:
         flow_id: str,
         time_window_seconds: int = 300,
         include_geolocation: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Analyze reachability for a discovered target from stored scan
         topology. This project has no packet-flow capture, so this reports
         the real connectivity graph inferred from the latest scan."""
@@ -149,9 +150,9 @@ class NetworkIntelligence:
     def detect_anomalies(
         self,
         sensor_id: str,
-        anomaly_type: Optional[str] = None,
+        anomaly_type: str | None = None,
         sensitivity: float = 0.7,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Detect baseline-drift anomalies by diffing the two most recent
         scans of a target (new/removed devices, new/resolved CVEs). This
         build has no live-traffic sensing, so attack-class anomaly types
@@ -265,15 +266,15 @@ class NetworkIntelligence:
 
     def threat_correlation(
         self,
-        indicators: List[str],
-        threat_intel_sources: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        indicators: list[str],
+        threat_intel_sources: list[str] | None = None,
+    ) -> dict[str, Any]:
         """Correlate indicators (IPs/hostnames) against stored scan findings
         -- the CVEs tied to each indicator across scan history. No external
         threat-intel feeds are configured, so sources are scan-history only."""
         return self._match_indicator_findings(indicators)
 
-    def _match_indicator_findings(self, indicators: List[str]) -> Dict[str, Any]:
+    def _match_indicator_findings(self, indicators: list[str]) -> dict[str, Any]:
         from pynetworkintel.db import Finding as DBFinding
 
         session = self.db.get_session()
@@ -286,7 +287,7 @@ class NetworkIntelligence:
         finally:
             session.close()
 
-        groups: Dict[str, Dict[str, Any]] = {}
+        groups: dict[str, dict[str, Any]] = {}
         for indicator in indicators:
             ind = indicator.strip()
             if not ind:
@@ -299,7 +300,7 @@ class NetworkIntelligence:
             if not matched:
                 groups[ind] = {"threats": [], "correlation_count": 0}
                 continue
-            by_cve: Dict[str, Dict[str, Any]] = {}
+            by_cve: dict[str, dict[str, Any]] = {}
             for f in matched:
                 key = f.cve_id
                 entry = by_cve.setdefault(
@@ -316,7 +317,7 @@ class NetworkIntelligence:
                 entry["affected_device_count"] += 1
                 if f.device_ip not in entry["devices"]:
                     entry["devices"].append(f.device_ip)
-            by_severity: Dict[str, int] = {}
+            by_severity: dict[str, int] = {}
             for entry in by_cve.values():
                 by_severity[entry["severity"]] = by_severity.get(entry["severity"], 0) + 1
             groups[ind] = {
@@ -326,7 +327,7 @@ class NetworkIntelligence:
             }
 
         highest = None
-        for ind, group in groups.items():
+        for group in groups.values():
             for entry in group.get("threats", []):
                 sev = entry.get("severity", "info")
                 if sev in ("critical", "high") and (highest is None or sev == "critical"):
@@ -342,8 +343,8 @@ class NetworkIntelligence:
         self,
         subnet: str,
         include_vulnerabilities: bool = False,
-        vulnerability_severity: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        vulnerability_severity: str | None = None,
+    ) -> dict[str, Any]:
         """Real inventory from the latest scan of `subnet` (treated as the
         monitored target)."""
         devices = self._devices_for_target(subnet)
@@ -351,7 +352,7 @@ class NetworkIntelligence:
             return {"subnet": subnet, "total_assets": 0, "responsive_hosts": 0,
                     "os_breakdown": {}, "vulnerabilities": []}
 
-        os_breakdown: Dict[str, int] = {}
+        os_breakdown: dict[str, int] = {}
         for d in devices:
             os = d.get("os") or "unknown"
             os_breakdown[os] = os_breakdown.get(os, 0) + 1
@@ -379,7 +380,7 @@ class NetworkIntelligence:
             "vulnerabilities": vulnerabilities,
         }
 
-    def _findings_for_device(self, ip: str) -> List[Any]:
+    def _findings_for_device(self, ip: str) -> list[Any]:
         from pynetworkintel.db import Finding as DBFinding
 
         session = self.db.get_session()
@@ -395,9 +396,9 @@ class NetworkIntelligence:
     def check_port_exposure(
         self,
         host: str,
-        port_range: Optional[str] = None,
+        port_range: str | None = None,
         check_services: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Report which ports/services were observed open on `host` in the
         latest scan that includes it."""
         devices = []
@@ -442,7 +443,7 @@ class NetworkIntelligence:
         }
 
     @staticmethod
-    def _filter_ports(services: List[Dict[str, Any]], port_range: Optional[str]) -> List[Dict[str, Any]]:
+    def _filter_ports(services: list[dict[str, Any]], port_range: str | None) -> list[dict[str, Any]]:
         if not port_range:
             return list(services)
 
@@ -462,11 +463,11 @@ class NetworkIntelligence:
         domain: str,
         include_dns_history: bool = False,
         check_dga: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Resolve real A/AAAA/CNAME records for `domain` via the system
         resolver. DNS history requires a provider this project does not
         use, so it is reported as unavailable (empty) rather than fake."""
-        records: List[Dict[str, str]] = []
+        records: list[dict[str, str]] = []
         seen = set()
         try:
             infos = socket.getaddrinfo(domain, None)
@@ -512,10 +513,10 @@ class NetworkIntelligence:
 
     def get_geolocation_analysis(
         self,
-        ip_addresses: List[str],
+        ip_addresses: list[str],
         time_window_hours: int = 24,
         detect_vpn_proxies: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Classify IPs as private/public/reserved via `ipaddress` -- the
         only genuinely available signal, since this project bundles no
         geolocation database. Country-level mapping is not performed."""
@@ -551,7 +552,7 @@ class NetworkIntelligence:
             "note": "IP classification only -- no geolocation database bundled.",
         }
 
-    def protocol_analysis(self, pcap_id: str, protocols: Optional[List[str]] = None) -> Dict[str, Any]:
+    def protocol_analysis(self, pcap_id: str, protocols: list[str] | None = None) -> dict[str, Any]:
         raise NotImplementedError(
             f"{NOT_IMPLEMENTED}: requires packet capture infrastructure "
             f"(no pcap_id '{pcap_id}' exists in this project)."
@@ -562,7 +563,7 @@ class NetworkIntelligence:
         entity_id: str,
         entity_type: str,
         time_window_days: int = 30,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Profile `entity_id` from scan history: when it was first/last
         seen, how many scans included it, and which services were observed."""
         from pynetworkintel.db import Device as DBDevice
@@ -600,7 +601,7 @@ class NetworkIntelligence:
 
         all_ports = set()
         device_types = set()
-        for first_seen, last_seen, device_type, ports in rows:
+        for _first_seen, _last_seen, device_type, ports in rows:
             device_types.add(device_type)
             all_ports.update(ports)
 
@@ -613,7 +614,7 @@ class NetworkIntelligence:
         }
         # Deviation heuristic: seen again today after a gap > the window.
         gaps = 0
-        for prev, cur in zip(rows, rows[1:]):
+        for prev, cur in itertools.pairwise(rows):
             if (cur[1] - prev[1]) > timedelta(days=time_window_days):
                 gaps += 1
         return {
@@ -627,7 +628,7 @@ class NetworkIntelligence:
         self,
         indicator: str,
         threat_level: str = "any",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Return the real CVEs tied to `indicator` (IP/hostname) in scan
         history. No external threat-intel feeds are configured; the result
         is local scan intelligence only."""
@@ -653,7 +654,7 @@ class NetworkIntelligence:
         if threat_level != "any":
             matched = [f for f in matched if f.severity == threat_level]
 
-        grouped: Dict[str, Dict[str, Any]] = {}
+        grouped: dict[str, dict[str, Any]] = {}
         for f in matched:
             entry = grouped.setdefault(
                 f.cve_id,
@@ -696,7 +697,7 @@ class NetworkIntelligence:
         self,
         threat_id: str,
         remediation_priority: str = "high",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Real remediation guidance derived from a stored vulnerability
         (by CVE id) matched against the scan history."""
         from pynetworkintel.db import Finding as DBFinding
@@ -746,8 +747,8 @@ class NetworkIntelligence:
         self,
         network_id: str,
         check_microsegmentation: bool = False,
-        security_zone: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        security_zone: str | None = None,
+    ) -> dict[str, Any]:
         """Segment the discovered topology of `network_id` into its real
         inferred subnets. The segmentation score is a transparent heuristic
         over the derived graph, not a claim of switch-level isolation."""
@@ -799,7 +800,7 @@ class NetworkIntelligence:
         report_type: str,
         time_period: str = "last_7d",
         format: str = "markdown",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate a real report from scan history via `ReportGenerator`.
 
         `report_type` maps: executive_summary -> summary report,
@@ -814,7 +815,7 @@ class NetworkIntelligence:
             )
 
         generator = ReportGenerator(self.db)
-        if report_type in ("executive_summary",):
+        if report_type == "executive_summary":
             body = generator.generate_summary_report(hours)
         elif report_type in ("threat_assessment", "vulnerability_scan"):
             body = generator.generate_vulnerability_report()

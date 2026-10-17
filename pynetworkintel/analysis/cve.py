@@ -1,11 +1,12 @@
 """CVE database integration and vulnerability checking."""
 
 import logging
-import requests
 import time
-from typing import List, Optional, Dict, Any
+from typing import Any
 
-from pynetworkintel.models import Device, Service, SecurityFinding, Severity, FindingType
+import requests
+
+from pynetworkintel.models import Device, FindingType, SecurityFinding, Service, Severity
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ class CVEChecker:
         self.last_request_time = 0.0
         self._cache = {}
 
-    def check_device(self, device: Device) -> List[SecurityFinding]:
+    def check_device(self, device: Device) -> list[SecurityFinding]:
         """
         Check all services on device for known vulnerabilities.
 
@@ -60,7 +61,7 @@ class CVEChecker:
 
         return findings
 
-    def get_cves_for_service(self, service_name: str, version: str) -> List[Dict[str, Any]]:
+    def get_cves_for_service(self, service_name: str, version: str) -> list[dict[str, Any]]:
         """
         Get CVEs for a specific service and version.
 
@@ -86,7 +87,7 @@ class CVEChecker:
             logger.warning(f"Failed to query CVEs for {service_name}: {e}")
             return []
 
-    def _query_nvd(self, keyword: str) -> List[Dict[str, Any]]:
+    def _query_nvd(self, keyword: str) -> list[dict[str, Any]]:
         """Query NVD API for CVEs matching keyword."""
         self._respect_rate_limit()
 
@@ -129,7 +130,7 @@ class CVEChecker:
             logger.error(f"NVD API request failed: {e}")
             return []
 
-    def _extract_cvss_score(self, cve_data: Dict[str, Any]) -> Optional[float]:
+    def _extract_cvss_score(self, cve_data: dict[str, Any]) -> float | None:
         """Extract CVSS score from CVE data."""
         metrics = cve_data.get("metrics", {})
 
@@ -153,7 +154,7 @@ class CVEChecker:
         self.last_request_time = time.time()
 
     def _create_finding(
-        self, device: Device, service: Service, cve: Dict[str, Any]
+        self, device: Device, service: Service, cve: dict[str, Any]
     ) -> SecurityFinding:
         """Create security finding from CVE information."""
         severity = self._cvss_to_severity(cve.get("cvss_score"))
@@ -172,7 +173,7 @@ class CVEChecker:
         )
 
     @staticmethod
-    def _cvss_to_severity(cvss_score: Optional[float]) -> Severity:
+    def _cvss_to_severity(cvss_score: float | None) -> Severity:
         """Convert CVSS score to severity level."""
         if cvss_score is None:
             return Severity.MEDIUM

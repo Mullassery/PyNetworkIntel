@@ -1,7 +1,7 @@
 """IoT device vulnerability analysis."""
-from typing import Dict, List, Any
 import logging
 import re
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class IoTVulnerabilityAnalyzer:
             },
         }
 
-    def check_firmware_vulnerabilities(self, device_model: str, firmware_version: str) -> List[Dict[str, Any]]:
+    def check_firmware_vulnerabilities(self, device_model: str, firmware_version: str) -> list[dict[str, Any]]:
         """Check for known firmware vulnerabilities."""
         vulnerabilities = []
 
@@ -33,7 +33,7 @@ class IoTVulnerabilityAnalyzer:
         if not version_match:
             return vulnerabilities
 
-        major, minor, patch = map(int, version_match.groups())
+        major, minor, _patch = map(int, version_match.groups())
 
         # Check for known vulnerability patterns
         if major < 2 or (major == 2 and minor < 5):
@@ -51,7 +51,7 @@ class IoTVulnerabilityAnalyzer:
 
         return vulnerabilities
 
-    def check_protocol_vulnerabilities(self, device: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def check_protocol_vulnerabilities(self, device: dict[str, Any]) -> list[dict[str, Any]]:
         """Check for protocol-based vulnerabilities."""
         vulnerabilities = []
 
@@ -80,7 +80,7 @@ class IoTVulnerabilityAnalyzer:
 
         return vulnerabilities
 
-    def scan_device_security(self, device: Dict[str, Any]) -> Dict[str, Any]:
+    def scan_device_security(self, device: dict[str, Any]) -> dict[str, Any]:
         """Perform comprehensive security scan on device."""
         firmware_vulns = self.check_firmware_vulnerabilities(
             device.get("model", "Unknown"),
@@ -103,7 +103,7 @@ class IoTVulnerabilityAnalyzer:
             "recommendations": self._get_recommendations(all_vulns),
         }
 
-    def detect_default_credentials(self, device: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def detect_default_credentials(self, device: dict[str, Any]) -> list[dict[str, Any]]:
         """Check for default credentials in device configuration."""
         issues = []
 
@@ -113,20 +113,19 @@ class IoTVulnerabilityAnalyzer:
 
         default_creds = self._get_default_creds_for_device(manufacturer, device_type)
 
-        for cred_set in default_creds:
-            issues.append({
-                "type": "default_credentials",
-                "severity": "critical",
-                "username": cred_set.get("username"),
-                "password": cred_set.get("password"),
-                "description": "Device likely has default credentials",
-                "recommendation": "Change default credentials immediately",
-                "cve_score": 9.1,
-            })
+        issues.extend({
+            "type": "default_credentials",
+            "severity": "critical",
+            "username": cred_set.get("username"),
+            "password": cred_set.get("password"),
+            "description": "Device likely has default credentials",
+            "recommendation": "Change default credentials immediately",
+            "cve_score": 9.1,
+        } for cred_set in default_creds)
 
         return issues
 
-    def analyze_device_fleet(self, devices: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def analyze_device_fleet(self, devices: list[dict[str, Any]]) -> dict[str, Any]:
         """Analyze security across IoT device fleet."""
         all_vulns = []
         risk_distribution = {"critical": 0, "high": 0, "medium": 0, "low": 0}
@@ -157,7 +156,7 @@ class IoTVulnerabilityAnalyzer:
         }
 
     @staticmethod
-    def _get_model_vulnerabilities(model: str) -> List[Dict[str, Any]]:
+    def _get_model_vulnerabilities(model: str) -> list[dict[str, Any]]:
         """Get known vulnerabilities for device model."""
         model_lower = model.lower()
 
@@ -190,7 +189,7 @@ class IoTVulnerabilityAnalyzer:
         return []
 
     @staticmethod
-    def _check_mqtt_vulnerabilities(device: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _check_mqtt_vulnerabilities(device: dict[str, Any]) -> list[dict[str, Any]]:
         """Check MQTT-specific vulnerabilities."""
         vulns = []
 
@@ -206,7 +205,7 @@ class IoTVulnerabilityAnalyzer:
         return vulns
 
     @staticmethod
-    def _check_http_vulnerabilities(device: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _check_http_vulnerabilities(device: dict[str, Any]) -> list[dict[str, Any]]:
         """Check HTTP-specific vulnerabilities."""
         vulns = []
 
@@ -222,12 +221,12 @@ class IoTVulnerabilityAnalyzer:
         return vulns
 
     @staticmethod
-    def _calculate_device_risk(vulnerabilities: List[Dict[str, Any]]) -> float:
+    def _calculate_device_risk(vulnerabilities: list[dict[str, Any]]) -> float:
         """Calculate overall device risk score (0-100)."""
         if not vulnerabilities:
             return 0.0
 
-        cve_scores = [v.get("cve_score", 5.0) for v in vulnerabilities]
+        [v.get("cve_score", 5.0) for v in vulnerabilities]
         severity_multipliers = {
             "critical": 1.5,
             "high": 1.2,
@@ -258,7 +257,7 @@ class IoTVulnerabilityAnalyzer:
             return "low"
 
     @staticmethod
-    def _get_recommendations(vulnerabilities: List[Dict[str, Any]]) -> List[str]:
+    def _get_recommendations(vulnerabilities: list[dict[str, Any]]) -> list[str]:
         """Get recommendations from vulnerabilities."""
         recommendations = []
 
@@ -269,7 +268,7 @@ class IoTVulnerabilityAnalyzer:
         return recommendations[:5]  # Return top 5 recommendations
 
     @staticmethod
-    def _get_remediation_priority(vulnerabilities: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _get_remediation_priority(vulnerabilities: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Get prioritized list of remediations."""
         critical_vulns = [v for v in vulnerabilities if v.get("severity") == "critical"]
         high_vulns = [v for v in vulnerabilities if v.get("severity") == "high"]
@@ -293,7 +292,7 @@ class IoTVulnerabilityAnalyzer:
         return priority
 
     @staticmethod
-    def _get_default_creds_for_device(manufacturer: str, device_type: str) -> List[Dict[str, str]]:
+    def _get_default_creds_for_device(manufacturer: str, device_type: str) -> list[dict[str, str]]:
         """Get default credentials for device type."""
         defaults = {
             "ubiquiti": [

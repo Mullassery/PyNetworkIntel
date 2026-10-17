@@ -1,8 +1,8 @@
 """Device behavioral baseline learning."""
-from typing import Dict, List, Any
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -11,11 +11,11 @@ logger = logging.getLogger(__name__)
 class DeviceBaseline:
     device_id: str
     device_type: str
-    metrics: Dict[str, Any] = field(default_factory=dict)
-    port_patterns: Dict[int, int] = field(default_factory=dict)
-    service_patterns: Dict[str, int] = field(default_factory=dict)
-    time_based_patterns: Dict[str, int] = field(default_factory=dict)
-    activity_history: List[Dict[str, Any]] = field(default_factory=list)
+    metrics: dict[str, Any] = field(default_factory=dict)
+    port_patterns: dict[int, int] = field(default_factory=dict)
+    service_patterns: dict[str, int] = field(default_factory=dict)
+    time_based_patterns: dict[str, int] = field(default_factory=dict)
+    activity_history: list[dict[str, Any]] = field(default_factory=list)
     baseline_confidence: float = 0.0
     last_updated: datetime = field(default_factory=datetime.now)
 
@@ -31,10 +31,10 @@ class BehavioralBaseline:
             min_samples: Minimum samples needed to establish baseline
         """
         self.min_samples = min_samples
-        self.baselines: Dict[str, DeviceBaseline] = {}
-        self.activity_log: List[Dict[str, Any]] = []
+        self.baselines: dict[str, DeviceBaseline] = {}
+        self.activity_log: list[dict[str, Any]] = []
 
-    def record_device_activity(self, device_id: str, device_type: str, activity: Dict[str, Any]):
+    def record_device_activity(self, device_id: str, device_type: str, activity: dict[str, Any]):
         """Record device activity."""
         if device_id not in self.baselines:
             self.baselines[device_id] = DeviceBaseline(
@@ -79,7 +79,7 @@ class BehavioralBaseline:
             baseline = self.baselines[device_id]
             baseline.service_patterns[service] = baseline.service_patterns.get(service, 0) + 1
 
-    def get_baseline_status(self, device_id: str) -> Dict[str, Any]:
+    def get_baseline_status(self, device_id: str) -> dict[str, Any]:
         """Get baseline status for device."""
         if device_id not in self.baselines:
             return {"status": "not_established"}
@@ -104,7 +104,7 @@ class BehavioralBaseline:
                 "common_services": self._get_top_services(baseline, 5),
             }
 
-    def detect_anomalies(self, device_id: str, current_activity: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def detect_anomalies(self, device_id: str, current_activity: dict[str, Any]) -> list[dict[str, Any]]:
         """Detect anomalies based on baseline."""
         if device_id not in self.baselines:
             return []
@@ -142,7 +142,7 @@ class BehavioralBaseline:
 
         return anomalies
 
-    def get_device_fingerprint(self, device_id: str) -> Dict[str, Any]:
+    def get_device_fingerprint(self, device_id: str) -> dict[str, Any]:
         """Get device fingerprint based on behavior."""
         if device_id not in self.baselines:
             return {}
@@ -166,7 +166,7 @@ class BehavioralBaseline:
             "baseline_confidence": baseline.baseline_confidence,
         }
 
-    def compare_baselines(self, device_id1: str, device_id2: str) -> Dict[str, Any]:
+    def compare_baselines(self, device_id1: str, device_id2: str) -> dict[str, Any]:
         """Compare baselines of two devices."""
         if device_id1 not in self.baselines or device_id2 not in self.baselines:
             return {"error": "One or both devices not found"}
@@ -194,7 +194,7 @@ class BehavioralBaseline:
             "shared_services": list(services1 & services2),
         }
 
-    def get_fleet_statistics(self) -> Dict[str, Any]:
+    def get_fleet_statistics(self) -> dict[str, Any]:
         """Get statistics across device fleet."""
         if not self.baselines:
             return {"total_devices": 0}
@@ -232,7 +232,7 @@ class BehavioralBaseline:
         }
 
     @staticmethod
-    def _update_baseline_metrics(baseline: DeviceBaseline, activity: Dict[str, Any]):
+    def _update_baseline_metrics(baseline: DeviceBaseline, activity: dict[str, Any]):
         """Update baseline metrics from activity."""
         timestamp = datetime.now()
         hour = timestamp.hour
@@ -247,7 +247,7 @@ class BehavioralBaseline:
         )
 
     @staticmethod
-    def _get_top_ports(baseline: DeviceBaseline, limit: int = 5) -> List[Dict[str, int]]:
+    def _get_top_ports(baseline: DeviceBaseline, limit: int = 5) -> list[dict[str, int]]:
         """Get top ports used by device."""
         sorted_ports = sorted(
             baseline.port_patterns.items(),
@@ -261,7 +261,7 @@ class BehavioralBaseline:
         ]
 
     @staticmethod
-    def _get_top_services(baseline: DeviceBaseline, limit: int = 5) -> List[Dict[str, int]]:
+    def _get_top_services(baseline: DeviceBaseline, limit: int = 5) -> list[dict[str, int]]:
         """Get top services used by device."""
         sorted_services = sorted(
             baseline.service_patterns.items(),

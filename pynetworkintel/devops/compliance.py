@@ -1,6 +1,6 @@
 """Compliance framework mapping and reporting."""
-from typing import Dict, List, Any
 import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +12,7 @@ class ComplianceMapper:
         """Initialize compliance mapper."""
         self.compliance_mappings = self._load_compliance_mappings()
 
-    def map_to_pci_dss(self, finding: Dict[str, Any]) -> List[Dict[str, str]]:
+    def map_to_pci_dss(self, finding: dict[str, Any]) -> list[dict[str, str]]:
         """Map finding to PCI-DSS requirements."""
         mapped = []
 
@@ -47,7 +47,7 @@ class ComplianceMapper:
 
         return mapped
 
-    def map_to_hipaa(self, finding: Dict[str, Any]) -> List[Dict[str, str]]:
+    def map_to_hipaa(self, finding: dict[str, Any]) -> list[dict[str, str]]:
         """Map finding to HIPAA requirements."""
         mapped = []
 
@@ -84,7 +84,7 @@ class ComplianceMapper:
 
         return mapped
 
-    def map_to_iso27001(self, finding: Dict[str, Any]) -> List[Dict[str, str]]:
+    def map_to_iso27001(self, finding: dict[str, Any]) -> list[dict[str, str]]:
         """Map finding to ISO 27001 controls."""
         mapped = []
 
@@ -114,7 +114,7 @@ class ComplianceMapper:
 
         return mapped
 
-    def map_to_cis_controls(self, finding: Dict[str, Any]) -> List[Dict[str, str]]:
+    def map_to_cis_controls(self, finding: dict[str, Any]) -> list[dict[str, str]]:
         """Map finding to CIS Controls."""
         mapped = []
 
@@ -143,7 +143,7 @@ class ComplianceMapper:
 
         return mapped
 
-    def generate_compliance_report(self, findings: List[Dict[str, Any]], framework: str) -> Dict[str, Any]:
+    def generate_compliance_report(self, findings: list[dict[str, Any]], framework: str) -> dict[str, Any]:
         """Generate compliance report for findings."""
         mapped_findings = []
         compliance_status = {"compliant": 0, "non_compliant": 0, "needs_review": 0}
@@ -186,7 +186,7 @@ class ComplianceMapper:
             "findings": mapped_findings[:20],  # Return first 20
         }
 
-    def get_remediation_timeline(self, findings: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def get_remediation_timeline(self, findings: list[dict[str, Any]]) -> dict[str, Any]:
         """Generate remediation timeline based on severity and compliance."""
         critical = [f for f in findings if f.get("severity") == "critical"]
         high = [f for f in findings if f.get("severity") == "high"]
@@ -211,7 +211,7 @@ class ComplianceMapper:
         }
 
     @staticmethod
-    def _load_compliance_mappings() -> Dict[str, Dict[str, List[str]]]:
+    def _load_compliance_mappings() -> dict[str, dict[str, list[str]]]:
         """Load compliance framework mappings."""
         return {
             "pci_dss": {
@@ -232,7 +232,7 @@ class ComplianceMapper:
         }
 
     @staticmethod
-    def _get_framework_recommendations(framework: str) -> List[str]:
+    def _get_framework_recommendations(framework: str) -> list[str]:
         """Get recommendations for compliance framework."""
         recommendations = {
             "pci_dss": [

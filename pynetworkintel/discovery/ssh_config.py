@@ -1,9 +1,9 @@
 """SSH-based configuration retrieval from devices."""
 
 import logging
-from typing import Optional
+
 import paramiko
-from paramiko.ssh_exception import SSHException, AuthenticationException
+from paramiko.ssh_exception import AuthenticationException, SSHException
 
 from pynetworkintel.models import Device
 
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class SSHConfigGrabber:
     """Grab configuration files from remote devices via SSH."""
 
-    def __init__(self, username: Optional[str], key_path: Optional[str] = None, password: Optional[str] = None):
+    def __init__(self, username: str | None, key_path: str | None = None, password: str | None = None):
         self.username = username
         self.key_path = key_path
         self.password = password
@@ -115,7 +115,7 @@ class SSHConfigGrabber:
         if firewalld:
             device.add_config("/etc/firewalld/config", firewalld, "linux")
 
-    def _read_file(self, client: paramiko.SSHClient, path: str) -> Optional[str]:
+    def _read_file(self, client: paramiko.SSHClient, path: str) -> str | None:
         """Read file from remote device."""
         try:
             sftp = client.open_sftp()
@@ -127,10 +127,10 @@ class SSHConfigGrabber:
             logger.debug(f"Could not read {path}: {e}")
             return None
 
-    def _run_command(self, client: paramiko.SSHClient, cmd: str) -> Optional[str]:
+    def _run_command(self, client: paramiko.SSHClient, cmd: str) -> str | None:
         """Run command on remote device and return output."""
         try:
-            _, stdout, stderr = client.exec_command(cmd, timeout=10)
+            _, stdout, _stderr = client.exec_command(cmd, timeout=10)
             output = stdout.read().decode("utf-8", errors="replace")
             return output if output.strip() else None
         except Exception as e:

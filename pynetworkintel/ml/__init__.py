@@ -8,12 +8,12 @@ device's historical port/service pattern). Lighter test coverage than the
 core rule/CVE checkers - see tests/test_ml.py.
 """
 
-from .behavioral import BehavioralBaseline
 from .anomaly import AnomalyDetector
+from .behavioral import BehavioralBaseline
 from .predictive import PredictiveAnalyzer
 
 __all__ = [
-    "BehavioralBaseline",
     "AnomalyDetector",
+    "BehavioralBaseline",
     "PredictiveAnalyzer",
 ]

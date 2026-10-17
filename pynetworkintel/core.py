@@ -3,11 +3,10 @@
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Optional
 
-from pynetworkintel.models import ScanResult
+from pynetworkintel.analysis import CVEChecker, LLMAnalyzer, RuleChecker
 from pynetworkintel.discovery import DeviceScanner, SSHConfigGrabber
-from pynetworkintel.analysis import RuleChecker, CVEChecker, LLMAnalyzer
+from pynetworkintel.models import ScanResult
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +23,9 @@ class Scanner:
     def __init__(
         self,
         nmap_path: str = "nmap",
-        ssh_username: Optional[str] = None,
-        ssh_key_path: Optional[str] = None,
-        ssh_password: Optional[str] = None,
+        ssh_username: str | None = None,
+        ssh_key_path: str | None = None,
+        ssh_password: str | None = None,
         nmap_args: str = "-sV",
         scan_timeout: int = 300,
         ssh_max_workers: int = 16,
@@ -109,7 +108,7 @@ class Scanner:
 class Analyzer:
     """Security analyzer for scan results."""
 
-    def __init__(self, anthropic_api_key: Optional[str] = None):
+    def __init__(self, anthropic_api_key: str | None = None):
         self.rule_checker = RuleChecker()
         self.cve_checker = CVEChecker()
         self.llm_analyzer = LLMAnalyzer(anthropic_api_key)
@@ -165,10 +164,10 @@ class Pipeline:
     def __init__(
         self,
         nmap_path: str = "nmap",
-        ssh_username: Optional[str] = None,
-        ssh_key_path: Optional[str] = None,
-        ssh_password: Optional[str] = None,
-        anthropic_api_key: Optional[str] = None,
+        ssh_username: str | None = None,
+        ssh_key_path: str | None = None,
+        ssh_password: str | None = None,
+        anthropic_api_key: str | None = None,
         nmap_args: str = "-sV",
         scan_timeout: int = 300,
     ):

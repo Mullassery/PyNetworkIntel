@@ -1,6 +1,6 @@
 """Intelligent recommendation generation."""
-from typing import Dict, List, Any
 import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -8,13 +8,13 @@ logger = logging.getLogger(__name__)
 class RecommendationEngine:
     """Generate intelligent recommendations."""
 
-    def generate_recommendations(self, architecture_review: Dict[str, Any], context: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def generate_recommendations(self, architecture_review: dict[str, Any], context: dict[str, Any]) -> list[dict[str, Any]]:
         """Generate context-aware recommendations."""
         recommendations = []
 
         reviews = architecture_review.get("reviews", {})
         budget = context.get("budget", 10000)
-        team_size = context.get("team_size", 5)
+        context.get("team_size", 5)
         time_horizon = context.get("time_horizon_months", 12)
 
         # Reliability recommendations
@@ -66,7 +66,7 @@ class RecommendationEngine:
 
         return recommendations
 
-    def generate_roi_analysis(self, recommendation: Dict[str, Any], timeframe_months: int) -> Dict[str, Any]:
+    def generate_roi_analysis(self, recommendation: dict[str, Any], timeframe_months: int) -> dict[str, Any]:
         """Calculate ROI for recommendation."""
         cost_impact = recommendation.get("cost_impact", 0)
         annual_savings = -cost_impact if cost_impact < 0 else 0
@@ -79,7 +79,7 @@ class RecommendationEngine:
 
         return {
             "recommendation": recommendation.get("action"),
-            "upfront_cost": cost_impact if cost_impact > 0 else 0,
+            "upfront_cost": max(0, cost_impact),
             "monthly_savings": monthly_benefit,
             "total_benefit_period": period_benefit,
             "roi_percent": (period_benefit / cost_impact * 100) if cost_impact > 0 else 0,
@@ -87,7 +87,7 @@ class RecommendationEngine:
         }
 
     @staticmethod
-    def _rank_by_roi(recommendations: List[Dict[str, Any]], budget: float, timeframe: int) -> List[Dict[str, Any]]:
+    def _rank_by_roi(recommendations: list[dict[str, Any]], budget: float, timeframe: int) -> list[dict[str, Any]]:
         """Rank recommendations by ROI."""
         scored = []
 

@@ -1,7 +1,7 @@
 """CI/CD pipeline security scanning."""
-from typing import Dict, List, Any
 import logging
 import re
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -11,9 +11,9 @@ class CICDPipelineScanner:
 
     def __init__(self):
         """Initialize CI/CD scanner."""
-        self.pipelines: List[Dict[str, Any]] = []
+        self.pipelines: list[dict[str, Any]] = []
 
-    def scan_github_actions(self, workflow_content: str) -> Dict[str, Any]:
+    def scan_github_actions(self, workflow_content: str) -> dict[str, Any]:
         """Scan GitHub Actions workflow for security issues."""
         issues = []
 
@@ -57,7 +57,7 @@ class CICDPipelineScanner:
             "recommendations": self._get_cicd_recommendations(),
         }
 
-    def scan_gitlab_ci(self, gitlab_ci_content: str) -> Dict[str, Any]:
+    def scan_gitlab_ci(self, gitlab_ci_content: str) -> dict[str, Any]:
         """Scan GitLab CI configuration for security issues."""
         issues = []
 
@@ -92,7 +92,7 @@ class CICDPipelineScanner:
             "recommendations": self._get_cicd_recommendations(),
         }
 
-    def scan_jenkins_pipeline(self, jenkinsfile_content: str) -> Dict[str, Any]:
+    def scan_jenkins_pipeline(self, jenkinsfile_content: str) -> dict[str, Any]:
         """Scan Jenkinsfile for security issues."""
         issues = []
 
@@ -127,31 +127,27 @@ class CICDPipelineScanner:
             "recommendations": self._get_cicd_recommendations(),
         }
 
-    def detect_supply_chain_risks(self, pipeline_config: Dict[str, Any]) -> Dict[str, Any]:
+    def detect_supply_chain_risks(self, pipeline_config: dict[str, Any]) -> dict[str, Any]:
         """Detect supply chain attack risks."""
         risks = []
 
         # Check for external dependencies
         dependencies = pipeline_config.get("dependencies", [])
-        for dep in dependencies:
-            if not self._is_trusted_package(dep):
-                risks.append({
-                    "type": "untrusted_dependency",
-                    "dependency": dep,
-                    "severity": "high",
-                    "recommendation": "Verify package source and maintainer",
-                })
+        risks.extend({
+            "type": "untrusted_dependency",
+            "dependency": dep,
+            "severity": "high",
+            "recommendation": "Verify package source and maintainer",
+        } for dep in dependencies if not self._is_trusted_package(dep))
 
         # Check for external container images
         images = pipeline_config.get("container_images", [])
-        for image in images:
-            if not self._is_official_image(image):
-                risks.append({
-                    "type": "untrusted_image",
-                    "image": image,
-                    "severity": "high",
-                    "recommendation": "Use official or trusted registry images",
-                })
+        risks.extend({
+            "type": "untrusted_image",
+            "image": image,
+            "severity": "high",
+            "recommendation": "Use official or trusted registry images",
+        } for image in images if not self._is_official_image(image))
 
         return {
             "supply_chain_risks": len(risks),
@@ -159,7 +155,7 @@ class CICDPipelineScanner:
             "recommendation": "Implement artifact attestation and SBOM verification",
         }
 
-    def generate_hardening_recommendations(self) -> List[str]:
+    def generate_hardening_recommendations(self) -> list[str]:
         """Generate CI/CD hardening recommendations."""
         return [
             "Enable branch protection rules",
@@ -183,7 +179,7 @@ class CICDPipelineScanner:
         return 0
 
     @staticmethod
-    def _get_cicd_recommendations() -> List[str]:
+    def _get_cicd_recommendations() -> list[str]:
         """Get CICD security recommendations."""
         return [
             "Use hardened runner images with minimal attack surface",

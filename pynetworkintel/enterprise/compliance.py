@@ -1,7 +1,7 @@
 """Compliance auditing and reporting."""
-from typing import Dict, List, Any, Optional
-from datetime import datetime
 import logging
+from datetime import datetime
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -11,11 +11,11 @@ class ComplianceAuditor:
 
     def __init__(self):
         """Initialize compliance auditor."""
-        self.audit_log: List[Dict[str, Any]] = []
-        self.compliance_status: Dict[str, Dict[str, Any]] = {}
-        self.evidences: Dict[str, List[Dict[str, Any]]] = {}
+        self.audit_log: list[dict[str, Any]] = []
+        self.compliance_status: dict[str, dict[str, Any]] = {}
+        self.evidences: dict[str, list[dict[str, Any]]] = {}
 
-    def audit_soc2_type2(self) -> Dict[str, Any]:
+    def audit_soc2_type2(self) -> dict[str, Any]:
         """Audit SOC 2 Type 2 compliance."""
         return {
             "framework": "SOC 2 Type 2",
@@ -28,7 +28,7 @@ class ComplianceAuditor:
             "overall_status": "compliant",
         }
 
-    def audit_iso27001(self) -> Dict[str, Any]:
+    def audit_iso27001(self) -> dict[str, Any]:
         """Audit ISO 27001 compliance."""
         return {
             "framework": "ISO 27001",
@@ -42,7 +42,7 @@ class ComplianceAuditor:
             ],
         }
 
-    def audit_pci_dss(self) -> Dict[str, Any]:
+    def audit_pci_dss(self) -> dict[str, Any]:
         """Audit PCI DSS compliance."""
         return {
             "framework": "PCI DSS",
@@ -65,7 +65,7 @@ class ComplianceAuditor:
             "overall_status": "mostly_compliant",
         }
 
-    def audit_hipaa(self) -> Dict[str, Any]:
+    def audit_hipaa(self) -> dict[str, Any]:
         """Audit HIPAA compliance."""
         return {
             "framework": "HIPAA",
@@ -82,7 +82,7 @@ class ComplianceAuditor:
             "overall_status": "compliant",
         }
 
-    def record_audit_entry(self, action: str, actor: str, resource: str, status: str, details: Optional[Dict[str, Any]] = None):
+    def record_audit_entry(self, action: str, actor: str, resource: str, status: str, details: dict[str, Any] | None = None):
         """Record audit log entry."""
         entry = {
             "timestamp": datetime.utcnow().isoformat(),
@@ -97,7 +97,7 @@ class ComplianceAuditor:
 
         logger.info(f"Audit: {action} by {actor} on {resource} - {status}")
 
-    def store_evidence(self, framework: str, control: str, evidence: Dict[str, Any]) -> bool:
+    def store_evidence(self, framework: str, control: str, evidence: dict[str, Any]) -> bool:
         """Store compliance evidence."""
         key = f"{framework}:{control}"
 
@@ -109,7 +109,7 @@ class ComplianceAuditor:
 
         return True
 
-    def generate_audit_report(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
+    def generate_audit_report(self, start_date: datetime, end_date: datetime) -> dict[str, Any]:
         """Generate audit report for date range."""
         filtered_logs = [
             log for log in self.audit_log
@@ -139,7 +139,7 @@ class ComplianceAuditor:
             "events": filtered_logs[:100],  # Return first 100
         }
 
-    def get_compliance_dashboard(self) -> Dict[str, Any]:
+    def get_compliance_dashboard(self) -> dict[str, Any]:
         """Get compliance dashboard data."""
         return {
             "soc2_type2": self.audit_soc2_type2(),
@@ -172,7 +172,7 @@ class ComplianceAuditor:
             return str(report)
 
     @staticmethod
-    def _generate_html_report(report: Dict[str, Any]) -> str:
+    def _generate_html_report(report: dict[str, Any]) -> str:
         """Generate HTML compliance report."""
         html = f"""
         <html>

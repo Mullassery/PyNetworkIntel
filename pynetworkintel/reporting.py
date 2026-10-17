@@ -2,9 +2,11 @@
 
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, Any
+from typing import Any
 
-from pynetworkintel.db import Database, ScanSession, Finding as DBFinding, Device as DBDevice, DeviceChange
+from pynetworkintel.db import Database, DeviceChange, ScanSession
+from pynetworkintel.db import Device as DBDevice
+from pynetworkintel.db import Finding as DBFinding
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +17,7 @@ class ReportGenerator:
     def __init__(self, db: Database):
         self.db = db
 
-    def generate_summary_report(self, hours: int = 24) -> Dict[str, Any]:
+    def generate_summary_report(self, hours: int = 24) -> dict[str, Any]:
         """Generate summary report for last N hours."""
         session = self.db.get_session()
 
@@ -53,7 +55,7 @@ class ReportGenerator:
         finally:
             session.close()
 
-    def generate_device_inventory_report(self) -> Dict[str, Any]:
+    def generate_device_inventory_report(self) -> dict[str, Any]:
         """Generate current device inventory report."""
         session = self.db.get_session()
 
@@ -88,7 +90,7 @@ class ReportGenerator:
         finally:
             session.close()
 
-    def generate_vulnerability_report(self) -> Dict[str, Any]:
+    def generate_vulnerability_report(self) -> dict[str, Any]:
         """Generate vulnerability report."""
         session = self.db.get_session()
 
@@ -116,7 +118,7 @@ class ReportGenerator:
                     })
 
             report = {
-                "total_cves": len(set(f.cve_id for f in findings if f.cve_id)),
+                "total_cves": len({f.cve_id for f in findings if f.cve_id}),
                 "cves_by_severity": cves_by_severity,
                 "most_affected_devices": sorted(
                     cves_by_device.items(),
@@ -130,7 +132,7 @@ class ReportGenerator:
         finally:
             session.close()
 
-    def generate_change_report(self, hours: int = 24) -> Dict[str, Any]:
+    def generate_change_report(self, hours: int = 24) -> dict[str, Any]:
         """Generate changes report."""
         session = self.db.get_session()
 
@@ -223,8 +225,10 @@ class ReportGenerator:
 
         if changes.get("discovered"):
             md.append("**Recently Discovered Devices**:")
-            for device in changes["discovered"][:5]:
-                md.append(f"- {device['ip']} ({device.get('hostname', 'unknown')})")
+            md.extend(
+                f"- {device['ip']} ({device.get('hostname', 'unknown')})"
+                for device in changes["discovered"][:5]
+            )
             md.append("")
 
         md.append("---")

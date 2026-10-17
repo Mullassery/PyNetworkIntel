@@ -1,8 +1,8 @@
 """Predictive analytics for vulnerability and risk forecasting."""
-from typing import Dict, List, Any
-from datetime import datetime, timedelta
-import statistics
 import logging
+import statistics
+from datetime import datetime, timedelta
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -12,8 +12,8 @@ class PredictiveAnalyzer:
 
     def __init__(self):
         """Initialize predictive analyzer."""
-        self.historical_risks: Dict[str, List[Dict[str, Any]]] = {}
-        self.predictions: Dict[str, List[Dict[str, Any]]] = {}
+        self.historical_risks: dict[str, list[dict[str, Any]]] = {}
+        self.predictions: dict[str, list[dict[str, Any]]] = {}
 
     def record_vulnerability(self, device_id: str, severity: str, vuln_type: str):
         """Record discovered vulnerability."""
@@ -26,7 +26,7 @@ class PredictiveAnalyzer:
             "type": vuln_type,
         })
 
-    def predict_future_vulnerabilities(self, device_id: str, days_ahead: int = 30) -> List[Dict[str, Any]]:
+    def predict_future_vulnerabilities(self, device_id: str, days_ahead: int = 30) -> list[dict[str, Any]]:
         """Predict future vulnerabilities based on history."""
         if device_id not in self.historical_risks:
             return []
@@ -56,7 +56,7 @@ class PredictiveAnalyzer:
 
         return predictions
 
-    def predict_severity_trends(self, device_id: str) -> Dict[str, Any]:
+    def predict_severity_trends(self, device_id: str) -> dict[str, Any]:
         """Predict trends in vulnerability severity."""
         if device_id not in self.historical_risks:
             return {"status": "insufficient_data"}
@@ -85,7 +85,7 @@ class PredictiveAnalyzer:
             "recommendation": self._get_severity_recommendation(severity_counts),
         }
 
-    def predict_patch_urgency(self, device_id: str, cve_score: float) -> Dict[str, Any]:
+    def predict_patch_urgency(self, device_id: str, cve_score: float) -> dict[str, Any]:
         """Predict how urgently device needs patching."""
         if device_id not in self.historical_risks:
             base_score = cve_score
@@ -104,7 +104,7 @@ class PredictiveAnalyzer:
             "recommendation": self._get_patch_recommendation(urgency_score),
         }
 
-    def predict_device_risk_score(self, device_id: str, current_metrics: Dict[str, Any]) -> Dict[str, Any]:
+    def predict_device_risk_score(self, device_id: str, current_metrics: dict[str, Any]) -> dict[str, Any]:
         """Predict overall device risk score."""
         base_score = 0.0
 
@@ -139,7 +139,7 @@ class PredictiveAnalyzer:
             "mitigation_priority": self._get_mitigation_priority(risk_score),
         }
 
-    def forecast_attack_surface_growth(self, device_ids: List[str], days_ahead: int = 90) -> Dict[str, Any]:
+    def forecast_attack_surface_growth(self, device_ids: list[str], days_ahead: int = 90) -> dict[str, Any]:
         """Forecast how attack surface will grow."""
         current_surface = sum(
             len(self.historical_risks.get(device_id, []))
@@ -171,7 +171,7 @@ class PredictiveAnalyzer:
         }
 
     @staticmethod
-    def _calculate_discovery_rate(history: List[Dict[str, Any]]) -> float:
+    def _calculate_discovery_rate(history: list[dict[str, Any]]) -> float:
         """Calculate vulnerability discovery rate per day."""
         if len(history) < 2:
             return 0.0
@@ -203,7 +203,7 @@ class PredictiveAnalyzer:
         return datetime.now() - timestamp < timedelta(days=days)
 
     @staticmethod
-    def _analyze_severity_trend(history: List[Dict[str, Any]]) -> str:
+    def _analyze_severity_trend(history: list[dict[str, Any]]) -> str:
         """Analyze trend in severity."""
         if len(history) < 3:
             return "insufficient_data"
@@ -222,7 +222,7 @@ class PredictiveAnalyzer:
             return "stable"
 
     @staticmethod
-    def _get_severity_recommendation(severity_counts: Dict[str, int]) -> str:
+    def _get_severity_recommendation(severity_counts: dict[str, int]) -> str:
         """Get recommendation based on severity distribution."""
         if severity_counts["critical"] > 0:
             return "Address critical vulnerabilities immediately"
@@ -281,7 +281,7 @@ class PredictiveAnalyzer:
             return "low"
 
     @staticmethod
-    def _get_risk_factors(total_score: float, current_metrics: Dict[str, Any]) -> List[str]:
+    def _get_risk_factors(total_score: float, current_metrics: dict[str, Any]) -> list[str]:
         """Get list of contributing risk factors."""
         factors = []
 

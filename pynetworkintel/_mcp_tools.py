@@ -12,7 +12,7 @@ similar claims that never backed a real implementation.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pynetworkintel._mcp_connector import NetworkIntelligence
 
@@ -40,7 +40,7 @@ class PyNetworkIntelMCPTools:
     """13 MCP tools for network analysis, threat detection, anomaly detection"""
 
     @staticmethod
-    def get_tools() -> Dict[str, Any]:
+    def get_tools() -> dict[str, Any]:
         return {
             "analyze_network_flow": {
                 "name": "analyze_network_flow",
@@ -256,26 +256,26 @@ class PyNetworkIntelMCPHandler:
 
     @_with_error_result
     async def analyze_network_flow(self, flow_id: str, time_window_seconds: int = 300,
-                                  include_geolocation: bool = False) -> Dict[str, Any]:
+                                  include_geolocation: bool = False) -> dict[str, Any]:
         return self.intel.analyze_network_flow(
             flow_id, time_window_seconds=time_window_seconds,
             include_geolocation=include_geolocation,
         )
 
     @_with_error_result
-    async def detect_anomalies(self, sensor_id: str, anomaly_type: Optional[str] = None,
-                              sensitivity: float = 0.7) -> Dict[str, Any]:
+    async def detect_anomalies(self, sensor_id: str, anomaly_type: str | None = None,
+                              sensitivity: float = 0.7) -> dict[str, Any]:
         return self.intel.detect_anomalies(sensor_id, anomaly_type=anomaly_type,
                                            sensitivity=sensitivity)
 
     @_with_error_result
-    async def threat_correlation(self, indicators: List[str],
-                                threat_intel_sources: Optional[List[str]] = None) -> Dict[str, Any]:
+    async def threat_correlation(self, indicators: list[str],
+                                threat_intel_sources: list[str] | None = None) -> dict[str, Any]:
         return self.intel.threat_correlation(indicators, threat_intel_sources=threat_intel_sources)
 
     @_with_error_result
     async def get_asset_inventory(self, subnet: str, include_vulnerabilities: bool = False,
-                                 vulnerability_severity: Optional[str] = None) -> Dict[str, Any]:
+                                 vulnerability_severity: str | None = None) -> dict[str, Any]:
         return self.intel.get_asset_inventory(
             subnet,
             include_vulnerabilities=include_vulnerabilities,
@@ -283,23 +283,23 @@ class PyNetworkIntelMCPHandler:
         )
 
     @_with_error_result
-    async def check_port_exposure(self, host: str, port_range: Optional[str] = None,
-                                 check_services: bool = True) -> Dict[str, Any]:
+    async def check_port_exposure(self, host: str, port_range: str | None = None,
+                                 check_services: bool = True) -> dict[str, Any]:
         return self.intel.check_port_exposure(
             host, port_range=port_range, check_services=check_services
         )
 
     @_with_error_result
     async def analyze_dns_records(self, domain: str, include_dns_history: bool = False,
-                                 check_dga: bool = False) -> Dict[str, Any]:
+                                 check_dga: bool = False) -> dict[str, Any]:
         return self.intel.analyze_dns_records(
             domain, include_dns_history=include_dns_history, check_dga=check_dga
         )
 
     @_with_error_result
-    async def get_geolocation_analysis(self, ip_addresses: List[str],
+    async def get_geolocation_analysis(self, ip_addresses: list[str],
                                       time_window_hours: int = 24,
-                                      detect_vpn_proxies: bool = False) -> Dict[str, Any]:
+                                      detect_vpn_proxies: bool = False) -> dict[str, Any]:
         return self.intel.get_geolocation_analysis(
             ip_addresses,
             time_window_hours=time_window_hours,
@@ -308,24 +308,24 @@ class PyNetworkIntelMCPHandler:
 
     @_with_error_result
     async def protocol_analysis(self, pcap_id: str,
-                               protocols: Optional[List[str]] = None) -> Dict[str, Any]:
+                               protocols: list[str] | None = None) -> dict[str, Any]:
         return self.intel.protocol_analysis(pcap_id, protocols=protocols)
 
     @_with_error_result
     async def behavioral_profiling(self, entity_id: str, entity_type: str,
-                                  time_window_days: int = 30) -> Dict[str, Any]:
+                                  time_window_days: int = 30) -> dict[str, Any]:
         return self.intel.behavioral_profiling(
             entity_id, entity_type, time_window_days=time_window_days
         )
 
     @_with_error_result
     async def get_threat_intelligence(self, indicator: str,
-                                     threat_level: str = "any") -> Dict[str, Any]:
+                                     threat_level: str = "any") -> dict[str, Any]:
         return self.intel.get_threat_intelligence(indicator, threat_level=threat_level)
 
     @_with_error_result
     async def remediation_recommendations(self, threat_id: str,
-                                         remediation_priority: str = "high") -> Dict[str, Any]:
+                                         remediation_priority: str = "high") -> dict[str, Any]:
         return self.intel.remediation_recommendations(
             threat_id, remediation_priority=remediation_priority
         )
@@ -333,7 +333,7 @@ class PyNetworkIntelMCPHandler:
     @_with_error_result
     async def network_segmentation_analysis(self, network_id: str,
                                            check_microsegmentation: bool = False,
-                                           security_zone: Optional[str] = None) -> Dict[str, Any]:
+                                           security_zone: str | None = None) -> dict[str, Any]:
         return self.intel.network_segmentation_analysis(
             network_id,
             check_microsegmentation=check_microsegmentation,
@@ -343,7 +343,7 @@ class PyNetworkIntelMCPHandler:
     @_with_error_result
     async def export_security_report(self, report_type: str,
                                     time_period: str = "last_7d",
-                                    format: str = "markdown") -> Dict[str, Any]:
+                                    format: str = "markdown") -> dict[str, Any]:
         return self.intel.export_security_report(
             report_type, time_period=time_period, format=format
         )

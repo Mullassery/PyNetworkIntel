@@ -113,3 +113,16 @@ target-version = ['py310', 'py311', 'py312']
 [tool.ruff]
 line-length = 100
 target-version = "py310"
+
+# Lint gate (PYNETWORKINTEL-010). The curated, high-signal ruleset below
+# was previously implicit (ruff defaults) and never enforced. E501 is left
+# to the formatter.
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RUF", "PIE", "PERF", "FURB"]
+ignore = [
+    "E501",   # line length is the formatter's job
+    # Per-iteration try/except in the scanner/discovery loops is deliberate
+    # fault isolation (one unreadable item must not abort the whole scan);
+    # PERF203's suggested hoist would change that behavior.
+    "PERF203",
+]

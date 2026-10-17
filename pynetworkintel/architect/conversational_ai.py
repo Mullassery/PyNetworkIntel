@@ -1,6 +1,6 @@
 """Conversational AI interface for architectural guidance."""
-from typing import Dict, List, Any
 import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +129,7 @@ class ConversationalArchitect:
                "- Implementation roadmaps\n\n" \
                "What would you like to explore?"
 
-    def get_context_awareness(self) -> Dict[str, Any]:
+    def get_context_awareness(self) -> dict[str, Any]:
         """Get current conversation context."""
         return {
             "message_count": len(self.conversation_history),
@@ -137,7 +137,7 @@ class ConversationalArchitect:
             "conversation_topics": self._extract_topics(),
         }
 
-    def _extract_topics(self) -> List[str]:
+    def _extract_topics(self) -> list[str]:
         """Extract topics from conversation history."""
         topics = []
 

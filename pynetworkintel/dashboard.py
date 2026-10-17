@@ -1,24 +1,22 @@
 """CLI stats dashboard that runs in a separate terminal window."""
 
-import os
-import sys
 import json
-import time
+import os
 import platform
 import subprocess
+import sys
 import tempfile
-from typing import Optional, Dict, Any, Tuple
+import time
 from datetime import datetime
 from threading import Thread
-import socket
+from typing import Any
 
 try:
     from rich.console import Console
-    from rich.table import Table
     from rich.layout import Layout
-    from rich.panel import Panel
     from rich.live import Live
-    from rich.progress import Progress, BarColumn, TextColumn, DownloadColumn
+    from rich.panel import Panel
+    from rich.table import Table
     from rich.text import Text
     RICH_AVAILABLE = True
 except ImportError:
@@ -44,7 +42,7 @@ class StatsCollector:
         self.errors = []
         self.current_device = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Export stats as dictionary."""
         elapsed = 0
         if self.start_time:
@@ -81,7 +79,7 @@ class StatsCollector:
 class DashboardServer:
     """Local IPC server for dashboard stats updates."""
 
-    def __init__(self, stats: StatsCollector, socket_path: Optional[str] = None):
+    def __init__(self, stats: StatsCollector, socket_path: str | None = None):
         self.stats = stats
         self.socket_path = socket_path or self._get_socket_path()
         self.running = False
@@ -128,7 +126,7 @@ class DashboardServer:
                     data = json.dumps(self.stats.to_dict()).encode()
                     conn.send(data)
                     conn.close()
-                except socket.timeout:
+                except TimeoutError:
                     continue
                 except Exception:
                     break
@@ -165,14 +163,14 @@ class DashboardClient:
     def __init__(self, socket_path: str):
         self.socket_path = socket_path
 
-    def get_stats(self) -> Optional[Dict[str, Any]]:
+    def get_stats(self) -> dict[str, Any] | None:
         """Fetch current stats from server."""
         if platform.system() == "Windows":
             return self._get_stats_windows()
         else:
             return self._get_stats_unix()
 
-    def _get_stats_unix(self) -> Optional[Dict[str, Any]]:
+    def _get_stats_unix(self) -> dict[str, Any] | None:
         """Fetch stats via Unix socket."""
         import socket as sock
 
@@ -186,7 +184,7 @@ class DashboardClient:
         except Exception:
             return None
 
-    def _get_stats_windows(self) -> Optional[Dict[str, Any]]:
+    def _get_stats_windows(self) -> dict[str, Any] | None:
         """Fetch stats via Windows named pipe."""
         import pipetools
 
@@ -207,7 +205,7 @@ class TerminalLauncher:
         return platform.system().lower()
 
     @staticmethod
-    def launch_dashboard(socket_path: str) -> Optional[subprocess.Popen]:
+    def launch_dashboard(socket_path: str) -> subprocess.Popen | None:
         """
         Launch dashboard in a new terminal window.
 
@@ -229,7 +227,7 @@ class TerminalLauncher:
             return None
 
     @staticmethod
-    def _launch_macos(socket_path: str) -> Optional[subprocess.Popen]:
+    def _launch_macos(socket_path: str) -> subprocess.Popen | None:
         """Launch dashboard in Terminal.app on macOS."""
         script = f"""
 import subprocess
@@ -243,7 +241,7 @@ dashboard.run()
         cmd = [
             "osascript",
             "-e",
-            f'tell app "Terminal" to do script "python3 -c {repr(script)}"',
+            f'tell app "Terminal" to do script "python3 -c {script!r}"',
         ]
 
         try:
@@ -256,7 +254,7 @@ dashboard.run()
             return None
 
     @staticmethod
-    def _launch_linux(socket_path: str) -> Optional[subprocess.Popen]:
+    def _launch_linux(socket_path: str) -> subprocess.Popen | None:
         """Launch dashboard in a new terminal on Linux."""
         script_content = f"""#!/bin/bash
 python3 -c "from pynetworkintel.dashboard import Dashboard; Dashboard(socket_path='{socket_path}').run()"
@@ -293,7 +291,7 @@ python3 -c "from pynetworkintel.dashboard import Dashboard; Dashboard(socket_pat
         return None
 
     @staticmethod
-    def _launch_windows(socket_path: str) -> Optional[subprocess.Popen]:
+    def _launch_windows(socket_path: str) -> subprocess.Popen | None:
         """Launch dashboard in a new terminal on Windows."""
         script_content = f"""python -c "from pynetworkintel.dashboard import Dashboard; Dashboard(socket_path='{socket_path}').run()"
 pause"""
@@ -317,7 +315,7 @@ pause"""
 class Dashboard:
     """Rich terminal dashboard for displaying scan stats."""
 
-    def __init__(self, socket_path: Optional[str] = None, refresh_rate: float = 1.0):
+    def __init__(self, socket_path: str | None = None, refresh_rate: float = 1.0):
         if not RICH_AVAILABLE:
             raise RuntimeError("Rich library is required for dashboard")
 
@@ -482,7 +480,7 @@ class Dashboard:
             return f"{hours:.1f}h"
 
 
-def launch_stats_dashboard(target: str) -> Tuple[Optional[subprocess.Popen], Optional[DashboardServer]]:
+def launch_stats_dashboard(target: str) -> tuple[subprocess.Popen | None, DashboardServer | None]:
     """
     Launch a stats dashboard in a separate terminal.
 

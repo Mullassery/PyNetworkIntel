@@ -1,7 +1,7 @@
 """Google Cloud Platform discovery and inventory management."""
-from typing import Any, Dict, List, Optional
-from dataclasses import dataclass, asdict
 import logging
+from dataclasses import asdict, dataclass
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -13,10 +13,10 @@ class GCPResource:
     region: str
     name: str
     state: str
-    public_ip: Optional[str] = None
-    private_ip: Optional[str] = None
-    tags: Dict[str, str] = None
-    metadata: Dict[str, Any] = None
+    public_ip: str | None = None
+    private_ip: str | None = None
+    tags: dict[str, str] = None
+    metadata: dict[str, Any] = None
 
     def __post_init__(self):
         if self.tags is None:
@@ -31,7 +31,7 @@ class GCPResource:
 class GCPDiscovery:
     """Discover and enumerate Google Cloud Platform resources."""
 
-    def __init__(self, project_id: str, credentials_path: Optional[str] = None):
+    def __init__(self, project_id: str, credentials_path: str | None = None):
         """
         Initialize GCP discovery client.
 
@@ -41,14 +41,12 @@ class GCPDiscovery:
         """
         self.project_id = project_id
         self.credentials_path = credentials_path
-        self.resources: List[GCPResource] = []
+        self.resources: list[GCPResource] = []
 
         # Lazy import Google Cloud libraries
         try:
-            from google.cloud import compute_v1
-            from google.cloud import sql_v1
-            from google.cloud import storage
             from google.auth import default as auth_default
+            from google.cloud import compute_v1, sql_v1, storage
 
             self.compute_v1 = compute_v1
             self.sql_v1 = sql_v1
@@ -75,7 +73,7 @@ class GCPDiscovery:
             logger.error(f"Failed to get GCP credentials: {e}")
             return None
 
-    def discover_compute_instances(self) -> List[GCPResource]:
+    def discover_compute_instances(self) -> list[GCPResource]:
         """Discover Google Compute Engine instances."""
         if not hasattr(self, 'compute_v1'):
             return []
@@ -128,7 +126,7 @@ class GCPDiscovery:
 
         return instances
 
-    def discover_cloud_sql_instances(self) -> List[GCPResource]:
+    def discover_cloud_sql_instances(self) -> list[GCPResource]:
         """Discover Google Cloud SQL instances."""
         if not hasattr(self, 'sql_v1'):
             return []
@@ -162,7 +160,7 @@ class GCPDiscovery:
 
         return databases
 
-    def discover_cloud_storage_buckets(self) -> List[GCPResource]:
+    def discover_cloud_storage_buckets(self) -> list[GCPResource]:
         """Discover Google Cloud Storage buckets."""
         if not hasattr(self, 'storage'):
             return []
@@ -196,7 +194,7 @@ class GCPDiscovery:
 
         return buckets
 
-    def discover_firewall_rules(self) -> List[Dict[str, Any]]:
+    def discover_firewall_rules(self) -> list[dict[str, Any]]:
         """Discover firewall rules."""
         if not hasattr(self, 'compute_v1'):
             return []
@@ -210,27 +208,26 @@ class GCPDiscovery:
             client = self.compute_v1.FirewallsClient(credentials=credentials)
             request = self.compute_v1.ListFirewallsRequest(project=self.project_id)
 
-            for firewall in client.list(request=request):
-                rules.append({
-                    "name": firewall.name,
-                    "direction": firewall.direction,
-                    "priority": firewall.priority,
-                    "source_ranges": list(firewall.source_ranges or []),
-                    "allowed": [
-                        {"protocol": rule.i_p_protocol, "ports": rule.ports}
-                        for rule in (firewall.allowed or [])
-                    ],
-                    "denied": [
-                        {"protocol": rule.i_p_protocol, "ports": rule.ports}
-                        for rule in (firewall.denied or [])
-                    ],
-                })
+            rules.extend({
+                "name": firewall.name,
+                "direction": firewall.direction,
+                "priority": firewall.priority,
+                "source_ranges": list(firewall.source_ranges or []),
+                "allowed": [
+                    {"protocol": rule.i_p_protocol, "ports": rule.ports}
+                    for rule in (firewall.allowed or [])
+                ],
+                "denied": [
+                    {"protocol": rule.i_p_protocol, "ports": rule.ports}
+                    for rule in (firewall.denied or [])
+                ],
+            } for firewall in client.list(request=request))
         except Exception as e:
             logger.error(f"Failed to discover firewall rules: {e}")
 
         return rules
 
-    def discover_networks(self) -> List[Dict[str, Any]]:
+    def discover_networks(self) -> list[dict[str, Any]]:
         """Discover VPC networks."""
         if not hasattr(self, 'compute_v1'):
             return []
@@ -244,19 +241,18 @@ class GCPDiscovery:
             client = self.compute_v1.NetworksClient(credentials=credentials)
             request = self.compute_v1.ListNetworksRequest(project=self.project_id)
 
-            for network in client.list(request=request):
-                networks.append({
-                    "name": network.name,
-                    "auto_create_subnetworks": network.auto_create_subnetworks,
-                    "ipv4_range": network.ipv4_range,
-                    "subnetworks": list(network.subnetworks or []),
-                })
+            networks.extend({
+                "name": network.name,
+                "auto_create_subnetworks": network.auto_create_subnetworks,
+                "ipv4_range": network.ipv4_range,
+                "subnetworks": list(network.subnetworks or []),
+            } for network in client.list(request=request))
         except Exception as e:
             logger.error(f"Failed to discover networks: {e}")
 
         return networks
 
-    def discover_all(self) -> Dict[str, List]:
+    def discover_all(self) -> dict[str, list]:
         """Discover all GCP resources."""
         return {
             "compute_instances": self.discover_compute_instances(),
@@ -266,7 +262,7 @@ class GCPDiscovery:
             "networks": self.discover_networks(),
         }
 
-    def get_resources_summary(self) -> Dict[str, Any]:
+    def get_resources_summary(self) -> dict[str, Any]:
         """Get summary of discovered resources."""
         by_type = {}
         by_region = {}

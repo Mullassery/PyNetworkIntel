@@ -2,14 +2,23 @@
 
 import logging
 from datetime import datetime
-from typing import List, Dict, Any, Optional
+from typing import Any
+
 from sqlalchemy.orm import Session
 
-from pynetworkintel.models import Device
 from pynetworkintel.db import (
-    Database, DeviceChange, VulnerabilityChange, Device as DBDevice,
-    Finding as DBFinding, ScanSession,
+    Database,
+    DeviceChange,
+    ScanSession,
+    VulnerabilityChange,
 )
+from pynetworkintel.db import (
+    Device as DBDevice,
+)
+from pynetworkintel.db import (
+    Finding as DBFinding,
+)
+from pynetworkintel.models import Device
 
 logger = logging.getLogger(__name__)
 
@@ -22,10 +31,10 @@ class ChangeDetector:
 
     def detect_device_changes(
         self,
-        current_devices: List[Device],
+        current_devices: list[Device],
         scan_id: int,
-        target: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+        target: str | None = None,
+    ) -> list[dict[str, Any]]:
         """
         Detect device additions, removals, and status changes.
 
@@ -87,7 +96,7 @@ class ChangeDetector:
 
         return changes
 
-    def detect_vulnerability_changes(self, current_findings: List, previous_findings_by_ip: Dict) -> List[Dict[str, Any]]:
+    def detect_vulnerability_changes(self, current_findings: list, previous_findings_by_ip: dict) -> list[dict[str, Any]]:
         """
         Detect new vulnerabilities and resolved vulnerabilities.
 
@@ -127,7 +136,7 @@ class ChangeDetector:
                     )
 
             # Check for resolved vulnerabilities
-            for (device_ip, cve_id), previous_finding in previous_findings_by_ip.items():
+            for (device_ip, cve_id) in previous_findings_by_ip:
                 if (device_ip, cve_id) not in current_by_ip_cve:
                     change = {
                         "type": "vulnerability_resolved",
@@ -147,9 +156,9 @@ class ChangeDetector:
 
     def get_previous_scan_findings(
         self,
-        exclude_scan_id: Optional[int] = None,
-        target: Optional[str] = None,
-    ) -> Dict[tuple, Any]:
+        exclude_scan_id: int | None = None,
+        target: str | None = None,
+    ) -> dict[tuple, Any]:
         """Get findings from previous scans grouped by (device_ip, cve_id).
 
         Optionally excludes one scan id (the current scan, whose findings
@@ -183,7 +192,7 @@ class ChangeDetector:
         finally:
             session.close()
 
-    def _record_device_change(self, session: Session, ip: str, change_type: str, hostname: Optional[str], os: Optional[str]):
+    def _record_device_change(self, session: Session, ip: str, change_type: str, hostname: str | None, os: str | None):
         """Record a device change in database."""
         change = DeviceChange(
             ip=ip,
@@ -220,7 +229,7 @@ class ChangeReporter:
     """Report detected changes in human-readable format."""
 
     @staticmethod
-    def summarize_changes(changes: List[Dict[str, Any]]) -> str:
+    def summarize_changes(changes: list[dict[str, Any]]) -> str:
         """Generate summary of detected changes."""
         if not changes:
             return "No changes detected since last scan."
@@ -234,22 +243,25 @@ class ChangeReporter:
 
         if device_discovered:
             summary.append(f"+ New Devices: {len(device_discovered)}")
-            for change in device_discovered[:3]:
-                summary.append(f"  - {change['ip']} ({change.get('hostname', 'unknown')})")
+            summary.extend(
+                f"  - {change['ip']} ({change.get('hostname', 'unknown')})"
+                for change in device_discovered[:3]
+            )
             if len(device_discovered) > 3:
                 summary.append(f"  ... and {len(device_discovered) - 3} more")
 
         if device_removed:
             summary.append(f"- Removed Devices: {len(device_removed)}")
-            for change in device_removed[:3]:
-                summary.append(f"  - {change['ip']}")
+            summary.extend(f"  - {change['ip']}" for change in device_removed[:3])
             if len(device_removed) > 3:
                 summary.append(f"  ... and {len(device_removed) - 3} more")
 
         if vuln_discovered:
             summary.append(f"! New Vulnerabilities: {len(vuln_discovered)}")
-            for change in vuln_discovered[:3]:
-                summary.append(f"  - {change['cve_id']} ({change['severity'].upper()}): {change['title'][:50]}")
+            summary.extend(
+                f"  - {change['cve_id']} ({change['severity'].upper()}): {change['title'][:50]}"
+                for change in vuln_discovered[:3]
+            )
             if len(vuln_discovered) > 3:
                 summary.append(f"  ... and {len(vuln_discovered) - 3} more")
 

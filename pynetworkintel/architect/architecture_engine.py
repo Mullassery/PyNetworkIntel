@@ -1,7 +1,7 @@
 """Architecture graph engine and modeling."""
-from typing import Dict, List, Any, Tuple
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -13,11 +13,11 @@ class ArchitectureComponent:
     component_type: str
     cloud: str
     layer: str
-    depends_on: List[str] = None
-    depends_on_type: List[str] = None
+    depends_on: list[str] = None
+    depends_on_type: list[str] = None
     replicas: int = 1
     region: str = "us-east-1"
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
 
     def __post_init__(self):
         if self.depends_on is None:
@@ -31,8 +31,8 @@ class ArchitectureEngine:
 
     def __init__(self):
         """Initialize architecture engine."""
-        self.components: Dict[str, ArchitectureComponent] = {}
-        self.connections: List[Tuple[str, str]] = []
+        self.components: dict[str, ArchitectureComponent] = {}
+        self.connections: list[tuple[str, str]] = []
 
     def add_component(self, component: ArchitectureComponent) -> bool:
         """Add component to architecture."""
@@ -60,14 +60,14 @@ class ArchitectureEngine:
 
         return True
 
-    def detect_single_points_of_failure(self) -> List[Dict[str, Any]]:
+    def detect_single_points_of_failure(self) -> list[dict[str, Any]]:
         """Detect single points of failure (SPOFs)."""
         spofs = []
 
         for component_id, component in self.components.items():
             # Check if component is a bottleneck
             incoming = sum(1 for c in self.connections if c[1] == component_id)
-            outgoing = sum(1 for c in self.connections if c[0] == component_id)
+            sum(1 for c in self.connections if c[0] == component_id)
 
             # SPOF if high incoming traffic but no redundancy
             if incoming > 2 and component.replicas == 1:
@@ -90,7 +90,7 @@ class ArchitectureEngine:
 
         return spofs
 
-    def analyze_complexity(self) -> Dict[str, Any]:
+    def analyze_complexity(self) -> dict[str, Any]:
         """Analyze architecture complexity."""
         num_components = len(self.components)
         num_connections = len(self.connections)
@@ -118,7 +118,7 @@ class ArchitectureEngine:
             "complexity_level": self._get_complexity_level(complexity_score),
         }
 
-    def calculate_high_availability(self) -> Dict[str, Any]:
+    def calculate_high_availability(self) -> dict[str, Any]:
         """Calculate high availability score."""
         if not self.components:
             return {"ha_score": 0, "ha_level": "none"}
@@ -137,7 +137,7 @@ class ArchitectureEngine:
             "ha_level": "high" if ha_percentage > 70 else "medium" if ha_percentage > 30 else "low",
         }
 
-    def suggest_improvements(self) -> List[Dict[str, Any]]:
+    def suggest_improvements(self) -> list[dict[str, Any]]:
         """Suggest architecture improvements."""
         suggestions = []
 
@@ -163,7 +163,7 @@ class ArchitectureEngine:
             })
 
         # Check distribution
-        clouds = set(c.cloud for c in self.components.values())
+        clouds = {c.cloud for c in self.components.values()}
         if len(clouds) > 1:
             suggestions.append({
                 "category": "multi_cloud",
@@ -199,7 +199,7 @@ class ArchitectureEngine:
         if not self.components:
             return 0
 
-        layers = set(c.layer for c in self.components.values())
+        layers = {c.layer for c in self.components.values()}
         return len(layers)
 
     @staticmethod

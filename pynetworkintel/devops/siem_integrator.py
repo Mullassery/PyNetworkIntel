@@ -1,7 +1,7 @@
 """SIEM integration for centralized logging and alerting."""
-from typing import Dict, Any
 import logging
 from datetime import datetime
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 class SIEMIntegrator:
     """Integrate PyNetworkIntel with SIEM platforms."""
 
-    def __init__(self, siem_type: str, endpoint: str, credentials: Dict[str, str]):
+    def __init__(self, siem_type: str, endpoint: str, credentials: dict[str, str]):
         """
         Initialize SIEM integrator.
 
@@ -22,7 +22,7 @@ class SIEMIntegrator:
         self.endpoint = endpoint
         self.credentials = credentials
 
-    def send_scan_results(self, scan_data: Dict[str, Any]) -> bool:
+    def send_scan_results(self, scan_data: dict[str, Any]) -> bool:
         """Send scan results to SIEM."""
         formatted_data = self._format_for_siem(scan_data)
 
@@ -42,7 +42,7 @@ class SIEMIntegrator:
             logger.error(f"Failed to send to SIEM: {e}")
             return False
 
-    def send_vulnerability_alert(self, device_id: str, vulnerability: Dict[str, Any]) -> bool:
+    def send_vulnerability_alert(self, device_id: str, vulnerability: dict[str, Any]) -> bool:
         """Send vulnerability alert to SIEM."""
         alert_data = {
             "event_type": "vulnerability_detected",
@@ -56,7 +56,7 @@ class SIEMIntegrator:
 
         return self.send_scan_results(alert_data)
 
-    def send_change_alert(self, device_id: str, change: Dict[str, Any]) -> bool:
+    def send_change_alert(self, device_id: str, change: dict[str, Any]) -> bool:
         """Send device change alert to SIEM."""
         alert_data = {
             "event_type": "device_change_detected",
@@ -70,7 +70,7 @@ class SIEMIntegrator:
 
         return self.send_scan_results(alert_data)
 
-    def send_anomaly_alert(self, device_id: str, anomaly: Dict[str, Any]) -> bool:
+    def send_anomaly_alert(self, device_id: str, anomaly: dict[str, Any]) -> bool:
         """Send anomaly alert to SIEM."""
         alert_data = {
             "event_type": "anomaly_detected",
@@ -85,7 +85,7 @@ class SIEMIntegrator:
         return self.send_scan_results(alert_data)
 
     @staticmethod
-    def _format_for_siem(data: Dict[str, Any]) -> Dict[str, Any]:
+    def _format_for_siem(data: dict[str, Any]) -> dict[str, Any]:
         """Format data for SIEM ingestion."""
         return {
             "timestamp": datetime.utcnow().isoformat(),
@@ -93,7 +93,7 @@ class SIEMIntegrator:
             "event": data,
         }
 
-    def _send_to_splunk(self, data: Dict[str, Any]) -> bool:
+    def _send_to_splunk(self, data: dict[str, Any]) -> bool:
         """Send data to Splunk via HTTP Event Collector."""
         try:
             import requests
@@ -120,7 +120,7 @@ class SIEMIntegrator:
             logger.error(f"Failed to send to Splunk: {e}")
             return False
 
-    def _send_to_elk(self, data: Dict[str, Any]) -> bool:
+    def _send_to_elk(self, data: dict[str, Any]) -> bool:
         """Send data to Elasticsearch/ELK."""
         try:
             import requests
@@ -149,7 +149,7 @@ class SIEMIntegrator:
             logger.error(f"Failed to send to ELK: {e}")
             return False
 
-    def _send_to_datadog(self, data: Dict[str, Any]) -> bool:
+    def _send_to_datadog(self, data: dict[str, Any]) -> bool:
         """Send data to Datadog."""
         try:
             import requests
@@ -171,11 +171,11 @@ class SIEMIntegrator:
             logger.error(f"Failed to send to Datadog: {e}")
             return False
 
-    def _send_to_splunk_hec(self, data: Dict[str, Any]) -> bool:
+    def _send_to_splunk_hec(self, data: dict[str, Any]) -> bool:
         """Send data to Splunk via HEC (HTTP Event Collector)."""
         return self._send_to_splunk(data)
 
-    def get_integration_status(self) -> Dict[str, Any]:
+    def get_integration_status(self) -> dict[str, Any]:
         """Check SIEM integration status."""
         try:
             if self.siem_type == "splunk":

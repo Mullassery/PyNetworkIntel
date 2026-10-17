@@ -1,6 +1,6 @@
 """Kubernetes RBAC (Role-Based Access Control) analysis."""
-from typing import Dict, List, Any, Optional
 import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class RBACAnalyzer:
         except Exception as e:
             logger.error(f"Failed to initialize RBAC client: {e}")
 
-    def analyze_roles(self, namespace: Optional[str] = None) -> List[Dict[str, Any]]:
+    def analyze_roles(self, namespace: str | None = None) -> list[dict[str, Any]]:
         """Analyze roles and identify overprivileged roles."""
         if not self._initialized:
             self._initialize_client()
@@ -60,7 +60,7 @@ class RBACAnalyzer:
 
         return roles
 
-    def analyze_cluster_roles(self) -> List[Dict[str, Any]]:
+    def analyze_cluster_roles(self) -> list[dict[str, Any]]:
         """Analyze cluster-wide roles."""
         if not self._initialized:
             self._initialize_client()
@@ -86,7 +86,7 @@ class RBACAnalyzer:
 
         return roles
 
-    def analyze_role_bindings(self, namespace: Optional[str] = None) -> List[Dict[str, Any]]:
+    def analyze_role_bindings(self, namespace: str | None = None) -> list[dict[str, Any]]:
         """Analyze role bindings and identify risky assignments."""
         if not self._initialized:
             self._initialize_client()
@@ -101,13 +101,14 @@ class RBACAnalyzer:
                 binding_list = self.rbac_v1.list_role_binding_for_all_namespaces()
 
             for binding in binding_list.items:
-                subjects = []
-                for subject in (binding.subjects or []):
-                    subjects.append({
+                subjects = [
+                    {
                         "kind": subject.kind,
                         "name": subject.name,
                         "namespace": subject.namespace,
-                    })
+                    }
+                    for subject in (binding.subjects or [])
+                ]
 
                 bindings.append({
                     "name": binding.metadata.name,
@@ -121,7 +122,7 @@ class RBACAnalyzer:
 
         return bindings
 
-    def analyze_cluster_role_bindings(self) -> List[Dict[str, Any]]:
+    def analyze_cluster_role_bindings(self) -> list[dict[str, Any]]:
         """Analyze cluster-wide role bindings."""
         if not self._initialized:
             self._initialize_client()
@@ -131,13 +132,14 @@ class RBACAnalyzer:
         bindings = []
         try:
             for binding in self.rbac_v1.list_cluster_role_binding().items:
-                subjects = []
-                for subject in (binding.subjects or []):
-                    subjects.append({
+                subjects = [
+                    {
                         "kind": subject.kind,
                         "name": subject.name,
                         "namespace": subject.namespace,
-                    })
+                    }
+                    for subject in (binding.subjects or [])
+                ]
 
                 bindings.append({
                     "name": binding.metadata.name,
@@ -150,13 +152,13 @@ class RBACAnalyzer:
 
         return bindings
 
-    def find_overprivileged_service_accounts(self) -> List[Dict[str, Any]]:
+    def find_overprivileged_service_accounts(self) -> list[dict[str, Any]]:
         """Find service accounts with excessive permissions."""
         # This would combine role analysis and binding analysis
         # Implementation depends on gathering all roles and bindings first
         return []
 
-    def get_rbac_summary(self) -> Dict[str, Any]:
+    def get_rbac_summary(self) -> dict[str, Any]:
         """Get RBAC security summary."""
         roles = self.analyze_roles()
         cluster_roles = self.analyze_cluster_roles()
@@ -177,7 +179,7 @@ class RBACAnalyzer:
         }
 
     @staticmethod
-    def _extract_permissions(rules) -> List[Dict[str, Any]]:
+    def _extract_permissions(rules) -> list[dict[str, Any]]:
         """Extract permissions from role rules."""
         permissions = []
 
@@ -193,7 +195,7 @@ class RBACAnalyzer:
         return permissions
 
     @staticmethod
-    def _calculate_role_risk(permissions: List[Dict]) -> float:
+    def _calculate_role_risk(permissions: list[dict]) -> float:
         """Calculate risk score for a role (0-100)."""
         risk_score = 0.0
 
@@ -235,7 +237,7 @@ class RBACAnalyzer:
             return "low"
 
     @staticmethod
-    def _get_role_recommendations(permissions: List[Dict]) -> List[str]:
+    def _get_role_recommendations(permissions: list[dict]) -> list[str]:
         """Get recommendations for role improvements."""
         recommendations = []
 
@@ -252,7 +254,7 @@ class RBACAnalyzer:
         return list(set(recommendations))[:3]  # Return top 3 unique recommendations
 
     @staticmethod
-    def _assess_binding_risk(subjects: List[Dict]) -> str:
+    def _assess_binding_risk(subjects: list[dict]) -> str:
         """Assess risk of role binding based on subjects."""
         for subject in subjects:
             # system:unauthenticated is extremely risky

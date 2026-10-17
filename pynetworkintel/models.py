@@ -1,9 +1,9 @@
 """Data models for devices, services, and security findings."""
 
-from dataclasses import dataclass, field, asdict
-from typing import Optional, List, Dict, Any
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
 
 class Severity(str, Enum):
@@ -25,11 +25,11 @@ class FindingType(str, Enum):
 class Service:
     port: int
     name: str
-    version: Optional[str] = None
+    version: str | None = None
     protocol: str = "tcp"
     state: str = "open"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -39,18 +39,18 @@ class ConfigFile:
     content: str
     device_type: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
 @dataclass
 class Device:
     ip: str
-    hostname: Optional[str] = None
-    os: Optional[str] = None
+    hostname: str | None = None
+    os: str | None = None
     device_type: str = "linux"
-    services: List[Service] = field(default_factory=list)
-    configs: List[ConfigFile] = field(default_factory=list)
+    services: list[Service] = field(default_factory=list)
+    configs: list[ConfigFile] = field(default_factory=list)
     last_seen: datetime = field(default_factory=datetime.now)
     is_online: bool = True
 
@@ -58,7 +58,7 @@ class Device:
         self,
         port: int,
         name: str,
-        version: Optional[str] = None,
+        version: str | None = None,
         protocol: str = "tcp",
         state: str = "open",
     ):
@@ -69,7 +69,7 @@ class Device:
     def add_config(self, path: str, content: str, device_type: str):
         self.configs.append(ConfigFile(path=path, content=content, device_type=device_type))
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "ip": self.ip,
             "hostname": self.hostname,
@@ -92,12 +92,12 @@ class SecurityFinding:
     evidence: str
     recommendation: str
     business_impact: str
-    cve_id: Optional[str] = None
-    cvss_score: Optional[float] = None
+    cve_id: str | None = None
+    cvss_score: float | None = None
     exploit_available: bool = False
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
         data["finding_type"] = self.finding_type.value
         data["severity"] = self.severity.value
@@ -107,12 +107,12 @@ class SecurityFinding:
 
 @dataclass
 class ScanResult:
-    devices: List[Device] = field(default_factory=list)
-    findings: List[SecurityFinding] = field(default_factory=list)
+    devices: list[Device] = field(default_factory=list)
+    findings: list[SecurityFinding] = field(default_factory=list)
     scan_time: datetime = field(default_factory=datetime.now)
     scan_duration_seconds: float = 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "devices": [d.to_dict() for d in self.devices],
             "findings": [f.to_dict() for f in self.findings],
@@ -129,7 +129,7 @@ class ScanResult:
 
         return TopologyMapper().build(self.devices)
 
-    def summary(self) -> Dict[str, Any]:
+    def summary(self) -> dict[str, Any]:
         return {
             "total_devices": len(self.devices),
             "online_devices": sum(1 for d in self.devices if d.is_online),

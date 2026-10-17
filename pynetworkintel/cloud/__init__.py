@@ -11,14 +11,14 @@ exercised since they require real cloud credentials).
 
 from .aws import AWSDiscovery
 from .azure import AzureDiscovery
-from .gcp import GCPDiscovery
-from .credentials import CloudCredentialManager
 from .correlation import CloudCorrelationEngine
+from .credentials import CloudCredentialManager
+from .gcp import GCPDiscovery
 
 __all__ = [
     "AWSDiscovery",
     "AzureDiscovery",
-    "GCPDiscovery",
-    "CloudCredentialManager",
     "CloudCorrelationEngine",
+    "CloudCredentialManager",
+    "GCPDiscovery",
 ]

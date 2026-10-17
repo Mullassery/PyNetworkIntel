@@ -1,11 +1,12 @@
 """Configuration management for PyNetworkIntel."""
 
-import os
-import yaml
 import logging
-from pathlib import Path
-from typing import Dict, Any, Optional
+import os
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+
+import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -17,16 +18,16 @@ CONFIG_FILE = CONFIG_DIR / "config.yaml"
 class SSHConfig:
     # No default username: root (or any) must be an explicit, conscious choice.
     # See cli.py --ssh-user / PYNETWORKINTEL_SSH_USER.
-    username: Optional[str] = None
-    key_path: Optional[str] = None
+    username: str | None = None
+    key_path: str | None = None
     # SSH password is intentionally NEVER persisted to disk (see to_dict()/
     # ConfigManager.save_config below). It only ever lives in-process, sourced
     # from the PYNETWORKINTEL_SSH_PASSWORD environment variable. Prefer
     # key-based auth wherever possible.
-    password: Optional[str] = None
+    password: str | None = None
     timeout: int = 10
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize for persistence to disk.
 
         Deliberately excludes `password`: credentials must never be written
@@ -47,7 +48,7 @@ class ScanConfig:
     grab_configs: bool = True
     retry_count: int = 1
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "timeout": self.timeout,
             "nmap_args": self.nmap_args,
@@ -63,7 +64,7 @@ class AnalysisConfig:
     cve_cache_ttl: int = 86400  # 1 day
     llm_model: str = "claude-3-5-sonnet-20241022"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "enable_cve_check": self.enable_cve_check,
             "enable_llm_summary": self.enable_llm_summary,
@@ -77,9 +78,9 @@ class OutputConfig:
     format: str = "text"  # text, json, csv
     verbose: bool = False
     color: bool = True
-    output_file: Optional[str] = None
+    output_file: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "format": self.format,
             "verbose": self.verbose,
@@ -95,7 +96,7 @@ class AppConfig:
     analysis: AnalysisConfig = field(default_factory=AnalysisConfig)
     output: OutputConfig = field(default_factory=OutputConfig)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "ssh": self.ssh.to_dict(),
             "scan": self.scan.to_dict(),
@@ -116,7 +117,7 @@ class ConfigManager:
         """Load configuration from file or use defaults."""
         if self.config_file.exists():
             try:
-                with open(self.config_file, "r") as f:
+                with open(self.config_file) as f:
                     data = yaml.safe_load(f) or {}
                 return self._parse_config(data)
             except Exception as e:
@@ -124,7 +125,7 @@ class ConfigManager:
 
         return AppConfig()
 
-    def _parse_config(self, data: Dict[str, Any]) -> AppConfig:
+    def _parse_config(self, data: dict[str, Any]) -> AppConfig:
         """Parse YAML config data into AppConfig."""
         config = AppConfig()
 
@@ -197,10 +198,6 @@ class ConfigManager:
 
     def update_from_env(self):
         """Update configuration from environment variables."""
-        if api_key := os.getenv("ANTHROPIC_API_KEY"):
-            # API key is handled separately
-            pass
-
         if ssh_user := os.getenv("PYNETWORKINTEL_SSH_USER"):
             self.config.ssh.username = ssh_user
 

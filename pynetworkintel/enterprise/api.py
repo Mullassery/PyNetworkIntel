@@ -1,8 +1,9 @@
 """REST API server for PyNetworkIntel."""
-from typing import Dict, List, Any, Optional, Callable
+import logging
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +14,7 @@ class Endpoint:
     method: str
     handler: Callable
     requires_auth: bool = True
-    required_role: Optional[str] = None
+    required_role: str | None = None
 
 
 class RESTAPIServer:
@@ -29,11 +30,11 @@ class RESTAPIServer:
         """
         self.host = host
         self.port = port
-        self.endpoints: List[Endpoint] = []
-        self.rate_limiter: Dict[str, List[datetime]] = {}
+        self.endpoints: list[Endpoint] = []
+        self.rate_limiter: dict[str, list[datetime]] = {}
         self.rate_limit_per_minute = 100
 
-    def register_endpoint(self, path: str, method: str, handler: Callable, requires_auth: bool = True, required_role: Optional[str] = None):
+    def register_endpoint(self, path: str, method: str, handler: Callable, requires_auth: bool = True, required_role: str | None = None):
         """Register API endpoint."""
         endpoint = Endpoint(
             path=path,
@@ -60,7 +61,7 @@ class RESTAPIServer:
         logger.info("Stopping REST API server")
         return True
 
-    def health_check(self) -> Dict[str, Any]:
+    def health_check(self) -> dict[str, Any]:
         """Health check endpoint."""
         return {
             "status": "healthy",
@@ -74,7 +75,7 @@ class RESTAPIServer:
             self.rate_limiter[client_id] = []
 
         now = datetime.utcnow()
-        minute_ago = datetime.fromtimestamp((now.timestamp() - 60))
+        minute_ago = datetime.fromtimestamp(now.timestamp() - 60)
 
         # Clean old entries
         self.rate_limiter[client_id] = [
@@ -91,7 +92,7 @@ class RESTAPIServer:
 
         return True
 
-    def get_openapi_spec(self) -> Dict[str, Any]:
+    def get_openapi_spec(self) -> dict[str, Any]:
         """Generate OpenAPI specification."""
         paths = {}
 
@@ -181,7 +182,7 @@ class RESTAPIServer:
         return True
 
     @staticmethod
-    def _handle_scan(request: Dict[str, Any]) -> Dict[str, Any]:
+    def _handle_scan(request: dict[str, Any]) -> dict[str, Any]:
         """Handle scan request."""
         return {
             "status": "started",
@@ -190,7 +191,7 @@ class RESTAPIServer:
         }
 
     @staticmethod
-    def _handle_get_devices(request: Dict[str, Any]) -> Dict[str, Any]:
+    def _handle_get_devices(request: dict[str, Any]) -> dict[str, Any]:
         """Handle get devices request."""
         return {
             "total": 0,
@@ -198,7 +199,7 @@ class RESTAPIServer:
         }
 
     @staticmethod
-    def _handle_get_vulnerabilities(request: Dict[str, Any]) -> Dict[str, Any]:
+    def _handle_get_vulnerabilities(request: dict[str, Any]) -> dict[str, Any]:
         """Handle get vulnerabilities request."""
         return {
             "total": 0,
@@ -206,7 +207,7 @@ class RESTAPIServer:
         }
 
     @staticmethod
-    def _handle_analyze_device(request: Dict[str, Any]) -> Dict[str, Any]:
+    def _handle_analyze_device(request: dict[str, Any]) -> dict[str, Any]:
         """Handle analyze device request."""
         return {
             "device_id": request.get("device_id"),
@@ -214,7 +215,7 @@ class RESTAPIServer:
         }
 
     @staticmethod
-    def _handle_get_alerts(request: Dict[str, Any]) -> Dict[str, Any]:
+    def _handle_get_alerts(request: dict[str, Any]) -> dict[str, Any]:
         """Handle get alerts request."""
         return {
             "total": 0,
@@ -222,7 +223,7 @@ class RESTAPIServer:
         }
 
     @staticmethod
-    def _handle_get_changes(request: Dict[str, Any]) -> Dict[str, Any]:
+    def _handle_get_changes(request: dict[str, Any]) -> dict[str, Any]:
         """Handle get changes request."""
         return {
             "total": 0,

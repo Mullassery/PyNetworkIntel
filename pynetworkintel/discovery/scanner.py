@@ -1,10 +1,9 @@
 """Network device discovery engine."""
 
-import re
-import subprocess
 import logging
+import re
 import socket
-from typing import List, Optional
+import subprocess
 import xml.etree.ElementTree as ET
 
 from pynetworkintel.models import Device
@@ -78,7 +77,7 @@ class NmapScanner:
         except (subprocess.TimeoutExpired, FileNotFoundError):
             logger.warning(f"nmap not found at {self.nmap_path}. Some discovery features will be limited.")
 
-    def scan(self, target: str, timeout: Optional[int] = None) -> List[Device]:
+    def scan(self, target: str, timeout: int | None = None) -> list[Device]:
         """
         Scan target subnet/host for active devices and services.
 
@@ -125,7 +124,7 @@ class NmapScanner:
 
         return devices
 
-    def _parse_nmap_xml(self, xml_output: str) -> List[Device]:
+    def _parse_nmap_xml(self, xml_output: str) -> list[Device]:
         """Parse nmap XML output and extract device information."""
         devices = []
 
@@ -158,7 +157,7 @@ class NmapScanner:
 
         return devices
 
-    def _parse_host(self, host_elem: ET.Element) -> Optional[Device]:
+    def _parse_host(self, host_elem: ET.Element) -> Device | None:
         """Parse individual host element from nmap XML."""
         address_elem = host_elem.find("address")
         if address_elem is None:
@@ -202,7 +201,7 @@ class NmapScanner:
 
         return device
 
-    def _parse_service(self, port_elem: ET.Element) -> Optional[dict]:
+    def _parse_service(self, port_elem: ET.Element) -> dict | None:
         """Parse service information from port element."""
         state = port_elem.find("state")
         if state is None or state.get("state") != "open":
@@ -230,7 +229,7 @@ class NmapScanner:
 class ARPScanner:
     """Simple ARP-based device discovery for local networks."""
 
-    def scan_local(self, interface: Optional[str] = None) -> List[str]:
+    def scan_local(self, interface: str | None = None) -> list[str]:
         """
         Discover active devices on local network via ARP.
 
@@ -286,7 +285,7 @@ class ARPScanner:
         try:
             socket.inet_aton(ip)
             return True
-        except socket.error:
+        except OSError:
             return False
 
 
@@ -297,7 +296,7 @@ class DeviceScanner:
         self.nmap_scanner = NmapScanner(nmap_path, nmap_args=nmap_args, timeout=timeout)
         self.arp_scanner = ARPScanner()
 
-    def discover(self, target: str) -> List[Device]:
+    def discover(self, target: str) -> list[Device]:
         """
         Discover devices in target network.
 
@@ -315,7 +314,7 @@ class DeviceScanner:
 
         return devices
 
-    def discover_local(self) -> List[Device]:
+    def discover_local(self) -> list[Device]:
         """Discover devices on local network."""
         logger.info("Starting local network discovery via ARP")
 

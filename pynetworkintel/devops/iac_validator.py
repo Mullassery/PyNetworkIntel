@@ -1,8 +1,8 @@
 """Infrastructure as Code validation and security scanning."""
-from typing import Dict, List, Any
 import json
 import logging
 import re
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -12,9 +12,9 @@ class IaCValidator:
 
     def __init__(self):
         """Initialize IaC validator."""
-        self.findings: List[Dict[str, Any]] = []
+        self.findings: list[dict[str, Any]] = []
 
-    def validate_terraform(self, tf_content: str) -> Dict[str, Any]:
+    def validate_terraform(self, tf_content: str) -> dict[str, Any]:
         """Validate Terraform configuration."""
         issues = []
 
@@ -75,7 +75,7 @@ class IaCValidator:
             "compliance_score": max(0, 100 - (len(issues) * 10)),
         }
 
-    def validate_cloudformation(self, cf_content: str) -> Dict[str, Any]:
+    def validate_cloudformation(self, cf_content: str) -> dict[str, Any]:
         """Validate CloudFormation template."""
         issues = []
 
@@ -85,7 +85,7 @@ class IaCValidator:
             else:
                 import yaml
                 template = yaml.safe_load(cf_content)
-        except:
+        except Exception:
             return {"error": "Failed to parse CloudFormation template"}
 
         resources = template.get("Resources", {})
@@ -115,14 +115,12 @@ class IaCValidator:
             # Check for ingress from 0.0.0.0/0
             if "SecurityGroup" in resource_type:
                 ingress_rules = properties.get("SecurityGroupIngress", [])
-                for rule in ingress_rules:
-                    if rule.get("CidrIp") == "0.0.0.0/0":
-                        issues.append({
-                            "type": "overly_permissive_sg",
-                            "severity": "high",
-                            "resource": resource_name,
-                            "description": "Security group allows all ingress",
-                        })
+                issues.extend({
+                    "type": "overly_permissive_sg",
+                    "severity": "high",
+                    "resource": resource_name,
+                    "description": "Security group allows all ingress",
+                } for rule in ingress_rules if rule.get("CidrIp") == "0.0.0.0/0")
 
         return {
             "iac_tool": "CloudFormation",
@@ -131,14 +129,14 @@ class IaCValidator:
             "compliance_score": max(0, 100 - (len(issues) * 10)),
         }
 
-    def validate_kubernetes_manifests(self, manifest_content: str) -> Dict[str, Any]:
+    def validate_kubernetes_manifests(self, manifest_content: str) -> dict[str, Any]:
         """Validate Kubernetes manifests."""
         issues = []
 
         try:
             import yaml
             manifests = list(yaml.safe_load_all(manifest_content))
-        except:
+        except Exception:
             return {"error": "Failed to parse Kubernetes manifests"}
 
         for manifest in manifests:
@@ -196,14 +194,14 @@ class IaCValidator:
             "compliance_score": max(0, 100 - (len(issues) * 10)),
         }
 
-    def validate_docker_compose(self, compose_content: str) -> Dict[str, Any]:
+    def validate_docker_compose(self, compose_content: str) -> dict[str, Any]:
         """Validate Docker Compose configuration."""
         issues = []
 
         try:
             import yaml
             compose = yaml.safe_load(compose_content)
-        except:
+        except Exception:
             return {"error": "Failed to parse Docker Compose"}
 
         services = compose.get("services", {})
@@ -234,15 +232,14 @@ class IaCValidator:
 
             # Check for environment secrets
             environment = service_config.get("environment", {})
-            for key, value in environment.items():
-                if any(secret in key.lower() for secret in ["password", "secret", "token", "key"]):
-                    issues.append({
-                        "type": "hardcoded_secret",
-                        "severity": "critical",
-                        "service": service_name,
-                        "variable": key,
-                        "description": "Secret hardcoded in environment",
-                    })
+            issues.extend({
+                "type": "hardcoded_secret",
+                "severity": "critical",
+                "service": service_name,
+                "variable": key,
+                "description": "Secret hardcoded in environment",
+            } for key in environment
+              if any(secret in key.lower() for secret in ["password", "secret", "token", "key"]))
 
         return {
             "iac_tool": "Docker Compose",
@@ -251,7 +248,7 @@ class IaCValidator:
             "compliance_score": max(0, 100 - (len(issues) * 10)),
         }
 
-    def generate_remediation_plan(self, validation_results: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def generate_remediation_plan(self, validation_results: dict[str, Any]) -> list[dict[str, Any]]:
         """Generate remediation plan from validation results."""
         issues = validation_results.get("issues", [])
 

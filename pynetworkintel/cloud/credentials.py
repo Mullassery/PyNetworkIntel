@@ -1,9 +1,9 @@
 """Cloud platform credential management."""
-import os
 import json
-from typing import Dict, Any, Optional
-from pathlib import Path
 import logging
+import os
+from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class CloudCredentialManager:
     """Manage credentials for cloud platforms (AWS, Azure, GCP)."""
 
-    def __init__(self, config_dir: Optional[str] = None):
+    def __init__(self, config_dir: str | None = None):
         """
         Initialize credential manager.
 
@@ -22,16 +22,16 @@ class CloudCredentialManager:
         self.config_dir.mkdir(parents=True, exist_ok=True)
         self.credentials = {}
 
-    def store_aws_credentials(self, profile_name: str, access_key_id: str, secret_access_key: str, regions: Optional[list] = None):
+    def store_aws_credentials(self, profile_name: str, access_key_id: str, secret_access_key: str, regions: list | None = None):
         """Store AWS credentials."""
         aws_file = self.config_dir / "aws.json"
 
         try:
             existing = {}
             if aws_file.exists():
-                with open(aws_file, 'r') as f:
+                with open(aws_file) as f:
                     existing = json.load(f)
-        except:
+        except Exception:
             existing = {}
 
         existing[profile_name] = {
@@ -53,9 +53,9 @@ class CloudCredentialManager:
         try:
             existing = {}
             if azure_file.exists():
-                with open(azure_file, 'r') as f:
+                with open(azure_file) as f:
                     existing = json.load(f)
-        except:
+        except Exception:
             existing = {}
 
         existing[profile_name] = {
@@ -78,9 +78,9 @@ class CloudCredentialManager:
         try:
             existing = {}
             if gcp_file.exists():
-                with open(gcp_file, 'r') as f:
+                with open(gcp_file) as f:
                     existing = json.load(f)
-        except:
+        except Exception:
             existing = {}
 
         existing[profile_name] = {
@@ -94,7 +94,7 @@ class CloudCredentialManager:
         os.chmod(gcp_file, 0o600)
         logger.info(f"Stored GCP credentials for profile: {profile_name}")
 
-    def load_aws_credentials(self, profile_name: str) -> Optional[Dict[str, Any]]:
+    def load_aws_credentials(self, profile_name: str) -> dict[str, Any] | None:
         """Load AWS credentials."""
         aws_file = self.config_dir / "aws.json"
 
@@ -103,14 +103,14 @@ class CloudCredentialManager:
             return None
 
         try:
-            with open(aws_file, 'r') as f:
+            with open(aws_file) as f:
                 credentials = json.load(f)
                 return credentials.get(profile_name)
         except Exception as e:
             logger.error(f"Failed to load AWS credentials: {e}")
             return None
 
-    def load_azure_credentials(self, profile_name: str) -> Optional[Dict[str, Any]]:
+    def load_azure_credentials(self, profile_name: str) -> dict[str, Any] | None:
         """Load Azure credentials."""
         azure_file = self.config_dir / "azure.json"
 
@@ -119,14 +119,14 @@ class CloudCredentialManager:
             return None
 
         try:
-            with open(azure_file, 'r') as f:
+            with open(azure_file) as f:
                 credentials = json.load(f)
                 return credentials.get(profile_name)
         except Exception as e:
             logger.error(f"Failed to load Azure credentials: {e}")
             return None
 
-    def load_gcp_credentials(self, profile_name: str) -> Optional[Dict[str, Any]]:
+    def load_gcp_credentials(self, profile_name: str) -> dict[str, Any] | None:
         """Load GCP credentials."""
         gcp_file = self.config_dir / "gcp.json"
 
@@ -135,7 +135,7 @@ class CloudCredentialManager:
             return None
 
         try:
-            with open(gcp_file, 'r') as f:
+            with open(gcp_file) as f:
                 credentials = json.load(f)
                 return credentials.get(profile_name)
         except Exception as e:
@@ -150,10 +150,10 @@ class CloudCredentialManager:
             return []
 
         try:
-            with open(aws_file, 'r') as f:
+            with open(aws_file) as f:
                 credentials = json.load(f)
                 return list(credentials.keys())
-        except:
+        except Exception:
             return []
 
     def get_azure_profiles(self) -> list:
@@ -164,10 +164,10 @@ class CloudCredentialManager:
             return []
 
         try:
-            with open(azure_file, 'r') as f:
+            with open(azure_file) as f:
                 credentials = json.load(f)
                 return list(credentials.keys())
-        except:
+        except Exception:
             return []
 
     def get_gcp_profiles(self) -> list:
@@ -178,10 +178,10 @@ class CloudCredentialManager:
             return []
 
         try:
-            with open(gcp_file, 'r') as f:
+            with open(gcp_file) as f:
                 credentials = json.load(f)
                 return list(credentials.keys())
-        except:
+        except Exception:
             return []
 
     def delete_aws_profile(self, profile_name: str):
@@ -192,7 +192,7 @@ class CloudCredentialManager:
             return
 
         try:
-            with open(aws_file, 'r') as f:
+            with open(aws_file) as f:
                 credentials = json.load(f)
 
             if profile_name in credentials:
@@ -213,7 +213,7 @@ class CloudCredentialManager:
             return
 
         try:
-            with open(azure_file, 'r') as f:
+            with open(azure_file) as f:
                 credentials = json.load(f)
 
             if profile_name in credentials:
@@ -234,7 +234,7 @@ class CloudCredentialManager:
             return
 
         try:
-            with open(gcp_file, 'r') as f:
+            with open(gcp_file) as f:
                 credentials = json.load(f)
 
             if profile_name in credentials:

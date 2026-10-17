@@ -14,6 +14,6 @@ from .vulnerabilities import IoTVulnerabilityAnalyzer
 
 __all__ = [
     "IoTDeviceDiscovery",
-    "ProtocolAnalyzer",
     "IoTVulnerabilityAnalyzer",
+    "ProtocolAnalyzer",
 ]

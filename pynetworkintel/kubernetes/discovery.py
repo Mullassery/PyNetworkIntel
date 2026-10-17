@@ -1,7 +1,7 @@
 """Kubernetes cluster discovery and resource enumeration."""
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass, asdict
 import logging
+from dataclasses import asdict, dataclass
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -13,9 +13,9 @@ class K8sResource:
     namespace: str
     name: str
     state: str
-    labels: Dict[str, str] = None
-    annotations: Dict[str, str] = None
-    metadata: Dict[str, Any] = None
+    labels: dict[str, str] = None
+    annotations: dict[str, str] = None
+    metadata: dict[str, Any] = None
 
     def __post_init__(self):
         if self.labels is None:
@@ -32,7 +32,7 @@ class K8sResource:
 class KubernetesDiscovery:
     """Discover and enumerate Kubernetes resources."""
 
-    def __init__(self, config_path: Optional[str] = None, context: Optional[str] = None):
+    def __init__(self, config_path: str | None = None, context: str | None = None):
         """
         Initialize Kubernetes discovery.
 
@@ -42,7 +42,7 @@ class KubernetesDiscovery:
         """
         self.config_path = config_path
         self.context = context
-        self.resources: List[K8sResource] = []
+        self.resources: list[K8sResource] = []
 
         try:
             from kubernetes import client, config, watch
@@ -75,7 +75,7 @@ class KubernetesDiscovery:
             logger.error(f"Failed to initialize Kubernetes client: {e}")
             self._initialized = False
 
-    def discover_nodes(self) -> List[K8sResource]:
+    def discover_nodes(self) -> list[K8sResource]:
         """Discover Kubernetes nodes."""
         if not self._initialized:
             self._initialize()
@@ -110,7 +110,7 @@ class KubernetesDiscovery:
 
         return nodes
 
-    def discover_pods(self, namespace: Optional[str] = None) -> List[K8sResource]:
+    def discover_pods(self, namespace: str | None = None) -> list[K8sResource]:
         """Discover Kubernetes pods."""
         if not self._initialized:
             self._initialize()
@@ -151,7 +151,7 @@ class KubernetesDiscovery:
 
         return pods
 
-    def discover_deployments(self, namespace: Optional[str] = None) -> List[K8sResource]:
+    def discover_deployments(self, namespace: str | None = None) -> list[K8sResource]:
         """Discover Kubernetes deployments."""
         if not self._initialized:
             self._initialize()
@@ -187,7 +187,7 @@ class KubernetesDiscovery:
 
         return deployments
 
-    def discover_services(self, namespace: Optional[str] = None) -> List[K8sResource]:
+    def discover_services(self, namespace: str | None = None) -> list[K8sResource]:
         """Discover Kubernetes services."""
         if not self._initialized:
             self._initialize()
@@ -202,14 +202,15 @@ class KubernetesDiscovery:
                 svc_list = self.v1.list_service_for_all_namespaces()
 
             for service in svc_list.items:
-                ports = []
-                for port in (service.spec.ports or []):
-                    ports.append({
+                ports = [
+                    {
                         "name": port.name,
                         "port": port.port,
                         "target_port": port.target_port,
                         "protocol": port.protocol,
-                    })
+                    }
+                    for port in (service.spec.ports or [])
+                ]
 
                 resource = K8sResource(
                     resource_id=f"{service.metadata.namespace}/{service.metadata.name}",
@@ -233,7 +234,7 @@ class KubernetesDiscovery:
 
         return services
 
-    def discover_namespaces(self) -> List[K8sResource]:
+    def discover_namespaces(self) -> list[K8sResource]:
         """Discover Kubernetes namespaces."""
         if not self._initialized:
             self._initialize()
@@ -258,7 +259,7 @@ class KubernetesDiscovery:
 
         return namespaces
 
-    def discover_secrets(self, namespace: Optional[str] = None) -> List[Dict[str, Any]]:
+    def discover_secrets(self, namespace: str | None = None) -> list[dict[str, Any]]:
         """Discover secrets (information only, not values)."""
         if not self._initialized:
             self._initialize()
@@ -272,19 +273,18 @@ class KubernetesDiscovery:
             else:
                 secret_list = self.v1.list_secret_for_all_namespaces()
 
-            for secret in secret_list.items:
-                secrets.append({
-                    "namespace": secret.metadata.namespace,
-                    "name": secret.metadata.name,
-                    "type": secret.type,
-                    "keys": list(secret.data.keys()) if secret.data else [],
-                })
+            secrets.extend({
+                "namespace": secret.metadata.namespace,
+                "name": secret.metadata.name,
+                "type": secret.type,
+                "keys": list(secret.data.keys()) if secret.data else [],
+            } for secret in secret_list.items)
         except Exception as e:
             logger.error(f"Failed to discover secrets: {e}")
 
         return secrets
 
-    def discover_all(self) -> Dict[str, List]:
+    def discover_all(self) -> dict[str, list]:
         """Discover all Kubernetes resources."""
         return {
             "namespaces": self.discover_namespaces(),
@@ -295,7 +295,7 @@ class KubernetesDiscovery:
             "secrets": self.discover_secrets(),
         }
 
-    def get_cluster_info(self) -> Dict[str, Any]:
+    def get_cluster_info(self) -> dict[str, Any]:
         """Get basic cluster information."""
         if not self._initialized:
             self._initialize()
@@ -309,10 +309,10 @@ class KubernetesDiscovery:
                 "git_commit": version.git_commit,
                 "platform": version.platform,
             }
-        except:
+        except Exception:
             return {}
 
-    def get_resources_summary(self) -> Dict[str, Any]:
+    def get_resources_summary(self) -> dict[str, Any]:
         """Get summary of discovered resources."""
         by_type = {}
         by_namespace = {}

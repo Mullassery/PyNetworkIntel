@@ -1,7 +1,7 @@
 """Azure cloud platform discovery and inventory management."""
-from typing import Any, Dict, List, Optional
-from dataclasses import dataclass, asdict
 import logging
+from dataclasses import asdict, dataclass
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -14,10 +14,10 @@ class AzureResource:
     name: str
     resource_group: str
     state: str
-    public_ip: Optional[str] = None
-    private_ip: Optional[str] = None
-    tags: Dict[str, str] = None
-    metadata: Dict[str, Any] = None
+    public_ip: str | None = None
+    private_ip: str | None = None
+    tags: dict[str, str] = None
+    metadata: dict[str, Any] = None
 
     def __post_init__(self):
         if self.tags is None:
@@ -46,15 +46,15 @@ class AzureDiscovery:
         self.client_id = client_id
         self.client_secret = client_secret
         self.tenant_id = tenant_id
-        self.resources: List[AzureResource] = []
+        self.resources: list[AzureResource] = []
 
         # Lazy import Azure SDK
         try:
             from azure.identity import ClientSecretCredential
             from azure.mgmt.compute import ComputeManagementClient
+            from azure.mgmt.network import NetworkManagementClient
             from azure.mgmt.rdbms.postgresql_flexibleservers import PostgreSQLManagementClient
             from azure.mgmt.storage import StorageManagementClient
-            from azure.mgmt.network import NetworkManagementClient
 
             self.ClientSecretCredential = ClientSecretCredential
             self.ComputeManagementClient = ComputeManagementClient
@@ -76,7 +76,7 @@ class AzureDiscovery:
             tenant_id=self.tenant_id
         )
 
-    def discover_virtual_machines(self) -> List[AzureResource]:
+    def discover_virtual_machines(self) -> list[AzureResource]:
         """Discover Azure virtual machines."""
         if not hasattr(self, 'ComputeManagementClient'):
             return []
@@ -110,7 +110,7 @@ class AzureDiscovery:
 
         return vms
 
-    def discover_databases(self) -> List[AzureResource]:
+    def discover_databases(self) -> list[AzureResource]:
         """Discover Azure databases (PostgreSQL, MySQL, SQL Server)."""
         databases = []
         try:
@@ -146,7 +146,7 @@ class AzureDiscovery:
 
         return databases
 
-    def discover_storage_accounts(self) -> List[AzureResource]:
+    def discover_storage_accounts(self) -> list[AzureResource]:
         """Discover Azure storage accounts."""
         if not hasattr(self, 'StorageManagementClient'):
             return []
@@ -181,7 +181,7 @@ class AzureDiscovery:
 
         return storage
 
-    def discover_resource_groups(self) -> List[Dict[str, Any]]:
+    def discover_resource_groups(self) -> list[dict[str, Any]]:
         """Discover resource groups."""
         if not hasattr(self, 'ComputeManagementClient'):
             return []
@@ -196,18 +196,17 @@ class AzureDiscovery:
 
             resource_client = ResourceManagementClient(credential, self.subscription_id)
 
-            for group in resource_client.resource_groups.list():
-                groups.append({
-                    "name": group.name,
-                    "location": group.location,
-                    "tags": group.tags or {},
-                })
+            groups.extend({
+                "name": group.name,
+                "location": group.location,
+                "tags": group.tags or {},
+            } for group in resource_client.resource_groups.list())
         except Exception as e:
             logger.error(f"Failed to discover resource groups: {e}")
 
         return groups
 
-    def discover_network_interfaces(self) -> List[Dict[str, Any]]:
+    def discover_network_interfaces(self) -> list[dict[str, Any]]:
         """Discover network interfaces and IP configurations."""
         if not hasattr(self, 'NetworkManagementClient'):
             return []
@@ -220,28 +219,30 @@ class AzureDiscovery:
 
             network_client = self.NetworkManagementClient(credential, self.subscription_id)
 
-            for nic in network_client.network_interfaces.list_all():
-                ip_configs = []
-                for ip_config in nic.ip_configurations or []:
-                    ip_configs.append({
+            interfaces.extend({
+                "nic_id": nic.id,
+                "name": nic.name,
+                "region": nic.location,
+                "mac_address": nic.mac_address,
+                "ip_configurations": [
+                    {
                         "name": ip_config.name,
                         "private_ip": ip_config.private_ip_address,
-                        "public_ip_id": ip_config.public_ip_address.id if ip_config.public_ip_address else None,
-                    })
-
-                interfaces.append({
-                    "nic_id": nic.id,
-                    "name": nic.name,
-                    "region": nic.location,
-                    "mac_address": nic.mac_address,
-                    "ip_configurations": ip_configs,
-                })
+                        "public_ip_id": (
+                            ip_config.public_ip_address.id
+                            if ip_config.public_ip_address
+                            else None
+                        ),
+                    }
+                    for ip_config in nic.ip_configurations or []
+                ],
+            } for nic in network_client.network_interfaces.list_all())
         except Exception as e:
             logger.error(f"Failed to discover network interfaces: {e}")
 
         return interfaces
 
-    def discover_all(self) -> Dict[str, List]:
+    def discover_all(self) -> dict[str, list]:
         """Discover all Azure resources."""
         return {
             "virtual_machines": self.discover_virtual_machines(),
@@ -251,7 +252,7 @@ class AzureDiscovery:
             "network_interfaces": self.discover_network_interfaces(),
         }
 
-    def get_resources_summary(self) -> Dict[str, Any]:
+    def get_resources_summary(self) -> dict[str, Any]:
         """Get summary of discovered resources."""
         by_type = {}
         by_region = {}
@@ -273,5 +274,5 @@ class AzureDiscovery:
             parts = resource_id.split('/')
             rg_index = parts.index('resourceGroups')
             return parts[rg_index + 1]
-        except:
+        except Exception:
             return "unknown"

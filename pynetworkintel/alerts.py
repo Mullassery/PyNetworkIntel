@@ -1,12 +1,13 @@
 """Alerting system for security findings and changes."""
 
-import logging
 import json
-from datetime import datetime
-from typing import List, Dict, Any, Optional
+import logging
 from abc import ABC, abstractmethod
+from datetime import datetime
+from typing import Any
 
-from pynetworkintel.db import Database, Alert as DBAlert
+from pynetworkintel.db import Alert as DBAlert
+from pynetworkintel.db import Database
 
 logger = logging.getLogger(__name__)
 
@@ -15,9 +16,8 @@ class AlertChannel(ABC):
     """Base class for alert channels."""
 
     @abstractmethod
-    def send(self, alert: Dict[str, Any]) -> bool:
+    def send(self, alert: dict[str, Any]) -> bool:
         """Send alert through channel. Returns True if successful."""
-        pass
 
 
 class SlackAlertChannel(AlertChannel):
@@ -26,7 +26,7 @@ class SlackAlertChannel(AlertChannel):
     def __init__(self, webhook_url: str):
         self.webhook_url = webhook_url
 
-    def send(self, alert: Dict[str, Any]) -> bool:
+    def send(self, alert: dict[str, Any]) -> bool:
         """Send alert to Slack via webhook."""
         try:
             import requests
@@ -70,19 +70,19 @@ class SlackAlertChannel(AlertChannel):
 class EmailAlertChannel(AlertChannel):
     """Send alerts via email."""
 
-    def __init__(self, smtp_server: str, smtp_port: int, sender: str, recipients: List[str], password: str = ""):
+    def __init__(self, smtp_server: str, smtp_port: int, sender: str, recipients: list[str], password: str = ""):
         self.smtp_server = smtp_server
         self.smtp_port = smtp_port
         self.sender = sender
         self.recipients = recipients
         self.password = password
 
-    def send(self, alert: Dict[str, Any]) -> bool:
+    def send(self, alert: dict[str, Any]) -> bool:
         """Send alert via email."""
         try:
             import smtplib
-            from email.mime.text import MIMEText
             from email.mime.multipart import MIMEMultipart
+            from email.mime.text import MIMEText
 
             severity = alert.get("severity", "INFO").upper()
             subject = f"[{severity}] {alert.get('title', 'Security Alert')}"
@@ -126,7 +126,7 @@ class WebhookAlertChannel(AlertChannel):
     def __init__(self, webhook_url: str):
         self.webhook_url = webhook_url
 
-    def send(self, alert: Dict[str, Any]) -> bool:
+    def send(self, alert: dict[str, Any]) -> bool:
         """Send alert to webhook."""
         try:
             import requests
@@ -150,15 +150,15 @@ class AlertManager:
 
     def __init__(self, db: Database):
         self.db = db
-        self.channels: Dict[str, AlertChannel] = {}
-        self.rules: List[Dict[str, Any]] = []
+        self.channels: dict[str, AlertChannel] = {}
+        self.rules: list[dict[str, Any]] = []
 
     def add_channel(self, name: str, channel: AlertChannel):
         """Add an alert channel."""
         self.channels[name] = channel
         logger.info(f"Registered alert channel: {name}")
 
-    def add_rule(self, rule: Dict[str, Any]):
+    def add_rule(self, rule: dict[str, Any]):
         """
         Add alert routing rule.
 
@@ -177,9 +177,9 @@ class AlertManager:
         severity: str,
         title: str,
         description: str,
-        device_ip: Optional[str] = None,
-        cve_id: Optional[str] = None,
-    ) -> Optional[Dict[str, Any]]:
+        device_ip: str | None = None,
+        cve_id: str | None = None,
+    ) -> dict[str, Any] | None:
         """Create and send alert."""
         alert = {
             "alert_type": alert_type,
@@ -199,7 +199,7 @@ class AlertManager:
 
         return alert
 
-    def _send_alert(self, alert: Dict[str, Any]):
+    def _send_alert(self, alert: dict[str, Any]):
         """Send alert through appropriate channels."""
         # Determine which channels to use (simple routing based on severity)
         severity_map = {
@@ -220,7 +220,7 @@ class AlertManager:
                 except Exception as e:
                     logger.error(f"Error sending alert via {channel_name}: {e}")
 
-    def _save_alert(self, alert: Dict[str, Any]):
+    def _save_alert(self, alert: dict[str, Any]):
         """Save alert to database."""
         session = self.db.get_session()
 
@@ -240,7 +240,7 @@ class AlertManager:
         finally:
             session.close()
 
-    def get_pending_alerts(self) -> List[Dict[str, Any]]:
+    def get_pending_alerts(self) -> list[dict[str, Any]]:
         """Get all pending alerts."""
         session = self.db.get_session()
 

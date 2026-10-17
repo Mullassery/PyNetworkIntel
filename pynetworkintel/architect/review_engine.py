@@ -1,6 +1,6 @@
 """Architecture review and assessment."""
-from typing import Dict, List, Any
 import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -8,24 +8,24 @@ logger = logging.getLogger(__name__)
 class ReviewEngine:
     """Review architectures for best practices."""
 
-    def review_reliability(self, architecture: Dict[str, Any]) -> Dict[str, Any]:
+    def review_reliability(self, architecture: dict[str, Any]) -> dict[str, Any]:
         """Review reliability aspects."""
         score = 0
 
         # Check redundancy
-        if "redundancy" in architecture and architecture["redundancy"]:
+        if architecture.get("redundancy"):
             score += 30
 
         # Check failover
-        if "failover" in architecture and architecture["failover"]:
+        if architecture.get("failover"):
             score += 25
 
         # Check monitoring
-        if "monitoring" in architecture and architecture["monitoring"]:
+        if architecture.get("monitoring"):
             score += 25
 
         # Check backup
-        if "backup" in architecture and architecture["backup"]:
+        if architecture.get("backup"):
             score += 20
 
         return {
@@ -36,20 +36,20 @@ class ReviewEngine:
             "recommendations": self._get_reliability_recommendations(score),
         }
 
-    def review_security(self, architecture: Dict[str, Any]) -> Dict[str, Any]:
+    def review_security(self, architecture: dict[str, Any]) -> dict[str, Any]:
         """Review security aspects."""
         score = 0
 
-        if "encryption" in architecture and architecture["encryption"]:
+        if architecture.get("encryption"):
             score += 30
 
-        if "authentication" in architecture and architecture["authentication"]:
+        if architecture.get("authentication"):
             score += 25
 
-        if "network_segmentation" in architecture and architecture["network_segmentation"]:
+        if architecture.get("network_segmentation"):
             score += 25
 
-        if "audit_logging" in architecture and architecture["audit_logging"]:
+        if architecture.get("audit_logging"):
             score += 20
 
         return {
@@ -58,17 +58,17 @@ class ReviewEngine:
             "recommendations": self._get_security_recommendations(score),
         }
 
-    def review_scalability(self, architecture: Dict[str, Any]) -> Dict[str, Any]:
+    def review_scalability(self, architecture: dict[str, Any]) -> dict[str, Any]:
         """Review scalability aspects."""
         score = 0
 
-        if "auto_scaling" in architecture and architecture["auto_scaling"]:
+        if architecture.get("auto_scaling"):
             score += 35
 
-        if "load_balancing" in architecture and architecture["load_balancing"]:
+        if architecture.get("load_balancing"):
             score += 35
 
-        if "caching" in architecture and architecture["caching"]:
+        if architecture.get("caching"):
             score += 30
 
         return {
@@ -77,18 +77,18 @@ class ReviewEngine:
             "recommendations": self._get_scalability_recommendations(score),
         }
 
-    def review_cost(self, architecture: Dict[str, Any]) -> Dict[str, Any]:
+    def review_cost(self, architecture: dict[str, Any]) -> dict[str, Any]:
         """Review cost optimization."""
         score = 50  # Baseline
 
         # Adjust based on factors
-        if "serverless" in architecture and architecture["serverless"]:
+        if architecture.get("serverless"):
             score += 20
 
-        if "reserved_instances" in architecture and architecture["reserved_instances"]:
+        if architecture.get("reserved_instances"):
             score += 15
 
-        if "right_sizing" in architecture and architecture["right_sizing"]:
+        if architecture.get("right_sizing"):
             score += 15
 
         return {
@@ -98,7 +98,7 @@ class ReviewEngine:
             "recommendations": self._get_cost_recommendations(score),
         }
 
-    def generate_overall_review(self, architecture: Dict[str, Any]) -> Dict[str, Any]:
+    def generate_overall_review(self, architecture: dict[str, Any]) -> dict[str, Any]:
         """Generate comprehensive review."""
         reliability = self.review_reliability(architecture)
         security = self.review_security(architecture)
@@ -125,7 +125,7 @@ class ReviewEngine:
         }
 
     @staticmethod
-    def _get_reliability_recommendations(score: float) -> List[str]:
+    def _get_reliability_recommendations(score: float) -> list[str]:
         if score < 50:
             return [
                 "Implement redundancy for critical components",
@@ -138,7 +138,7 @@ class ReviewEngine:
             return ["Good reliability posture"]
 
     @staticmethod
-    def _get_security_recommendations(score: float) -> List[str]:
+    def _get_security_recommendations(score: float) -> list[str]:
         if score < 50:
             return [
                 "Enable encryption for data in transit and at rest",
@@ -148,13 +148,13 @@ class ReviewEngine:
         return ["Continue security hardening"]
 
     @staticmethod
-    def _get_scalability_recommendations(score: float) -> List[str]:
+    def _get_scalability_recommendations(score: float) -> list[str]:
         if score < 50:
             return ["Implement auto-scaling", "Add load balancing", "Setup caching"]
         return ["Scalability well architected"]
 
     @staticmethod
-    def _get_cost_recommendations(score: float) -> List[str]:
+    def _get_cost_recommendations(score: float) -> list[str]:
         if score < 60:
             return ["Consider serverless for cost reduction", "Use reserved instances"]
         return ["Cost optimized"]
@@ -169,7 +169,7 @@ class ReviewEngine:
             return "initial"
 
     @staticmethod
-    def _identify_critical_issues(reviews: List[Dict[str, Any]]) -> List[str]:
+    def _identify_critical_issues(reviews: list[dict[str, Any]]) -> list[str]:
         issues = []
 
         for review in reviews:

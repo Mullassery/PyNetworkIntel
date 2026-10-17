@@ -1,9 +1,9 @@
 """Multi-tenant architecture and isolation."""
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass, field
-from datetime import datetime
 import hashlib
 import logging
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ class TenantConfig:
     quota_storage_gb: int = 100
     quota_api_calls_daily: int = 10000
     is_active: bool = True
-    features: List[str] = field(default_factory=list)
+    features: list[str] = field(default_factory=list)
     encryption_key: str = ""
 
 
@@ -27,11 +27,11 @@ class TenantManager:
 
     def __init__(self):
         """Initialize tenant manager."""
-        self.tenants: Dict[str, TenantConfig] = {}
-        self.tenant_data_isolation: Dict[str, Dict[str, Any]] = {}
-        self.api_keys: Dict[str, str] = {}  # api_key -> tenant_id
+        self.tenants: dict[str, TenantConfig] = {}
+        self.tenant_data_isolation: dict[str, dict[str, Any]] = {}
+        self.api_keys: dict[str, str] = {}  # api_key -> tenant_id
 
-    def create_tenant(self, name: str, owner_email: str, features: Optional[List[str]] = None) -> Optional[str]:
+    def create_tenant(self, name: str, owner_email: str, features: list[str] | None = None) -> str | None:
         """Create a new tenant."""
         tenant_id = self._generate_tenant_id(name, owner_email)
 
@@ -78,7 +78,7 @@ class TenantManager:
 
         return True
 
-    def generate_api_key(self, tenant_id: str) -> Optional[str]:
+    def generate_api_key(self, tenant_id: str) -> str | None:
         """Generate API key for tenant."""
         if tenant_id not in self.tenants:
             return None
@@ -90,11 +90,11 @@ class TenantManager:
 
         return api_key
 
-    def validate_api_key(self, api_key: str) -> Optional[str]:
+    def validate_api_key(self, api_key: str) -> str | None:
         """Validate API key and return tenant ID."""
         return self.api_keys.get(api_key)
 
-    def get_tenant_quota(self, tenant_id: str) -> Optional[Dict[str, Any]]:
+    def get_tenant_quota(self, tenant_id: str) -> dict[str, Any] | None:
         """Get tenant quota."""
         if tenant_id not in self.tenants:
             return None
@@ -115,16 +115,15 @@ class TenantManager:
 
         tenant = self.tenants[tenant_id]
 
-        if resource == "devices":
-            return amount <= tenant.quota_devices
-        elif resource == "storage":
-            return amount <= tenant.quota_storage_gb
-        elif resource == "api_calls":
-            return amount <= tenant.quota_api_calls_daily
+        quota_limits = {
+            "devices": tenant.quota_devices,
+            "storage": tenant.quota_storage_gb,
+            "api_calls": tenant.quota_api_calls_daily,
+        }
+        limit = quota_limits.get(resource)
+        return limit is not None and amount <= limit
 
-        return False
-
-    def isolate_data(self, tenant_id: str, data_key: str, data: Dict[str, Any]) -> bool:
+    def isolate_data(self, tenant_id: str, data_key: str, data: dict[str, Any]) -> bool:
         """Store tenant-isolated data."""
         if tenant_id not in self.tenant_data_isolation:
             return False
@@ -133,7 +132,7 @@ class TenantManager:
 
         return True
 
-    def retrieve_tenant_data(self, tenant_id: str, data_key: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    def retrieve_tenant_data(self, tenant_id: str, data_key: str | None = None) -> dict[str, Any] | None:
         """Retrieve tenant-isolated data."""
         if tenant_id not in self.tenant_data_isolation:
             return None
@@ -143,7 +142,7 @@ class TenantManager:
         else:
             return self.tenant_data_isolation[tenant_id]
 
-    def get_row_level_security_filter(self, tenant_id: str) -> Dict[str, Any]:
+    def get_row_level_security_filter(self, tenant_id: str) -> dict[str, Any]:
         """Get RLS filter for tenant data queries."""
         return {
             "tenant_id": tenant_id,
@@ -151,7 +150,7 @@ class TenantManager:
             "operator": "equals",
         }
 
-    def update_encryption_key(self, tenant_id: str) -> Optional[str]:
+    def update_encryption_key(self, tenant_id: str) -> str | None:
         """Rotate encryption key for tenant."""
         if tenant_id not in self.tenants:
             return None
@@ -185,7 +184,7 @@ class TenantManager:
 
         return True
 
-    def get_tenant_info(self, tenant_id: str) -> Optional[Dict[str, Any]]:
+    def get_tenant_info(self, tenant_id: str) -> dict[str, Any] | None:
         """Get tenant information."""
         if tenant_id not in self.tenants:
             return None
@@ -216,8 +215,8 @@ class TenantManager:
     @staticmethod
     def _generate_api_key(tenant_id: str) -> str:
         """Generate API key for tenant."""
-        import uuid
         import base64
+        import uuid
         key_material = f"{tenant_id}-{uuid.uuid4()}"
         return base64.b64encode(key_material.encode()).decode()[:32]
 

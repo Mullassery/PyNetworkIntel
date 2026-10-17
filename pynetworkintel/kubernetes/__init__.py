@@ -10,13 +10,13 @@ not exercised).
 """
 
 from .discovery import KubernetesDiscovery
+from .network_policy import NetworkPolicyAnalyzer
 from .rbac import RBACAnalyzer
 from .security import ContainerSecurityAnalyzer
-from .network_policy import NetworkPolicyAnalyzer
 
 __all__ = [
-    "KubernetesDiscovery",
-    "RBACAnalyzer",
     "ContainerSecurityAnalyzer",
+    "KubernetesDiscovery",
     "NetworkPolicyAnalyzer",
+    "RBACAnalyzer",
 ]

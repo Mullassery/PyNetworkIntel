@@ -1,8 +1,8 @@
 """LLM-powered analysis and summarization using Claude."""
 
-import logging
 import json
-from typing import Optional
+import logging
+
 from anthropic import Anthropic
 
 from pynetworkintel.models import ScanResult, SecurityFinding, Severity
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class LLMAnalyzer:
     """Use Claude to synthesize findings and provide business-focused analysis."""
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None):
         self.client = Anthropic(api_key=api_key)
         self.model = "claude-3-5-sonnet-20241022"
 
