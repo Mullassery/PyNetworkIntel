@@ -9,6 +9,11 @@ messages - they are not a full feature-by-feature history, since no
 changelog was kept at the time. Nothing here is fabricated beyond what the
 git history itself verifies.
 
+## [1.5.1] - 2026-10-17
+
+### Fixed
+- Audit remediation: security hardening, correctness fixes, and lint/CI gates.
+
 ## [1.5.0] - 2026-10-11
 
 ### Added
