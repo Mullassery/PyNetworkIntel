@@ -46,6 +46,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Embedded architecture/knowledge-graph engine behind tools/codeatlas.
+architecture = ["codeatlas-rs>=0.3.0"]
 dev = [
     # Lower bounds on pytest/black were raised to the first version that
     # fixes PYSEC-2026-1845 / PYSEC-2026-2120 / PYSEC-2026-2121 respectively
