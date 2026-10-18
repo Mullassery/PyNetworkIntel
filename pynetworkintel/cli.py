@@ -124,7 +124,7 @@ Examples:
     )
     scan_parser.add_argument(
         "--output",
-        choices=["text", "json", "graphml", "d3-json"],
+        choices=["text", "json", "graphml", "d3-json", "sarif"],
         default="text",
         help=(
             "Output format. 'graphml' and 'd3-json' export the scan's "
@@ -466,6 +466,14 @@ def handle_analyze(args) -> int:
 
             topology = NetworkTopology.from_dict(result.get("topology", {}))
             result_str = render_topology_output(topology, args.output)
+        elif args.output == "sarif":
+            import json as _json
+
+            from pynetworkintel.sarif import build_sarif
+
+            result_str = _json.dumps(
+                build_sarif(result.get("findings", [])), indent=2
+            )
         else:
             result_str = format_analysis_output(result, args.summarize)
 

@@ -90,6 +90,8 @@ it makes no hidden network calls.
 - **Not an enterprise platform.** Multitenancy, HA, auth, and a REST API
   (`enterprise`) and a conversational architecture advisor (`architect`) are
   **not shipped** — excluded from the package entirely.
+- **SARIF output** — `pynetworkintel analyze ... -o sarif` emits SARIF 2.1.0
+  for GitHub code scanning/SARIF viewers. One result per finding.
 - **CVE data is cached, not bundled.** NVD lookups are live REST calls written
   to a local cache (default `~/.pynetworkintel/cve_cache.json`, TTL via
   `PYNETWORKINTEL_CVE_CACHE_TTL`). Set `PYNETWORKINTEL_OFFLINE=1` to forbid

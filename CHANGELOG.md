@@ -9,6 +9,15 @@ messages - they are not a full feature-by-feature history, since no
 changelog was kept at the time. Nothing here is fabricated beyond what the
 git history itself verifies.
 
+## [1.7.0] - 2026-10-19
+
+### Added
+- SARIF 2.1.0 export (`-o sarif` / `--output sarif`) for scan findings, with
+  one result per finding, `network://` device URIs, CVE IDs/scores, severity
+  mapping, recommendations, and business impact.
+- `tests/test_sarif.py` covers rules, levels, properties, locations, and empty
+  scans.
+
 ## [1.6.0] - 2026-10-19
 
 ### Added
