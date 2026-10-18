@@ -1,7 +1,12 @@
 """CVE database integration and vulnerability checking."""
 
+from __future__ import annotations
+
+import json
 import logging
+import os
 import time
+from pathlib import Path
 from typing import Any
 
 import requests
@@ -35,10 +40,32 @@ SERVICE_KEYWORDS = {
 class CVEChecker:
     """Check services for known vulnerabilities via NVD API."""
 
-    def __init__(self, rate_limit_delay: float = 6.0):
+    def __init__(
+        self,
+        rate_limit_delay: float = 6.0,
+        cache_path: str | None = None,
+        cache_ttl: int | None = None,
+        offline: bool | None = None,
+    ):
         self.rate_limit_delay = rate_limit_delay
         self.last_request_time = 0.0
         self._cache = {}
+        self.cache_path = Path(
+            cache_path
+            or os.getenv("PYNETWORKINTEL_CVE_CACHE")
+            or (Path.home() / ".pynetworkintel" / "cve_cache.json")
+        )
+        self.cache_ttl = int(
+            cache_ttl
+            if cache_ttl is not None
+            else os.getenv("PYNETWORKINTEL_CVE_CACHE_TTL", "86400")
+        )
+        self.offline = (
+            offline
+            if offline is not None
+            else os.getenv("PYNETWORKINTEL_OFFLINE", "").lower() in ("1", "true", "yes")
+        )
+        self._disk_cache = self._load_disk_cache()
 
     def check_device(self, device: Device) -> list[SecurityFinding]:
         """
@@ -76,12 +103,32 @@ class CVEChecker:
         if cache_key in self._cache:
             return self._cache[cache_key]
 
+        cached = self._disk_cache.get(cache_key)
+        if isinstance(cached, dict):
+            age = time.time() - float(cached.get("timestamp", 0))
+            if age <= self.cache_ttl:
+                cves = cached.get("cves", [])
+                self._cache[cache_key] = cves
+                return cves
+
+        if self.offline:
+            logger.warning(
+                "Offline mode and no fresh CVE cache entry for %s; skipping NVD lookup",
+                cache_key,
+            )
+            return []
+
         keyword = SERVICE_KEYWORDS.get(service_name.lower(), service_name)
         search_query = f"{keyword} {version}"
 
         try:
             cves = self._query_nvd(search_query)
             self._cache[cache_key] = cves
+            self._disk_cache[cache_key] = {
+                "timestamp": time.time(),
+                "cves": cves,
+            }
+            self._save_disk_cache()
             return cves
         except Exception as e:
             logger.warning(f"Failed to query CVEs for {service_name}: {e}")
@@ -89,6 +136,9 @@ class CVEChecker:
 
     def _query_nvd(self, keyword: str) -> list[dict[str, Any]]:
         """Query NVD API for CVEs matching keyword."""
+        if self.offline:
+            logger.warning("Offline mode: skipping NVD request for %r", keyword)
+            return []
         self._respect_rate_limit()
 
         params = {
@@ -129,6 +179,22 @@ class CVEChecker:
         except requests.RequestException as e:
             logger.error(f"NVD API request failed: {e}")
             return []
+
+    def _load_disk_cache(self) -> dict[str, Any]:
+        try:
+            data = json.loads(self.cache_path.read_text(encoding="utf-8"))
+            return data if isinstance(data, dict) else {}
+        except (OSError, ValueError):
+            return {}
+
+    def _save_disk_cache(self) -> None:
+        try:
+            self.cache_path.parent.mkdir(parents=True, exist_ok=True)
+            tmp = self.cache_path.with_suffix(self.cache_path.suffix + ".tmp")
+            tmp.write_text(json.dumps(self._disk_cache, indent=2), encoding="utf-8")
+            os.replace(tmp, self.cache_path)
+        except OSError as exc:
+            logger.warning("Could not write CVE cache %s: %s", self.cache_path, exc)
 
     def _extract_cvss_score(self, cve_data: dict[str, Any]) -> float | None:
         """Extract CVSS score from CVE data."""

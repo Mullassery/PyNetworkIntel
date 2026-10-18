@@ -90,8 +90,11 @@ it makes no hidden network calls.
 - **Not an enterprise platform.** Multitenancy, HA, auth, and a REST API
   (`enterprise`) and a conversational architecture advisor (`architect`) are
   **not shipped** — excluded from the package entirely.
-- **Not offline-first CVE data.** CVE checks are live NVD REST calls, and the
-  optional summary is a live Anthropic call. Neither is used unless enabled.
+- **CVE data is cached, not bundled.** NVD lookups are live REST calls written
+  to a local cache (default `~/.pynetworkintel/cve_cache.json`, TTL via
+  `PYNETWORKINTEL_CVE_CACHE_TTL`). Set `PYNETWORKINTEL_OFFLINE=1` to forbid
+  network calls; uncached services are skipped rather than failing the scan.
+  The optional summary is still a live Anthropic call.
 - **Not benchmarked.** There is no committed benchmark script or results file,
   so no throughput/latency numbers are claimed here.
 - **Not uniformly hardened.** Several shipped modules have thin test coverage

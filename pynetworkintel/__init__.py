@@ -1,6 +1,6 @@
 """PyNetworkIntel: AI-powered network intelligence platform."""
 
-__version__ = "1.4.0"
+__version__ = "1.6.0"
 
 # Core scanning and analysis
 # MCP 2.0 Support — Network security intelligence

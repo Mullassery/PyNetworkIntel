@@ -9,6 +9,16 @@ messages - they are not a full feature-by-feature history, since no
 changelog was kept at the time. Nothing here is fabricated beyond what the
 git history itself verifies.
 
+## [1.6.0] - 2026-10-19
+
+### Added
+- Persistent NVD CVE cache at `~/.pynetworkintel/cve_cache.json` (override with
+  `PYNETWORKINTEL_CVE_CACHE`), TTL via `PYNETWORKINTEL_CVE_CACHE_TTL` (default
+  24h). Fresh entries avoid a network request and survive process restarts.
+- `CVEChecker(offline=True)` / `PYNETWORKINTEL_OFFLINE=1` skips NVD requests
+  entirely; uncached services are skipped with a warning instead of failing.
+- Tests cover disk-cache round trips and offline behavior without network access.
+
 ## [1.5.1] - 2026-10-17
 
 ### Fixed

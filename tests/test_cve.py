@@ -35,9 +35,10 @@ def make_nvd_response(cve_id="CVE-2021-41617", score=7.0, description="Test vuln
 
 
 @pytest.fixture
-def checker():
-    # rate_limit_delay=0 so tests don't actually sleep
-    return CVEChecker(rate_limit_delay=0)
+def checker(tmp_path):
+    # rate_limit_delay=0 so tests don't actually sleep; isolate the disk cache
+    # so a developer's real ~/.pynetworkintel cache cannot change test results.
+    return CVEChecker(rate_limit_delay=0, cache_path=str(tmp_path / "cve_cache.json"))
 
 
 class TestQueryNVD:
@@ -225,3 +226,31 @@ class TestCheckDevice:
     def test_check_device_no_services(self, checker):
         device = Device(ip="10.0.0.7")
         assert checker.check_device(device) == []
+
+
+class TestDiskCacheAndOffline:
+    def test_disk_cache_round_trip_avoids_second_request(self, tmp_path):
+        cache_path = tmp_path / "cve_cache.json"
+        first = CVEChecker(rate_limit_delay=0, cache_path=str(cache_path), cache_ttl=3600)
+        response = MagicMock()
+        response.json.return_value = make_nvd_response()
+        response.raise_for_status.return_value = None
+
+        with patch("requests.get", return_value=response):
+            cves = first.get_cves_for_service("ssh", "8.2p1")
+        assert cves[0]["id"] == "CVE-2021-41617"
+        assert cache_path.is_file()
+
+        second = CVEChecker(rate_limit_delay=0, cache_path=str(cache_path), cache_ttl=3600)
+        with patch("requests.get", side_effect=AssertionError("network must not be used")):
+            cached = second.get_cves_for_service("ssh", "8.2p1")
+        assert cached[0]["id"] == "CVE-2021-41617"
+
+    def test_offline_without_cache_returns_empty_without_request(self, tmp_path):
+        checker = CVEChecker(
+            rate_limit_delay=0,
+            cache_path=str(tmp_path / "missing.json"),
+            offline=True,
+        )
+        with patch("requests.get", side_effect=AssertionError("network must not be used")):
+            assert checker.get_cves_for_service("ssh", "9.0") == []
