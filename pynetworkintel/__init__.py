@@ -1,6 +1,6 @@
 """PyNetworkIntel: AI-powered network intelligence platform."""
 
-__version__ = "1.8.0"
+__version__ = "1.9.0"
 
 # Core scanning and analysis
 # MCP 2.0 Support — Network security intelligence
@@ -32,6 +32,8 @@ from pynetworkintel.core import Analyzer, Pipeline, Scanner
 from pynetworkintel.dashboard import Dashboard, DashboardClient, DashboardServer
 
 # Models and data structures
+from pynetworkintel.discovery.nuclei import NucleiScanner, NucleiUnavailable, scan_with_nuclei
+from pynetworkintel.integrations.netbox import NetBoxCsvExporter, devices_csv, prefixes_csv
 from pynetworkintel.models import (
     ConfigFile,
     Device,
@@ -50,7 +52,7 @@ from pynetworkintel.scheduler import MonitoringScheduler
 from pynetworkintel.topology import NetworkTopology, TopologyEdge, TopologyMapper, TopologyNode
 from pynetworkintel.topology_export import export_topology, to_graphml, to_node_link_json
 
-__all__ = [
+__all__ = [  # noqa: RUF022
     # Alerts
     "AlertChannel",
     "AlertManager",
@@ -72,6 +74,12 @@ __all__ = [
     "MonitoringScheduler",
     # MCP
     "NetworkIntelligence",
+    "NetBoxCsvExporter",
+    "devices_csv",
+    "prefixes_csv",
+    "NucleiScanner",
+    "NucleiUnavailable",
+    "scan_with_nuclei",
     "NetworkTopology",
     "OutputConfig",
     "OutputFormatter",

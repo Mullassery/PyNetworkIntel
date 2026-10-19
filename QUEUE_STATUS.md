@@ -4,6 +4,7 @@ This file records what was shipped, what is blocked/failed, and what is rejected
 
 ## Shipped
 - Offline NVD cache, SARIF output, CLI `--offline`/cache flags (1.8.0).
+- Nuclei verification adapter (`--nuclei`) and NetBox CSV export (1.9.0).
 
 ## Blocked / failed
 - Live scan validation; network hardening review.

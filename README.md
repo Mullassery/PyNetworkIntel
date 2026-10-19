@@ -49,6 +49,46 @@ It is pure Python with no bundled Rust engine, no trained ML models, and no
 cloud-hosted service. Beyond `nmap`, SSH, NVD, and (only if you opt in) Anthropic,
 it makes no hidden network calls.
 
+## NetBox export
+
+Generate CSVs accepted by NetBox's device/prefix import UI (Apache-2.0 source
+of truth), using the site/type/role slugs you already maintain:
+
+```python
+from pynetworkintel import NetBoxCsvExporter
+
+exporter = NetBoxCsvExporter(site="lab", device_type="server", device_role="edge")
+open("devices.csv", "w").write(exporter.devices_csv(scan_result))
+open("prefixes.csv", "w").write(exporter.prefixes_csv(scan_result))
+```
+
+No NetBox token or embedded Django is required; this is an import artifact, not
+an automatic write. Review it before importing.
+
+## Verified findings with Nuclei (optional)
+
+Nmap tells you which services are exposed; it does not prove whether a
+template-detectable vulnerability is present. The optional Nuclei adapter
+runs the standalone MIT-licensed [Nuclei](https://github.com/projectdiscovery/nuclei)
+binary against HTTP(S) services discovered by your scan and maps JSONL output
+into normal `SecurityFinding` records (severity, CVE, CVSS, matched URL and
+template evidence).
+
+```bash
+pip install projectdiscovery-nuclei  # or install the Go binary directly
+pynetworkintel analyze 192.168.1.0/24 --nuclei --i-am-authorized
+```
+
+```python
+from pynetworkintel import NucleiScanner, Scanner
+
+result = Scanner().scan("192.168.1.0/24", grab_configs=False)
+findings = NucleiScanner().scan_scan_result(result)
+```
+
+Nuclei is an external process and is never vendored or forked. Install it
+only on networks you are authorized to test.
+
 ## Features / Highlights
 
 - **Device discovery** — `nmap -sV`-based host/port/service discovery

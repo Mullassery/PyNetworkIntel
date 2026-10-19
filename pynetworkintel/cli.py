@@ -151,6 +151,23 @@ Examples:
             "Required for non-interactive/CI use."
         ),
     )
+    scan_parser.add_argument(
+        "--nuclei",
+        nargs="?",
+        const="nuclei",
+        default=None,
+        metavar="PATH",
+        help=(
+            "Verify discovered HTTP(S) services with the installed Nuclei "
+            "binary (MIT). Optionally pass the binary path. Requires explicit "
+            "authorization to test the target."
+        ),
+    )
+    scan_parser.add_argument(
+        "--nuclei-severity",
+        default=None,
+        help="Comma-separated Nuclei severity filter (e.g. critical,high).",
+    )
     scan_parser.set_defaults(func=handle_scan)
 
     # Analyze command
@@ -225,6 +242,22 @@ Examples:
             f"interactive confirmation prompt (or set {AUTH_ENV_VAR}=1). "
             "Required for non-interactive/CI use."
         ),
+    )
+    analyze_parser.add_argument(
+        "--nuclei",
+        nargs="?",
+        const="nuclei",
+        default=None,
+        metavar="PATH",
+        help=(
+            "Verify discovered HTTP(S) services with the installed Nuclei "
+            "binary (MIT). Optionally pass the binary path."
+        ),
+    )
+    analyze_parser.add_argument(
+        "--nuclei-severity",
+        default=None,
+        help="Comma-separated Nuclei severity filter (e.g. critical,high).",
     )
     analyze_parser.set_defaults(func=handle_analyze)
 
@@ -357,6 +390,8 @@ def handle_scan(args) -> int:
         ssh_password=os.getenv("PYNETWORKINTEL_SSH_PASSWORD"),
         nmap_args=scan_config.nmap_args,
         scan_timeout=scan_config.timeout,
+        nuclei_path=getattr(args, "nuclei", None),
+        nuclei_severity=getattr(args, "nuclei_severity", None),
     )
 
     progress.status(f"Starting scan of {args.target}...")
@@ -448,6 +483,8 @@ def handle_analyze(args) -> int:
         anthropic_api_key=api_key,
         nmap_args=scan_config.nmap_args,
         scan_timeout=scan_config.timeout,
+        nuclei_path=getattr(args, "nuclei", None),
+        nuclei_severity=getattr(args, "nuclei_severity", None),
     )
 
     progress.status(f"Scanning network {args.target}...")

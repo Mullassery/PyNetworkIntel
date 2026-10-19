@@ -170,7 +170,19 @@ class Pipeline:
         anthropic_api_key: str | None = None,
         nmap_args: str = "-sV",
         scan_timeout: int = 300,
+        nuclei_path: str | None = None,
+        nuclei_templates: list[str] | None = None,
+        nuclei_severity: str | None = None,
     ):
+        self.nuclei_scanner = None
+        if nuclei_path:
+            from pynetworkintel.discovery.nuclei import NucleiScanner
+
+            self.nuclei_scanner = NucleiScanner(
+                nuclei_path=nuclei_path,
+                templates=nuclei_templates,
+                severity=nuclei_severity,
+            )
         self.scanner = Scanner(
             nmap_path,
             ssh_username,
@@ -200,6 +212,19 @@ class Pipeline:
 
         # Analyze
         scan_result = self.analyzer.analyze(scan_result)
+
+        # Optional active verification with Nuclei (MIT, external binary)
+        if self.nuclei_scanner is not None:
+            verified = self.nuclei_scanner.scan_scan_result(scan_result)
+            if verified:
+                existing = {
+                    (f.device, f.title, f.evidence) for f in scan_result.findings
+                }
+                for finding in verified:
+                    key = (finding.device, finding.title, finding.evidence)
+                    if key not in existing:
+                        scan_result.findings.append(finding)
+                        existing.add(key)
 
         result = {
             "devices": [d.to_dict() for d in scan_result.devices],
