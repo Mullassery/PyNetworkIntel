@@ -58,7 +58,7 @@ dev = [
     "black>=26.3.1,<27.0",
     "ruff>=0.0.280,<0.9",
     "build>=0.10,<2.0",
-    "twine>=4.0,<7.0",
+    "twine>=4.0,<8.0",
 ]
 # Optional SDKs for the (real, shipped, but lighter-tested) cloud/ and
 # kubernetes/ discovery modules. Both modules lazy-import these and degrade
