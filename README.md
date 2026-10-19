@@ -239,6 +239,16 @@ See [SECURITY.md](SECURITY.md) for how to report a vulnerability.
 stale/placeholder documents from earlier planning, each carrying an in-file
 banner saying so — refer to `CLAUDE.md` and `ROADMAP_HONEST.md` instead.
 
+## Known issues and deferred work
+
+**Blocked / failed:**
+- Live scan validation; network hardening review.
+
+**Rejected / deferred:**
+- A native scanner.
+
+Full shipped/blocked/rejected detail: [`QUEUE_STATUS.md`](QUEUE_STATUS.md).
+
 ## Queue status
 
 Shipped, blocked/failed, and rejected work for this repository is documented in
