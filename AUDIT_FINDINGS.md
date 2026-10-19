@@ -51,7 +51,8 @@ Added a persistent NVD cache and explicit offline mode in this pass:
 - Cache file `~/.pynetworkintel/cve_cache.json` (override
   `PYNETWORKINTEL_CVE_CACHE`), TTL `PYNETWORKINTEL_CVE_CACHE_TTL` (default 24h).
 - `PYNETWORKINTEL_OFFLINE=1` / `CVEChecker(offline=True)` forbids network calls;
-  uncached services are skipped with a warning.
+  uncached services are skipped with a warning. CLI flags `--offline`,
+  `--cve-cache`, and `--cve-cache-ttl` expose the same behavior.
 - `tests/test_cve.py`: 17 passed (including disk-cache round trip and offline
   no-network cases). Version `1.6.0`.
 

@@ -9,6 +9,12 @@ messages - they are not a full feature-by-feature history, since no
 changelog was kept at the time. Nothing here is fabricated beyond what the
 git history itself verifies.
 
+## [1.8.0] - 2026-10-19
+
+### Added
+- CLI flags `--offline`, `--cve-cache PATH`, and `--cve-cache-ttl SECONDS` on
+  `analyze`, exposing the existing offline/cache behavior without env vars.
+
 ## [1.7.0] - 2026-10-19
 
 ### Added

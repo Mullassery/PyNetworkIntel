@@ -176,6 +176,24 @@ Examples:
         help="Generate AI-powered summary of findings",
     )
     analyze_parser.add_argument(
+        "--offline",
+        action="store_true",
+        help="Skip all NVD network calls; only cached CVE data is used",
+    )
+    analyze_parser.add_argument(
+        "--cve-cache",
+        default=None,
+        metavar="PATH",
+        help="Path to the persistent NVD cache (default: ~/.pynetworkintel/cve_cache.json)",
+    )
+    analyze_parser.add_argument(
+        "--cve-cache-ttl",
+        type=int,
+        default=None,
+        metavar="SECONDS",
+        help="CVE cache TTL in seconds (default: 86400)",
+    )
+    analyze_parser.add_argument(
         "--output",
         choices=["text", "json", "graphml", "d3-json"],
         default="text",
@@ -398,6 +416,12 @@ def handle_scan(args) -> int:
 def handle_analyze(args) -> int:
     """Handle analyze command."""
     api_key = getattr(args, "api_key", None) or os.getenv("ANTHROPIC_API_KEY")
+    if getattr(args, "offline", False):
+        os.environ["PYNETWORKINTEL_OFFLINE"] = "1"
+    if getattr(args, "cve_cache", None):
+        os.environ["PYNETWORKINTEL_CVE_CACHE"] = args.cve_cache
+    if getattr(args, "cve_cache_ttl", None) is not None:
+        os.environ["PYNETWORKINTEL_CVE_CACHE_TTL"] = str(args.cve_cache_ttl)
 
     progress.section(f"Analyzing {args.target}")
 
