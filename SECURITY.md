@@ -28,7 +28,7 @@ Other security-relevant defaults, verified in the current code:
   reject anything that looks like an injected flag.
 
 See [README.md's Security section](README.md#security) for the full,
-current list, and `ROADMAP_HONEST.md` for the one known open dependency
+current list, and `docs/internal/ROADMAP_HONEST.md` for the one known open dependency
 advisory (`paramiko`, no fix available yet) affecting the SSH code path.
 
 ## Reporting Security Issues

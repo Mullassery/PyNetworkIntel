@@ -55,7 +55,7 @@ git history itself verifies.
   `start_mcp_connector`/`stop_mcp_connector`, geo/VPN lookups, PDF output)
   raise `NotImplementedError` rather than returning fabricated data. The
   `statguardian` import and `dab` subprocess were removed. See
-  `ROADMAP_HONEST.md` section 2.1.
+  `docs/internal/ROADMAP_HONEST.md` section 2.1.
 - `tests/test_mcp.py` - 18 tests covering every `NetworkIntelligence`
   method, the `not_implemented` error surfacing in the MCP handlers, and
   per-target change-detection scoping.
@@ -69,7 +69,7 @@ git history itself verifies.
 - `pynetworkintel/architect/recommendation_engine.py:76`: `generate_roi_analysis`
   referenced an undefined `monthly_benefit` variable, which would raise
   `NameError` on any call where `cost_impact > 0` (flagged by
-  `ruff --select F821` and documented in `ROADMAP_HONEST.md`). Defined
+  `ruff --select F821` and documented in `docs/internal/ROADMAP_HONEST.md`). Defined
   `monthly_benefit = annual_savings / 12` before use and fixed the payback
   guard to check `monthly_benefit > 0` instead of a redundant
   `cost_impact / 12 > 0` check. Verified with a new
@@ -130,10 +130,10 @@ git history itself verifies.
 ### Added (meta)
 - `.github/dependabot.yml` (pip + github-actions ecosystems, weekly).
 - `pip-audit` CI job in `.github/workflows/tests.yml` (advisory/non-blocking
-  for now - see that file and `ROADMAP_HONEST.md` for why).
+  for now - see that file and `docs/internal/ROADMAP_HONEST.md` for why).
 - `.github/ISSUE_TEMPLATE/bug_report.yml`, `.github/ISSUE_TEMPLATE/feature_request.yml`,
   `.github/pull_request_template.md`.
-- `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `ROADMAP_HONEST.md`, this file.
+- `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `docs/internal/ROADMAP_HONEST.md`, this file.
 - Stale-doc banners at the top of `docs/ARCHITECTURE.md`,
   `docs/PRODUCT_VISION.md`, and `docs/ROADMAP.md` pointing to the real
   current docs, since the disclosure previously existed only in
@@ -159,5 +159,5 @@ First tagged release.
 ## Not listed here
 A `v2.0.0` git tag exists but points at a commit from 2026-07-30 - older
 than `v1.0.1` and much older than `v1.4.0` - and does not represent a real
-2.0 release; see `ROADMAP_HONEST.md`. It is intentionally omitted from this
+2.0 release; see `docs/internal/ROADMAP_HONEST.md`. It is intentionally omitted from this
 changelog as a version entry.

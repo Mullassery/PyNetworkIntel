@@ -89,7 +89,7 @@ scan data or refused.
 
 Tested in `tests/test_mcp.py` (18 tests). The root `pynetworkintel.toml`
 MCP-to-toole configuration file is not referenced by any code (see
-`ROADMAP_HONEST.md` section 4).
+`docs/internal/ROADMAP_HONEST.md` section 4).
 
 ## Entry points
 

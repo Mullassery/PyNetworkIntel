@@ -9,7 +9,7 @@
 
 - [ ] `pytest tests/ -v` passes locally
 - [ ] `ruff check pynetworkintel/` was run (new lint errors, if any, are explained below)
-- [ ] Docs (README.md / CLAUDE.md / ROADMAP_HONEST.md) updated if behavior, status, or scope changed
+- [ ] Docs (README.md / CLAUDE.md / ../docs/internal/ROADMAP_HONEST.md) updated if behavior, status, or scope changed
 
 ## Notes for reviewers
 

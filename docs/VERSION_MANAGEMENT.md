@@ -15,7 +15,7 @@ version.
 Git tags and the PyPI registry are reported by the script for information
 but are **not** part of the pass/fail check - this repo has at least one
 out-of-order git tag (`v2.0.0`, pointing at a commit older and less
-complete than `v1.4.0`; see `ROADMAP_HONEST.md`), so tag names cannot be
+complete than `v1.4.0`; see `internal/ROADMAP_HONEST.md`), so tag names cannot be
 trusted as a version source.
 
 Current version: see `pyproject.toml` (`1.4.0` as of this writing - do not

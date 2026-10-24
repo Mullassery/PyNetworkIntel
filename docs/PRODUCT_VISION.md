@@ -4,7 +4,7 @@
 > project.** There is no "unified MCP 2.0 Platform" of "228 tools across 19
 > projects" - that claim does not correspond to anything that exists. The
 > real, shipped `pynetworkintel._mcp_connector`/`_mcp_tools` code is a set
-> of stub methods that return hardcoded fake data (see `ROADMAP_HONEST.md`
+> of stub methods that return hardcoded fake data (see `internal/ROADMAP_HONEST.md`
 > for specifics); it is not the platform described below. Current actual
 > version is tracked in `pyproject.toml`, not "v2.0.0". See
 > [`README.md`](../README.md) and [`CLAUDE.md`](../CLAUDE.md) for what this

@@ -30,14 +30,14 @@ subprocess/XML parsing path.
 ```bash
 pytest tests/ -v          # test suite (168 tests as of this writing)
 ruff check pynetworkintel/ # lint
-black --check pynetworkintel/  # formatting (see ROADMAP_HONEST.md - not
+black --check pynetworkintel/  # formatting (see docs/internal/ROADMAP_HONEST.md - not
                                 # currently enforced in CI, so don't be
                                 # surprised if `main` isn't fully compliant)
 ```
 
 All 168 tests must pass before a PR is merged. `ruff`/`black` are
 configured in `pyproject.toml` but not currently gated in CI - see
-`ROADMAP_HONEST.md` for that gap. Please don't introduce *new* lint errors
+`docs/internal/ROADMAP_HONEST.md` for that gap. Please don't introduce *new* lint errors
 even though old ones aren't blocked yet.
 
 ## Scope boundaries

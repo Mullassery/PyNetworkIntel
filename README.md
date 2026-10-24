@@ -148,7 +148,7 @@ only on networks you are authorized to test.
 **Beta (v1.5.0).** The core discovery → analysis → topology → reporting path is
 implemented and tested. The `cloud`, `kubernetes`, `iot`, `ml`, and `devops`
 extensions ship but are lighter-tested. `enterprise` and `architect` are excluded
-from the distributed package. See [ROADMAP_HONEST.md](ROADMAP_HONEST.md) for the
+from the distributed package. See [docs/internal/ROADMAP_HONEST.md](docs/internal/ROADMAP_HONEST.md) for the
 current honest status and [CLAUDE.md](CLAUDE.md) for an accurate architecture
 description.
 
@@ -270,14 +270,14 @@ See [SECURITY.md](SECURITY.md) for how to report a vulnerability.
   (`--dashboard`).
 - [CLAUDE.md](CLAUDE.md) — accurate architecture description for engineers
   working on the codebase.
-- [ROADMAP_HONEST.md](ROADMAP_HONEST.md) — current honest status and technical
+- [docs/internal/ROADMAP_HONEST.md](docs/internal/ROADMAP_HONEST.md) — current honest status and technical
   debt with file:line specifics.
 - [CHANGELOG.md](CHANGELOG.md), [CONTRIBUTING.md](CONTRIBUTING.md),
   [SECURITY.md](SECURITY.md).
 
 `docs/ARCHITECTURE.md`, `docs/PRODUCT_VISION.md`, and `docs/ROADMAP.md` are
 stale/placeholder documents from earlier planning, each carrying an in-file
-banner saying so — refer to `CLAUDE.md` and `ROADMAP_HONEST.md` instead.
+banner saying so — refer to `CLAUDE.md` and `docs/internal/ROADMAP_HONEST.md` instead.
 
 ## Known issues and deferred work
 
@@ -287,7 +287,7 @@ banner saying so — refer to `CLAUDE.md` and `ROADMAP_HONEST.md` instead.
 **Rejected / deferred:**
 - A native scanner.
 
-Full shipped/blocked/rejected detail: [`QUEUE_STATUS.md`](QUEUE_STATUS.md).
+Full shipped/blocked/rejected detail: [`docs/internal/QUEUE_STATUS.md`](docs/internal/QUEUE_STATUS.md).
 
 ## Contributing
 

@@ -5,7 +5,7 @@
 > true - the actual current version is in `pyproject.toml` (currently
 > 1.4.0), and there is no "MCP 2.0 Platform." For the real, current,
 > honestly-assessed status and pending work, see
-> [`ROADMAP_HONEST.md`](../ROADMAP_HONEST.md) at the repo root instead of
+> [`internal/ROADMAP_HONEST.md`](internal/ROADMAP_HONEST.md) at the repo root instead of
 > this file.
 
 ## Current Status: Production Ready
