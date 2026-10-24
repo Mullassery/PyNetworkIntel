@@ -1,4 +1,5 @@
 """IoT device vulnerability analysis."""
+
 import logging
 import re
 from typing import Any
@@ -24,7 +25,9 @@ class IoTVulnerabilityAnalyzer:
             },
         }
 
-    def check_firmware_vulnerabilities(self, device_model: str, firmware_version: str) -> list[dict[str, Any]]:
+    def check_firmware_vulnerabilities(
+        self, device_model: str, firmware_version: str
+    ) -> list[dict[str, Any]]:
         """Check for known firmware vulnerabilities."""
         vulnerabilities = []
 
@@ -37,13 +40,15 @@ class IoTVulnerabilityAnalyzer:
 
         # Check for known vulnerability patterns
         if major < 2 or (major == 2 and minor < 5):
-            vulnerabilities.append({
-                "type": "outdated_firmware",
-                "severity": "high",
-                "description": f"Firmware {firmware_version} may contain known vulnerabilities",
-                "recommendation": "Update to latest firmware version",
-                "cve_score": 7.5,
-            })
+            vulnerabilities.append(
+                {
+                    "type": "outdated_firmware",
+                    "severity": "high",
+                    "description": f"Firmware {firmware_version} may contain known vulnerabilities",
+                    "recommendation": "Update to latest firmware version",
+                    "cve_score": 7.5,
+                }
+            )
 
         # Model-specific vulnerabilities
         model_vulns = self._get_model_vulnerabilities(device_model)
@@ -70,21 +75,22 @@ class IoTVulnerabilityAnalyzer:
 
         # Modbus vulnerabilities
         if "Modbus TCP" in protocols:
-            vulnerabilities.append({
-                "type": "no_authentication",
-                "severity": "critical",
-                "description": "Modbus TCP has no authentication mechanism",
-                "recommendation": "Restrict network access via firewall",
-                "cve_score": 9.8,
-            })
+            vulnerabilities.append(
+                {
+                    "type": "no_authentication",
+                    "severity": "critical",
+                    "description": "Modbus TCP has no authentication mechanism",
+                    "recommendation": "Restrict network access via firewall",
+                    "cve_score": 9.8,
+                }
+            )
 
         return vulnerabilities
 
     def scan_device_security(self, device: dict[str, Any]) -> dict[str, Any]:
         """Perform comprehensive security scan on device."""
         firmware_vulns = self.check_firmware_vulnerabilities(
-            device.get("model", "Unknown"),
-            device.get("firmware_version", "Unknown")
+            device.get("model", "Unknown"), device.get("firmware_version", "Unknown")
         )
         protocol_vulns = self.check_protocol_vulnerabilities(device)
 
@@ -113,15 +119,18 @@ class IoTVulnerabilityAnalyzer:
 
         default_creds = self._get_default_creds_for_device(manufacturer, device_type)
 
-        issues.extend({
-            "type": "default_credentials",
-            "severity": "critical",
-            "username": cred_set.get("username"),
-            "password": cred_set.get("password"),
-            "description": "Device likely has default credentials",
-            "recommendation": "Change default credentials immediately",
-            "cve_score": 9.1,
-        } for cred_set in default_creds)
+        issues.extend(
+            {
+                "type": "default_credentials",
+                "severity": "critical",
+                "username": cred_set.get("username"),
+                "password": cred_set.get("password"),
+                "description": "Device likely has default credentials",
+                "recommendation": "Change default credentials immediately",
+                "cve_score": 9.1,
+            }
+            for cred_set in default_creds
+        )
 
         return issues
 
@@ -147,11 +156,7 @@ class IoTVulnerabilityAnalyzer:
             "total_devices": len(devices),
             "total_vulnerabilities": len(all_vulns),
             "risk_distribution": risk_distribution,
-            "most_common_issues": sorted(
-                vuln_types.items(),
-                key=lambda x: x[1],
-                reverse=True
-            )[:5],
+            "most_common_issues": sorted(vuln_types.items(), key=lambda x: x[1], reverse=True)[:5],
             "remediation_priority": self._get_remediation_priority(all_vulns),
         }
 
@@ -194,13 +199,15 @@ class IoTVulnerabilityAnalyzer:
         vulns = []
 
         if device.get("port") == 1883:  # Unencrypted MQTT
-            vulns.append({
-                "type": "mqtt_unencrypted",
-                "severity": "high",
-                "description": "MQTT running on port 1883 without TLS",
-                "recommendation": "Use port 8883 with TLS encryption",
-                "cve_score": 7.2,
-            })
+            vulns.append(
+                {
+                    "type": "mqtt_unencrypted",
+                    "severity": "high",
+                    "description": "MQTT running on port 1883 without TLS",
+                    "recommendation": "Use port 8883 with TLS encryption",
+                    "cve_score": 7.2,
+                }
+            )
 
         return vulns
 
@@ -210,13 +217,15 @@ class IoTVulnerabilityAnalyzer:
         vulns = []
 
         if device.get("port") == 80:  # Unencrypted HTTP
-            vulns.append({
-                "type": "http_unencrypted",
-                "severity": "high",
-                "description": "HTTP running on port 80 without HTTPS",
-                "recommendation": "Use port 443 with HTTPS",
-                "cve_score": 7.1,
-            })
+            vulns.append(
+                {
+                    "type": "http_unencrypted",
+                    "severity": "high",
+                    "description": "HTTP running on port 80 without HTTPS",
+                    "recommendation": "Use port 443 with HTTPS",
+                    "cve_score": 7.1,
+                }
+            )
 
         return vulns
 
@@ -276,18 +285,22 @@ class IoTVulnerabilityAnalyzer:
         priority = []
 
         if critical_vulns:
-            priority.append({
-                "priority": 1,
-                "count": len(critical_vulns),
-                "action": "Address critical vulnerabilities immediately",
-            })
+            priority.append(
+                {
+                    "priority": 1,
+                    "count": len(critical_vulns),
+                    "action": "Address critical vulnerabilities immediately",
+                }
+            )
 
         if high_vulns:
-            priority.append({
-                "priority": 2,
-                "count": len(high_vulns),
-                "action": "Address high-severity vulnerabilities",
-            })
+            priority.append(
+                {
+                    "priority": 2,
+                    "count": len(high_vulns),
+                    "action": "Address high-severity vulnerabilities",
+                }
+            )
 
         return priority
 

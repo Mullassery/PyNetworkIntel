@@ -1,4 +1,5 @@
 """Kubernetes RBAC (Role-Based Access Control) analysis."""
+
 import logging
 from typing import Any
 
@@ -12,6 +13,7 @@ class RBACAnalyzer:
         """Initialize RBAC analyzer."""
         try:
             from kubernetes import client
+
             self.client = client
             self._initialized = False
         except ImportError:
@@ -47,14 +49,16 @@ class RBACAnalyzer:
                 permissions = self._extract_permissions(role.rules)
                 risk_score = self._calculate_role_risk(permissions)
 
-                roles.append({
-                    "name": role.metadata.name,
-                    "namespace": role.metadata.namespace,
-                    "permissions": permissions,
-                    "risk_score": risk_score,
-                    "risk_level": self._get_risk_level(risk_score),
-                    "recommendations": self._get_role_recommendations(permissions),
-                })
+                roles.append(
+                    {
+                        "name": role.metadata.name,
+                        "namespace": role.metadata.namespace,
+                        "permissions": permissions,
+                        "risk_score": risk_score,
+                        "risk_level": self._get_risk_level(risk_score),
+                        "recommendations": self._get_role_recommendations(permissions),
+                    }
+                )
         except Exception as e:
             logger.error(f"Failed to analyze roles: {e}")
 
@@ -73,14 +77,16 @@ class RBACAnalyzer:
                 permissions = self._extract_permissions(role.rules)
                 risk_score = self._calculate_role_risk(permissions)
 
-                roles.append({
-                    "name": role.metadata.name,
-                    "type": "cluster_role",
-                    "permissions": permissions,
-                    "risk_score": risk_score,
-                    "risk_level": self._get_risk_level(risk_score),
-                    "recommendations": self._get_role_recommendations(permissions),
-                })
+                roles.append(
+                    {
+                        "name": role.metadata.name,
+                        "type": "cluster_role",
+                        "permissions": permissions,
+                        "risk_score": risk_score,
+                        "risk_level": self._get_risk_level(risk_score),
+                        "recommendations": self._get_role_recommendations(permissions),
+                    }
+                )
         except Exception as e:
             logger.error(f"Failed to analyze cluster roles: {e}")
 
@@ -110,13 +116,15 @@ class RBACAnalyzer:
                     for subject in (binding.subjects or [])
                 ]
 
-                bindings.append({
-                    "name": binding.metadata.name,
-                    "namespace": binding.metadata.namespace,
-                    "role": binding.role_ref.name,
-                    "subjects": subjects,
-                    "risk_level": self._assess_binding_risk(subjects),
-                })
+                bindings.append(
+                    {
+                        "name": binding.metadata.name,
+                        "namespace": binding.metadata.namespace,
+                        "role": binding.role_ref.name,
+                        "subjects": subjects,
+                        "risk_level": self._assess_binding_risk(subjects),
+                    }
+                )
         except Exception as e:
             logger.error(f"Failed to analyze role bindings: {e}")
 
@@ -141,12 +149,14 @@ class RBACAnalyzer:
                     for subject in (binding.subjects or [])
                 ]
 
-                bindings.append({
-                    "name": binding.metadata.name,
-                    "role": binding.role_ref.name,
-                    "subjects": subjects,
-                    "risk_level": self._assess_binding_risk(subjects),
-                })
+                bindings.append(
+                    {
+                        "name": binding.metadata.name,
+                        "role": binding.role_ref.name,
+                        "subjects": subjects,
+                        "risk_level": self._assess_binding_risk(subjects),
+                    }
+                )
         except Exception as e:
             logger.error(f"Failed to analyze cluster role bindings: {e}")
 
@@ -163,8 +173,8 @@ class RBACAnalyzer:
         roles = self.analyze_roles()
         cluster_roles = self.analyze_cluster_roles()
 
-        high_risk = sum(1 for r in roles if r.get('risk_level') == 'high')
-        high_risk += sum(1 for r in cluster_roles if r.get('risk_level') == 'high')
+        high_risk = sum(1 for r in roles if r.get("risk_level") == "high")
+        high_risk += sum(1 for r in cluster_roles if r.get("risk_level") == "high")
 
         return {
             "total_roles": len(roles),
@@ -183,7 +193,7 @@ class RBACAnalyzer:
         """Extract permissions from role rules."""
         permissions = []
 
-        for rule in (rules or []):
+        for rule in rules or []:
             permission = {
                 "api_groups": rule.api_groups or ["*"],
                 "resources": rule.resources or [],
@@ -246,10 +256,14 @@ class RBACAnalyzer:
                 recommendations.append("Specify specific resources instead of wildcards")
 
             if "*" in perm.get("verbs", []):
-                recommendations.append("Limit verbs to only what's necessary (get, list, watch, etc.)")
+                recommendations.append(
+                    "Limit verbs to only what's necessary (get, list, watch, etc.)"
+                )
 
             if "secrets" in perm.get("resources", []):
-                recommendations.append("Restrict access to secrets - consider using sealed-secrets or external-secrets")
+                recommendations.append(
+                    "Restrict access to secrets - consider using sealed-secrets or external-secrets"
+                )
 
         return list(set(recommendations))[:3]  # Return top 3 unique recommendations
 

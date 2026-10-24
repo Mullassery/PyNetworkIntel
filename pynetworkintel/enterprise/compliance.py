@@ -1,4 +1,5 @@
 """Compliance auditing and reporting."""
+
 import logging
 from datetime import datetime
 from typing import Any
@@ -82,7 +83,14 @@ class ComplianceAuditor:
             "overall_status": "compliant",
         }
 
-    def record_audit_entry(self, action: str, actor: str, resource: str, status: str, details: dict[str, Any] | None = None):
+    def record_audit_entry(
+        self,
+        action: str,
+        actor: str,
+        resource: str,
+        status: str,
+        details: dict[str, Any] | None = None,
+    ):
         """Record audit log entry."""
         entry = {
             "timestamp": datetime.utcnow().isoformat(),
@@ -112,7 +120,8 @@ class ComplianceAuditor:
     def generate_audit_report(self, start_date: datetime, end_date: datetime) -> dict[str, Any]:
         """Generate audit report for date range."""
         filtered_logs = [
-            log for log in self.audit_log
+            log
+            for log in self.audit_log
             if start_date <= datetime.fromisoformat(log["timestamp"]) <= end_date
         ]
 
@@ -165,6 +174,7 @@ class ComplianceAuditor:
 
         if format == "json":
             import json
+
             return json.dumps(report, indent=2)
         elif format == "html":
             return self._generate_html_report(report)

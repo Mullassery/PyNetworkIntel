@@ -8,7 +8,7 @@ export, not a replacement for the JSON report.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any
 
 _LEVEL = {
     "critical": "error",
@@ -19,9 +19,9 @@ _LEVEL = {
 }
 
 
-def build_sarif(findings: List[Dict[str, Any]], tool_version: str = "") -> Dict[str, Any]:
-    rules: Dict[str, Dict[str, Any]] = {}
-    results: List[Dict[str, Any]] = []
+def build_sarif(findings: list[dict[str, Any]], tool_version: str = "") -> dict[str, Any]:
+    rules: dict[str, dict[str, Any]] = {}
+    results: list[dict[str, Any]] = []
 
     for finding in findings:
         finding_type = str(finding.get("finding_type", "finding"))
@@ -31,9 +31,7 @@ def build_sarif(findings: List[Dict[str, Any]], tool_version: str = "") -> Dict[
             {
                 "id": rule_id,
                 "name": finding_type,
-                "shortDescription": {
-                    "text": "PyNetworkIntel %s finding" % finding_type
-                },
+                "shortDescription": {"text": f"PyNetworkIntel {finding_type} finding"},
                 "properties": {"security-severity": _security_severity(finding)},
             },
         )
@@ -43,8 +41,7 @@ def build_sarif(findings: List[Dict[str, Any]], tool_version: str = "") -> Dict[
                 "ruleId": rule_id,
                 "level": _LEVEL.get(str(finding.get("severity", "")).lower(), "warning"),
                 "message": {
-                    "text": "%s: %s"
-                    % (finding.get("title", "finding"), finding.get("description", ""))
+                    "text": f"{finding.get('title', 'finding')}: {finding.get('description', '')}"
                 },
                 "locations": [
                     {
@@ -66,7 +63,7 @@ def build_sarif(findings: List[Dict[str, Any]], tool_version: str = "") -> Dict[
             }
         )
 
-    driver: Dict[str, Any] = {
+    driver: dict[str, Any] = {
         "name": "PyNetworkIntel",
         "informationUri": "https://github.com/Mullassery/PyNetworkIntel",
         "rules": [rules[key] for key in sorted(rules)],
@@ -80,9 +77,9 @@ def build_sarif(findings: List[Dict[str, Any]], tool_version: str = "") -> Dict[
     }
 
 
-def _security_severity(finding: Dict[str, Any]) -> str:
+def _security_severity(finding: dict[str, Any]) -> str:
     score = finding.get("cvss_score")
-    if isinstance(score, (int, float)):
+    if isinstance(score, int | float):
         return f"{float(score):.1f}"
     return {
         "critical": "9.0",

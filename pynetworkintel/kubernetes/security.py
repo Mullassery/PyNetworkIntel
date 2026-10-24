@@ -1,4 +1,5 @@
 """Container and workload security analysis for Kubernetes."""
+
 import logging
 from typing import Any
 
@@ -12,6 +13,7 @@ class ContainerSecurityAnalyzer:
         """Initialize container security analyzer."""
         try:
             from kubernetes import client
+
             self.client = client
             self._initialized = False
         except ImportError:
@@ -46,12 +48,14 @@ class ContainerSecurityAnalyzer:
             for pod in pod_list.items:
                 issues = self._check_pod_security(pod)
                 if issues:
-                    security_issues.append({
-                        "namespace": pod.metadata.namespace,
-                        "pod_name": pod.metadata.name,
-                        "issues": issues,
-                        "risk_score": self._calculate_pod_risk(issues),
-                    })
+                    security_issues.append(
+                        {
+                            "namespace": pod.metadata.namespace,
+                            "pod_name": pod.metadata.name,
+                            "issues": issues,
+                            "risk_score": self._calculate_pod_risk(issues),
+                        }
+                    )
         except Exception as e:
             logger.error(f"Failed to analyze pod security: {e}")
 
@@ -74,15 +78,17 @@ class ContainerSecurityAnalyzer:
             seen_images = set()
 
             for pod in pod_list.items:
-                for container in (pod.spec.containers or []):
+                for container in pod.spec.containers or []:
                     image = container.image
                     if image not in seen_images:
                         seen_images.add(image)
-                        images.append({
-                            "image": image,
-                            "issues": self._check_image(image),
-                            "risk_level": self._assess_image_risk(image),
-                        })
+                        images.append(
+                            {
+                                "image": image,
+                                "issues": self._check_image(image),
+                                "risk_level": self._assess_image_risk(image),
+                            }
+                        )
         except Exception as e:
             logger.error(f"Failed to scan container images: {e}")
 
@@ -105,12 +111,14 @@ class ContainerSecurityAnalyzer:
             for pod in pod_list.items:
                 for _i, container in enumerate(pod.spec.containers or []):
                     if container.security_context and container.security_context.privileged:
-                        privileged.append({
-                            "namespace": pod.metadata.namespace,
-                            "pod": pod.metadata.name,
-                            "container": container.name,
-                            "image": container.image,
-                        })
+                        privileged.append(
+                            {
+                                "namespace": pod.metadata.namespace,
+                                "pod": pod.metadata.name,
+                                "container": container.name,
+                                "image": container.image,
+                            }
+                        )
         except Exception as e:
             logger.error(f"Failed to find privileged containers: {e}")
 
@@ -131,7 +139,7 @@ class ContainerSecurityAnalyzer:
                 pod_list = self.v1.list_pod_for_all_namespaces()
 
             for pod in pod_list.items:
-                for container in (pod.spec.containers or []):
+                for container in pod.spec.containers or []:
                     sec_ctx = container.security_context
                     runs_as_root = True
 
@@ -139,12 +147,14 @@ class ContainerSecurityAnalyzer:
                         runs_as_root = sec_ctx.run_as_user == 0
 
                     if runs_as_root:
-                        root_containers.append({
-                            "namespace": pod.metadata.namespace,
-                            "pod": pod.metadata.name,
-                            "container": container.name,
-                            "image": container.image,
-                        })
+                        root_containers.append(
+                            {
+                                "namespace": pod.metadata.namespace,
+                                "pod": pod.metadata.name,
+                                "container": container.name,
+                                "image": container.image,
+                            }
+                        )
         except Exception as e:
             logger.error(f"Failed to find root containers: {e}")
 
@@ -165,13 +175,16 @@ class ContainerSecurityAnalyzer:
                 pod_list = self.v1.list_pod_for_all_namespaces()
 
             for pod in pod_list.items:
-                issues.extend({
-                    "namespace": pod.metadata.namespace,
-                    "pod": pod.metadata.name,
-                    "container": container.name,
-                    "issue": "No resource limits defined",
-                } for container in (pod.spec.containers or [])
-                  if not container.resources or not container.resources.limits)
+                issues.extend(
+                    {
+                        "namespace": pod.metadata.namespace,
+                        "pod": pod.metadata.name,
+                        "container": container.name,
+                        "issue": "No resource limits defined",
+                    }
+                    for container in (pod.spec.containers or [])
+                    if not container.resources or not container.resources.limits
+                )
         except Exception as e:
             logger.error(f"Failed to check resource limits: {e}")
 
@@ -188,7 +201,7 @@ class ContainerSecurityAnalyzer:
         critical_issues = 0
         critical_issues += len(privileged)
         critical_issues += len(root_containers)
-        critical_issues += sum(1 for img in images if img.get('risk_level') == 'critical')
+        critical_issues += sum(1 for img in images if img.get("risk_level") == "critical")
 
         return {
             "total_pods_analyzed": len(pod_issues),
@@ -219,7 +232,7 @@ class ContainerSecurityAnalyzer:
         if spec.security_context and spec.security_context.run_as_user == 0:
             issues.append("Pod runs as root")
 
-        for container in (spec.containers or []):
+        for container in spec.containers or []:
             if not container.security_context:
                 issues.append(f"Container {container.name} has no security context")
             elif not container.security_context.read_only_root_filesystem:

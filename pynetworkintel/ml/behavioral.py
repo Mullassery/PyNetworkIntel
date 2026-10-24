@@ -1,4 +1,5 @@
 """Device behavioral baseline learning."""
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -56,13 +57,19 @@ class BehavioralBaseline:
         # Update baseline metrics
         self._update_baseline_metrics(baseline, activity)
 
-    def record_port_activity(self, device_id: str, device_type: str, port: int, direction: str = "outbound"):
+    def record_port_activity(
+        self, device_id: str, device_type: str, port: int, direction: str = "outbound"
+    ):
         """Record port activity."""
-        self.record_device_activity(device_id, device_type, {
-            "type": "port_activity",
-            "port": port,
-            "direction": direction,
-        })
+        self.record_device_activity(
+            device_id,
+            device_type,
+            {
+                "type": "port_activity",
+                "port": port,
+                "direction": direction,
+            },
+        )
 
         if device_id in self.baselines:
             baseline = self.baselines[device_id]
@@ -70,10 +77,14 @@ class BehavioralBaseline:
 
     def record_service_activity(self, device_id: str, device_type: str, service: str):
         """Record service access."""
-        self.record_device_activity(device_id, device_type, {
-            "type": "service_activity",
-            "service": service,
-        })
+        self.record_device_activity(
+            device_id,
+            device_type,
+            {
+                "type": "service_activity",
+                "service": service,
+            },
+        )
 
         if device_id in self.baselines:
             baseline = self.baselines[device_id]
@@ -104,7 +115,9 @@ class BehavioralBaseline:
                 "common_services": self._get_top_services(baseline, 5),
             }
 
-    def detect_anomalies(self, device_id: str, current_activity: dict[str, Any]) -> list[dict[str, Any]]:
+    def detect_anomalies(
+        self, device_id: str, current_activity: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """Detect anomalies based on baseline."""
         if device_id not in self.baselines:
             return []
@@ -121,24 +134,28 @@ class BehavioralBaseline:
             port = current_activity["port"]
             if port not in baseline.port_patterns:
                 anomaly_score = 0.8
-                anomalies.append({
-                    "type": "unusual_port",
-                    "port": port,
-                    "anomaly_score": anomaly_score,
-                    "description": f"Port {port} not in device baseline",
-                })
+                anomalies.append(
+                    {
+                        "type": "unusual_port",
+                        "port": port,
+                        "anomaly_score": anomaly_score,
+                        "description": f"Port {port} not in device baseline",
+                    }
+                )
 
         # Check for unusual services
         if "service" in current_activity:
             service = current_activity["service"]
             if service not in baseline.service_patterns:
                 anomaly_score = 0.7
-                anomalies.append({
-                    "type": "unusual_service",
-                    "service": service,
-                    "anomaly_score": anomaly_score,
-                    "description": f"Service {service} not in device baseline",
-                })
+                anomalies.append(
+                    {
+                        "type": "unusual_service",
+                        "service": service,
+                        "anomaly_score": anomaly_score,
+                        "description": f"Service {service} not in device baseline",
+                    }
+                )
 
         return anomalies
 
@@ -153,14 +170,10 @@ class BehavioralBaseline:
             "device_id": device_id,
             "device_type": baseline.device_type,
             "port_profile": sorted(
-                baseline.port_patterns.items(),
-                key=lambda x: x[1],
-                reverse=True
+                baseline.port_patterns.items(), key=lambda x: x[1], reverse=True
             )[:10],
             "service_profile": sorted(
-                baseline.service_patterns.items(),
-                key=lambda x: x[1],
-                reverse=True
+                baseline.service_patterns.items(), key=lambda x: x[1], reverse=True
             )[:10],
             "activity_count": len(baseline.activity_history),
             "baseline_confidence": baseline.baseline_confidence,
@@ -200,8 +213,7 @@ class BehavioralBaseline:
             return {"total_devices": 0}
 
         established = sum(
-            1 for b in self.baselines.values()
-            if len(b.activity_history) >= self.min_samples
+            1 for b in self.baselines.values() if len(b.activity_history) >= self.min_samples
         )
 
         all_ports = {}
@@ -218,16 +230,10 @@ class BehavioralBaseline:
             "total_devices": len(self.baselines),
             "established_baselines": established,
             "establishing_baselines": len(self.baselines) - established,
-            "most_common_ports": sorted(
-                all_ports.items(),
-                key=lambda x: x[1],
-                reverse=True
-            )[:10],
-            "most_common_services": sorted(
-                all_services.items(),
-                key=lambda x: x[1],
-                reverse=True
-            )[:10],
+            "most_common_ports": sorted(all_ports.items(), key=lambda x: x[1], reverse=True)[:10],
+            "most_common_services": sorted(all_services.items(), key=lambda x: x[1], reverse=True)[
+                :10
+            ],
             "total_activities_recorded": len(self.activity_log),
         }
 
@@ -241,38 +247,23 @@ class BehavioralBaseline:
         baseline.time_based_patterns[hour_key] = baseline.time_based_patterns.get(hour_key, 0) + 1
 
         baseline.last_updated = timestamp
-        baseline.baseline_confidence = min(
-            len(baseline.activity_history) / 100,
-            1.0
-        )
+        baseline.baseline_confidence = min(len(baseline.activity_history) / 100, 1.0)
 
     @staticmethod
     def _get_top_ports(baseline: DeviceBaseline, limit: int = 5) -> list[dict[str, int]]:
         """Get top ports used by device."""
-        sorted_ports = sorted(
-            baseline.port_patterns.items(),
-            key=lambda x: x[1],
-            reverse=True
-        )
+        sorted_ports = sorted(baseline.port_patterns.items(), key=lambda x: x[1], reverse=True)
 
-        return [
-            {"port": port, "count": count}
-            for port, count in sorted_ports[:limit]
-        ]
+        return [{"port": port, "count": count} for port, count in sorted_ports[:limit]]
 
     @staticmethod
     def _get_top_services(baseline: DeviceBaseline, limit: int = 5) -> list[dict[str, int]]:
         """Get top services used by device."""
         sorted_services = sorted(
-            baseline.service_patterns.items(),
-            key=lambda x: x[1],
-            reverse=True
+            baseline.service_patterns.items(), key=lambda x: x[1], reverse=True
         )
 
-        return [
-            {"service": service, "count": count}
-            for service, count in sorted_services[:limit]
-        ]
+        return [{"service": service, "count": count} for service, count in sorted_services[:limit]]
 
     @staticmethod
     def _calculate_similarity(set1: set, set2: set) -> float:

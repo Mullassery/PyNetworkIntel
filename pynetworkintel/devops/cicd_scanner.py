@@ -1,4 +1,5 @@
 """CI/CD pipeline security scanning."""
+
 import logging
 import re
 from typing import Any
@@ -18,37 +19,45 @@ class CICDPipelineScanner:
         issues = []
 
         # Check for unsafe use of secrets
-        if re.search(r'secrets\.\w+.*echo|print|log', workflow_content):
-            issues.append({
-                "type": "secret_exposure",
-                "severity": "critical",
-                "description": "Secrets may be logged to console",
-                "line": self._find_line_number(workflow_content, r'secrets\.\w+'),
-            })
+        if re.search(r"secrets\.\w+.*echo|print|log", workflow_content):
+            issues.append(
+                {
+                    "type": "secret_exposure",
+                    "severity": "critical",
+                    "description": "Secrets may be logged to console",
+                    "line": self._find_line_number(workflow_content, r"secrets\.\w+"),
+                }
+            )
 
         # Check for untrusted input in shell commands
-        if re.search(r'\$\{\{\s*github\.event\.pull_request\.title', workflow_content):
-            issues.append({
-                "type": "command_injection",
-                "severity": "high",
-                "description": "User input from PR title may be used in shell command",
-            })
+        if re.search(r"\$\{\{\s*github\.event\.pull_request\.title", workflow_content):
+            issues.append(
+                {
+                    "type": "command_injection",
+                    "severity": "high",
+                    "description": "User input from PR title may be used in shell command",
+                }
+            )
 
         # Check for pinned actions (unpinned = security risk)
-        if re.search(r'uses:\s*[\w-]+/[\w-]+@main|@master', workflow_content):
-            issues.append({
-                "type": "unpinned_action",
-                "severity": "medium",
-                "description": "Actions should be pinned to specific commits, not branches",
-            })
+        if re.search(r"uses:\s*[\w-]+/[\w-]+@main|@master", workflow_content):
+            issues.append(
+                {
+                    "type": "unpinned_action",
+                    "severity": "medium",
+                    "description": "Actions should be pinned to specific commits, not branches",
+                }
+            )
 
         # Check for permissions
-        if not re.search(r'permissions:', workflow_content):
-            issues.append({
-                "type": "overly_permissive",
-                "severity": "high",
-                "description": "Workflow does not specify permissions (defaults to all)",
-            })
+        if not re.search(r"permissions:", workflow_content):
+            issues.append(
+                {
+                    "type": "overly_permissive",
+                    "severity": "high",
+                    "description": "Workflow does not specify permissions (defaults to all)",
+                }
+            )
 
         return {
             "workflow": "GitHub Actions",
@@ -63,27 +72,33 @@ class CICDPipelineScanner:
 
         # Check for exposed variables
         if "expose_as_env_vars: true" in gitlab_ci_content:
-            issues.append({
-                "type": "exposed_variables",
-                "severity": "high",
-                "description": "Environment variables exposed as artifacts",
-            })
+            issues.append(
+                {
+                    "type": "exposed_variables",
+                    "severity": "high",
+                    "description": "Environment variables exposed as artifacts",
+                }
+            )
 
         # Check for artifacts containing sensitive files
-        if re.search(r'artifacts:.*\.env|\.config|credentials', gitlab_ci_content):
-            issues.append({
-                "type": "sensitive_artifacts",
-                "severity": "critical",
-                "description": "Artifacts may contain sensitive configuration files",
-            })
+        if re.search(r"artifacts:.*\.env|\.config|credentials", gitlab_ci_content):
+            issues.append(
+                {
+                    "type": "sensitive_artifacts",
+                    "severity": "critical",
+                    "description": "Artifacts may contain sensitive configuration files",
+                }
+            )
 
         # Check for unprotected deployments
-        if not re.search(r'environment:\s*name:\s*\w+', gitlab_ci_content):
-            issues.append({
-                "type": "no_environment_protection",
-                "severity": "medium",
-                "description": "Deployments should target protected environments",
-            })
+        if not re.search(r"environment:\s*name:\s*\w+", gitlab_ci_content):
+            issues.append(
+                {
+                    "type": "no_environment_protection",
+                    "severity": "medium",
+                    "description": "Deployments should target protected environments",
+                }
+            )
 
         return {
             "pipeline": "GitLab CI",
@@ -98,27 +113,33 @@ class CICDPipelineScanner:
 
         # Check for hardcoded credentials
         if re.search(r'password\s*=\s*["\']', jenkinsfile_content):
-            issues.append({
-                "type": "hardcoded_credentials",
-                "severity": "critical",
-                "description": "Credentials hardcoded in Jenkinsfile",
-            })
+            issues.append(
+                {
+                    "type": "hardcoded_credentials",
+                    "severity": "critical",
+                    "description": "Credentials hardcoded in Jenkinsfile",
+                }
+            )
 
         # Check for unsafe shell steps
         if re.search(r'sh\s+["\'].*\$\{BUILD_', jenkinsfile_content):
-            issues.append({
-                "type": "build_variable_injection",
-                "severity": "high",
-                "description": "Build variables may be subject to injection attacks",
-            })
+            issues.append(
+                {
+                    "type": "build_variable_injection",
+                    "severity": "high",
+                    "description": "Build variables may be subject to injection attacks",
+                }
+            )
 
         # Check for missing credential binding
         if "withCredentials" not in jenkinsfile_content and "credentials" in jenkinsfile_content:
-            issues.append({
-                "type": "missing_credential_binding",
-                "severity": "high",
-                "description": "Credentials not properly bound to steps",
-            })
+            issues.append(
+                {
+                    "type": "missing_credential_binding",
+                    "severity": "high",
+                    "description": "Credentials not properly bound to steps",
+                }
+            )
 
         return {
             "pipeline": "Jenkins",
@@ -133,21 +154,29 @@ class CICDPipelineScanner:
 
         # Check for external dependencies
         dependencies = pipeline_config.get("dependencies", [])
-        risks.extend({
-            "type": "untrusted_dependency",
-            "dependency": dep,
-            "severity": "high",
-            "recommendation": "Verify package source and maintainer",
-        } for dep in dependencies if not self._is_trusted_package(dep))
+        risks.extend(
+            {
+                "type": "untrusted_dependency",
+                "dependency": dep,
+                "severity": "high",
+                "recommendation": "Verify package source and maintainer",
+            }
+            for dep in dependencies
+            if not self._is_trusted_package(dep)
+        )
 
         # Check for external container images
         images = pipeline_config.get("container_images", [])
-        risks.extend({
-            "type": "untrusted_image",
-            "image": image,
-            "severity": "high",
-            "recommendation": "Use official or trusted registry images",
-        } for image in images if not self._is_official_image(image))
+        risks.extend(
+            {
+                "type": "untrusted_image",
+                "image": image,
+                "severity": "high",
+                "recommendation": "Use official or trusted registry images",
+            }
+            for image in images
+            if not self._is_official_image(image)
+        )
 
         return {
             "supply_chain_risks": len(risks),
@@ -173,7 +202,7 @@ class CICDPipelineScanner:
     @staticmethod
     def _find_line_number(content: str, pattern: str) -> int:
         """Find line number of pattern in content."""
-        for i, line in enumerate(content.split('\n'), 1):
+        for i, line in enumerate(content.split("\n"), 1):
             if re.search(pattern, line):
                 return i
         return 0

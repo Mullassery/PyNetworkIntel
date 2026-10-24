@@ -18,6 +18,7 @@ try:
     from rich.panel import Panel
     from rich.table import Table
     from rich.text import Text
+
     RICH_AVAILABLE = True
 except ImportError:
     RICH_AVAILABLE = False
@@ -260,9 +261,7 @@ dashboard.run()
 python3 -c "from pynetworkintel.dashboard import Dashboard; Dashboard(socket_path='{socket_path}').run()"
 """
 
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".sh", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".sh", delete=False) as f:
             f.write(script_content)
             script_path = f.name
 
@@ -296,9 +295,7 @@ python3 -c "from pynetworkintel.dashboard import Dashboard; Dashboard(socket_pat
         script_content = f"""python -c "from pynetworkintel.dashboard import Dashboard; Dashboard(socket_path='{socket_path}').run()"
 pause"""
 
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".bat", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".bat", delete=False) as f:
             f.write(script_content)
             script_path = f.name
 
@@ -435,9 +432,7 @@ class Dashboard:
         table.add_row("Total Findings", f"[bold magenta]{total_findings}[/bold magenta]")
         table.add_row("Critical", f"[{critical_style}]{critical}[/{critical_style}]")
         table.add_row("High", f"[{high_style}]{high}[/{high_style}]")
-        table.add_row(
-            "Medium", f"[{medium_style}]{medium}[/{medium_style}]"
-        )
+        table.add_row("Medium", f"[{medium_style}]{medium}[/{medium_style}]")
         table.add_row("Low", f"[dim green]{low}[/dim green]")
         table.add_row("Info", f"[dim blue]{info}[/dim blue]")
 

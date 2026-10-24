@@ -1,4 +1,5 @@
 """Cloud platform credential management."""
+
 import json
 import logging
 import os
@@ -22,7 +23,13 @@ class CloudCredentialManager:
         self.config_dir.mkdir(parents=True, exist_ok=True)
         self.credentials = {}
 
-    def store_aws_credentials(self, profile_name: str, access_key_id: str, secret_access_key: str, regions: list | None = None):
+    def store_aws_credentials(
+        self,
+        profile_name: str,
+        access_key_id: str,
+        secret_access_key: str,
+        regions: list | None = None,
+    ):
         """Store AWS credentials."""
         aws_file = self.config_dir / "aws.json"
 
@@ -40,13 +47,20 @@ class CloudCredentialManager:
             "regions": regions or [],
         }
 
-        with open(aws_file, 'w') as f:
+        with open(aws_file, "w") as f:
             json.dump(existing, f, indent=2)
 
         os.chmod(aws_file, 0o600)
         logger.info(f"Stored AWS credentials for profile: {profile_name}")
 
-    def store_azure_credentials(self, profile_name: str, subscription_id: str, client_id: str, client_secret: str, tenant_id: str):
+    def store_azure_credentials(
+        self,
+        profile_name: str,
+        subscription_id: str,
+        client_id: str,
+        client_secret: str,
+        tenant_id: str,
+    ):
         """Store Azure credentials."""
         azure_file = self.config_dir / "azure.json"
 
@@ -65,7 +79,7 @@ class CloudCredentialManager:
             "tenant_id": tenant_id,
         }
 
-        with open(azure_file, 'w') as f:
+        with open(azure_file, "w") as f:
             json.dump(existing, f, indent=2)
 
         os.chmod(azure_file, 0o600)
@@ -88,7 +102,7 @@ class CloudCredentialManager:
             "credentials_path": credentials_path,
         }
 
-        with open(gcp_file, 'w') as f:
+        with open(gcp_file, "w") as f:
             json.dump(existing, f, indent=2)
 
         os.chmod(gcp_file, 0o600)
@@ -198,7 +212,7 @@ class CloudCredentialManager:
             if profile_name in credentials:
                 del credentials[profile_name]
 
-                with open(aws_file, 'w') as f:
+                with open(aws_file, "w") as f:
                     json.dump(credentials, f, indent=2)
 
                 logger.info(f"Deleted AWS profile: {profile_name}")
@@ -219,7 +233,7 @@ class CloudCredentialManager:
             if profile_name in credentials:
                 del credentials[profile_name]
 
-                with open(azure_file, 'w') as f:
+                with open(azure_file, "w") as f:
                     json.dump(credentials, f, indent=2)
 
                 logger.info(f"Deleted Azure profile: {profile_name}")
@@ -240,7 +254,7 @@ class CloudCredentialManager:
             if profile_name in credentials:
                 del credentials[profile_name]
 
-                with open(gcp_file, 'w') as f:
+                with open(gcp_file, "w") as f:
                     json.dump(credentials, f, indent=2)
 
                 logger.info(f"Deleted GCP profile: {profile_name}")

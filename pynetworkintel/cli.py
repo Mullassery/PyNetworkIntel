@@ -92,9 +92,7 @@ Examples:
     init_parser.set_defaults(func=handle_init_config)
 
     # Dashboard command
-    dashboard_parser = subparsers.add_parser(
-        "dashboard", help="Launch stats dashboard viewer"
-    )
+    dashboard_parser = subparsers.add_parser("dashboard", help="Launch stats dashboard viewer")
     dashboard_parser.add_argument(
         "--socket",
         help="Connect to existing stats server socket (advanced)",
@@ -171,9 +169,7 @@ Examples:
     scan_parser.set_defaults(func=handle_scan)
 
     # Analyze command
-    analyze_parser = subparsers.add_parser(
-        "analyze", help="Scan and perform full analysis"
-    )
+    analyze_parser = subparsers.add_parser("analyze", help="Scan and perform full analysis")
     analyze_parser.add_argument("target", help="Target IP, CIDR range, or hostname")
     analyze_parser.add_argument(
         "--ssh-user",
@@ -408,9 +404,7 @@ def handle_scan(args) -> int:
 
         if stats_server:
             stats_server.stats.devices_discovered = len(scan_result.devices)
-            stats_server.stats.devices_online = sum(
-                1 for d in scan_result.devices if d.is_online
-            )
+            stats_server.stats.devices_online = sum(1 for d in scan_result.devices if d.is_online)
             stats_server.stats.scan_status = "Complete"
 
         progress.success(
@@ -532,9 +526,7 @@ def handle_analyze(args) -> int:
 
             from pynetworkintel.sarif import build_sarif
 
-            result_str = _json.dumps(
-                build_sarif(result.get("findings", [])), indent=2
-            )
+            result_str = _json.dumps(build_sarif(result.get("findings", [])), indent=2)
         else:
             result_str = format_analysis_output(result, args.summarize)
 
@@ -575,9 +567,9 @@ def render_topology_output(topology, output_format: str) -> str:
 def format_scan_output(scan_result) -> str:
     """Format scan results in human-readable format."""
     output = []
-    output.append("="*60)
+    output.append("=" * 60)
     output.append("NETWORK SCAN RESULTS")
-    output.append("="*60)
+    output.append("=" * 60)
     output.append("")
 
     output.append(f"Devices Found: {len(scan_result.devices)}")
@@ -612,9 +604,9 @@ def format_scan_output(scan_result) -> str:
 def format_analysis_output(result: dict, show_summary: bool = False) -> str:
     """Format analysis results in human-readable format."""
     output = []
-    output.append("="*60)
+    output.append("=" * 60)
     output.append("NETWORK ANALYSIS RESULTS")
-    output.append("="*60)
+    output.append("=" * 60)
     output.append("")
 
     summary = result.get("summary", {})
@@ -632,9 +624,7 @@ def format_analysis_output(result: dict, show_summary: bool = False) -> str:
 
         # Sort by severity
         severity_order = {"critical": 0, "high": 1, "medium": 2, "low": 3, "info": 4}
-        sorted_findings = sorted(
-            findings, key=lambda f: severity_order.get(f.get("severity"), 5)
-        )
+        sorted_findings = sorted(findings, key=lambda f: severity_order.get(f.get("severity"), 5))
 
         for i, finding in enumerate(sorted_findings[:10], 1):
             severity = finding.get("severity", "unknown").upper()
@@ -655,9 +645,9 @@ def format_analysis_output(result: dict, show_summary: bool = False) -> str:
 
     if show_summary and "ai_summary" in result:
         output.append("")
-        output.append("="*60)
+        output.append("=" * 60)
         output.append("AI ANALYSIS SUMMARY")
-        output.append("="*60)
+        output.append("=" * 60)
         output.append("")
         output.append(result["ai_summary"])
 

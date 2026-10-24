@@ -1,4 +1,5 @@
 """Compliance framework mapping and reporting."""
+
 import logging
 from typing import Any
 
@@ -20,30 +21,40 @@ class ComplianceMapper:
         severity = finding.get("severity", "").lower()
 
         if "unencrypted" in finding_type:
-            mapped.append({
-                "requirement": "PCI-DSS 3.4",
-                "control": "Encryption of cardholder data",
-                "status": "non_compliant" if severity in ["critical", "high"] else "needs_review",
-            })
+            mapped.append(
+                {
+                    "requirement": "PCI-DSS 3.4",
+                    "control": "Encryption of cardholder data",
+                    "status": (
+                        "non_compliant" if severity in ["critical", "high"] else "needs_review"
+                    ),
+                }
+            )
 
         if "default_credentials" in finding_type or "weak_auth" in finding_type:
-            mapped.append({
-                "requirement": "PCI-DSS 2.1",
-                "control": "Default security parameters",
-                "status": "non_compliant",
-            })
-            mapped.append({
-                "requirement": "PCI-DSS 8.1",
-                "control": "User identification",
-                "status": "non_compliant",
-            })
+            mapped.append(
+                {
+                    "requirement": "PCI-DSS 2.1",
+                    "control": "Default security parameters",
+                    "status": "non_compliant",
+                }
+            )
+            mapped.append(
+                {
+                    "requirement": "PCI-DSS 8.1",
+                    "control": "User identification",
+                    "status": "non_compliant",
+                }
+            )
 
         if "access_control" in finding_type or "permission" in finding_type:
-            mapped.append({
-                "requirement": "PCI-DSS 7.1",
-                "control": "Limit access to cardholder data",
-                "status": "needs_review" if severity == "medium" else "non_compliant",
-            })
+            mapped.append(
+                {
+                    "requirement": "PCI-DSS 7.1",
+                    "control": "Limit access to cardholder data",
+                    "status": "needs_review" if severity == "medium" else "non_compliant",
+                }
+            )
 
         return mapped
 
@@ -55,32 +66,42 @@ class ComplianceMapper:
         severity = finding.get("severity", "").lower()
 
         if "unencrypted" in finding_type:
-            mapped.append({
-                "requirement": "HIPAA 164.312(a)(2)(i)",
-                "control": "Encryption and decryption",
-                "status": "non_compliant",
-            })
+            mapped.append(
+                {
+                    "requirement": "HIPAA 164.312(a)(2)(i)",
+                    "control": "Encryption and decryption",
+                    "status": "non_compliant",
+                }
+            )
 
         if "access_control" in finding_type:
-            mapped.append({
-                "requirement": "HIPAA 164.308(a)(4)(i)",
-                "control": "Access management",
-                "status": "non_compliant" if severity in ["critical", "high"] else "needs_review",
-            })
+            mapped.append(
+                {
+                    "requirement": "HIPAA 164.308(a)(4)(i)",
+                    "control": "Access management",
+                    "status": (
+                        "non_compliant" if severity in ["critical", "high"] else "needs_review"
+                    ),
+                }
+            )
 
         if "audit" in finding_type or "logging" in finding_type:
-            mapped.append({
-                "requirement": "HIPAA 164.312(b)",
-                "control": "Audit controls",
-                "status": "non_compliant",
-            })
+            mapped.append(
+                {
+                    "requirement": "HIPAA 164.312(b)",
+                    "control": "Audit controls",
+                    "status": "non_compliant",
+                }
+            )
 
         if "malware" in finding_type or "vulnerability" in finding_type:
-            mapped.append({
-                "requirement": "HIPAA 164.308(a)(5)(ii)(B)",
-                "control": "Malware protection",
-                "status": "non_compliant",
-            })
+            mapped.append(
+                {
+                    "requirement": "HIPAA 164.308(a)(5)(ii)(B)",
+                    "control": "Malware protection",
+                    "status": "non_compliant",
+                }
+            )
 
         return mapped
 
@@ -92,25 +113,33 @@ class ComplianceMapper:
         severity = finding.get("severity", "").lower()
 
         if "unencrypted" in finding_type:
-            mapped.append({
-                "requirement": "ISO 27001 A.10.1.1",
-                "control": "Cryptographic controls",
-                "status": "non_compliant",
-            })
+            mapped.append(
+                {
+                    "requirement": "ISO 27001 A.10.1.1",
+                    "control": "Cryptographic controls",
+                    "status": "non_compliant",
+                }
+            )
 
         if "access_control" in finding_type or "authentication" in finding_type:
-            mapped.append({
-                "requirement": "ISO 27001 A.9.1.1",
-                "control": "Access control policy",
-                "status": "non_compliant" if severity in ["critical", "high"] else "needs_review",
-            })
+            mapped.append(
+                {
+                    "requirement": "ISO 27001 A.9.1.1",
+                    "control": "Access control policy",
+                    "status": (
+                        "non_compliant" if severity in ["critical", "high"] else "needs_review"
+                    ),
+                }
+            )
 
         if "patch" in finding_type or "vulnerability" in finding_type:
-            mapped.append({
-                "requirement": "ISO 27001 A.12.6.1",
-                "control": "Management of technical vulnerabilities",
-                "status": "non_compliant",
-            })
+            mapped.append(
+                {
+                    "requirement": "ISO 27001 A.12.6.1",
+                    "control": "Management of technical vulnerabilities",
+                    "status": "non_compliant",
+                }
+            )
 
         return mapped
 
@@ -121,29 +150,37 @@ class ComplianceMapper:
         finding_type = finding.get("type", "").lower()
 
         if "inventory" in finding_type:
-            mapped.append({
-                "control": "CIS 1",
-                "description": "Inventory of Authorized and Unauthorized Devices",
-                "status": "needs_action",
-            })
+            mapped.append(
+                {
+                    "control": "CIS 1",
+                    "description": "Inventory of Authorized and Unauthorized Devices",
+                    "status": "needs_action",
+                }
+            )
 
         if "vulnerability" in finding_type:
-            mapped.append({
-                "control": "CIS 7",
-                "description": "Continuous Vulnerability Management",
-                "status": "needs_action",
-            })
+            mapped.append(
+                {
+                    "control": "CIS 7",
+                    "description": "Continuous Vulnerability Management",
+                    "status": "needs_action",
+                }
+            )
 
         if "access_control" in finding_type or "authentication" in finding_type:
-            mapped.append({
-                "control": "CIS 5",
-                "description": "Account Access Management",
-                "status": "needs_action",
-            })
+            mapped.append(
+                {
+                    "control": "CIS 5",
+                    "description": "Account Access Management",
+                    "status": "needs_action",
+                }
+            )
 
         return mapped
 
-    def generate_compliance_report(self, findings: list[dict[str, Any]], framework: str) -> dict[str, Any]:
+    def generate_compliance_report(
+        self, findings: list[dict[str, Any]], framework: str
+    ) -> dict[str, Any]:
         """Generate compliance report for findings."""
         mapped_findings = []
         compliance_status = {"compliant": 0, "non_compliant": 0, "needs_review": 0}
@@ -161,20 +198,20 @@ class ComplianceMapper:
                 mappings = []
 
             for mapping in mappings:
-                mapped_findings.append({
-                    "finding": finding.get("description"),
-                    "severity": finding.get("severity"),
-                    **mapping,
-                })
+                mapped_findings.append(
+                    {
+                        "finding": finding.get("description"),
+                        "severity": finding.get("severity"),
+                        **mapping,
+                    }
+                )
 
                 status = mapping.get("status", "needs_review")
                 compliance_status[status] += 1
 
         total_issues = sum(compliance_status.values())
         compliance_percentage = (
-            (compliance_status["compliant"] / total_issues * 100)
-            if total_issues > 0
-            else 0
+            (compliance_status["compliant"] / total_issues * 100) if total_issues > 0 else 0
         )
 
         return {
@@ -265,8 +302,11 @@ class ComplianceMapper:
             ],
         }
 
-        return recommendations.get(framework.lower(), [
-            "Review framework requirements",
-            "Conduct gap analysis",
-            "Implement remediation plan",
-        ])
+        return recommendations.get(
+            framework.lower(),
+            [
+                "Review framework requirements",
+                "Conduct gap analysis",
+                "Implement remediation plan",
+            ],
+        )

@@ -6,6 +6,7 @@ from collections.abc import Iterable
 try:
     from rich.console import Console
     from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn, TimeRemainingColumn
+
     RICH_AVAILABLE = True
 except ImportError:
     RICH_AVAILABLE = False

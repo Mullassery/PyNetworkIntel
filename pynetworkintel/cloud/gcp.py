@@ -1,4 +1,5 @@
 """Google Cloud Platform discovery and inventory management."""
+
 import logging
 from dataclasses import asdict, dataclass
 from typing import Any
@@ -55,17 +56,20 @@ class GCPDiscovery:
             self._initialized = False
         except ImportError:
             self._initialized = False
-            logger.warning("Google Cloud libraries not installed. Install with: pip install google-cloud-compute google-cloud-sql google-cloud-storage")
+            logger.warning(
+                "Google Cloud libraries not installed. Install with: pip install google-cloud-compute google-cloud-sql google-cloud-storage"
+            )
 
     def _get_credentials(self):
         """Get GCP credentials."""
-        if not hasattr(self, 'auth_default'):
+        if not hasattr(self, "auth_default"):
             return None
 
         try:
             if self.credentials_path:
                 import os
-                os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = self.credentials_path
+
+                os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = self.credentials_path
 
             credentials, _ = self.auth_default()
             return credentials
@@ -75,7 +79,7 @@ class GCPDiscovery:
 
     def discover_compute_instances(self) -> list[GCPResource]:
         """Discover Google Compute Engine instances."""
-        if not hasattr(self, 'compute_v1'):
+        if not hasattr(self, "compute_v1"):
             return []
 
         instances = []
@@ -85,12 +89,10 @@ class GCPDiscovery:
                 return []
 
             client = self.compute_v1.InstancesClient(credentials=credentials)
-            request = self.compute_v1.AggregatedListInstancesRequest(
-                project=self.project_id
-            )
+            request = self.compute_v1.AggregatedListInstancesRequest(project=self.project_id)
 
             for zone, instances_data in client.aggregated_list(request=request).items():
-                zone_name = zone.split('/')[-1]
+                zone_name = zone.split("/")[-1]
 
                 for instance in instances_data.instances:
                     # Extract network interface info
@@ -114,10 +116,16 @@ class GCPDiscovery:
                         private_ip=private_ip,
                         tags=dict(instance.labels or {}),
                         metadata={
-                            "machine_type": instance.machine_type.split('/')[-1] if instance.machine_type else None,
-                            "boot_disk": instance.disks[0].source.split('/')[-1] if instance.disks else None,
+                            "machine_type": (
+                                instance.machine_type.split("/")[-1]
+                                if instance.machine_type
+                                else None
+                            ),
+                            "boot_disk": (
+                                instance.disks[0].source.split("/")[-1] if instance.disks else None
+                            ),
                             "creation_timestamp": str(instance.creation_timestamp),
-                        }
+                        },
                     )
                     instances.append(resource)
                     self.resources.append(resource)
@@ -128,7 +136,7 @@ class GCPDiscovery:
 
     def discover_cloud_sql_instances(self) -> list[GCPResource]:
         """Discover Google Cloud SQL instances."""
-        if not hasattr(self, 'sql_v1'):
+        if not hasattr(self, "sql_v1"):
             return []
 
         databases = []
@@ -151,7 +159,7 @@ class GCPDiscovery:
                         "database_version": instance.database_version,
                         "tier": instance.settings.tier if instance.settings else None,
                         "ip_addresses": [ip.ip_address for ip in (instance.ip_addresses or [])],
-                    }
+                    },
                 )
                 databases.append(resource)
                 self.resources.append(resource)
@@ -162,7 +170,7 @@ class GCPDiscovery:
 
     def discover_cloud_storage_buckets(self) -> list[GCPResource]:
         """Discover Google Cloud Storage buckets."""
-        if not hasattr(self, 'storage'):
+        if not hasattr(self, "storage"):
             return []
 
         buckets = []
@@ -185,7 +193,7 @@ class GCPDiscovery:
                         "creation_time": str(bucket.time_created),
                         "storage_class": bucket.storage_class,
                         "versioning_enabled": bucket.versioning_enabled,
-                    }
+                    },
                 )
                 buckets.append(resource)
                 self.resources.append(resource)
@@ -196,7 +204,7 @@ class GCPDiscovery:
 
     def discover_firewall_rules(self) -> list[dict[str, Any]]:
         """Discover firewall rules."""
-        if not hasattr(self, 'compute_v1'):
+        if not hasattr(self, "compute_v1"):
             return []
 
         rules = []
@@ -208,20 +216,23 @@ class GCPDiscovery:
             client = self.compute_v1.FirewallsClient(credentials=credentials)
             request = self.compute_v1.ListFirewallsRequest(project=self.project_id)
 
-            rules.extend({
-                "name": firewall.name,
-                "direction": firewall.direction,
-                "priority": firewall.priority,
-                "source_ranges": list(firewall.source_ranges or []),
-                "allowed": [
-                    {"protocol": rule.i_p_protocol, "ports": rule.ports}
-                    for rule in (firewall.allowed or [])
-                ],
-                "denied": [
-                    {"protocol": rule.i_p_protocol, "ports": rule.ports}
-                    for rule in (firewall.denied or [])
-                ],
-            } for firewall in client.list(request=request))
+            rules.extend(
+                {
+                    "name": firewall.name,
+                    "direction": firewall.direction,
+                    "priority": firewall.priority,
+                    "source_ranges": list(firewall.source_ranges or []),
+                    "allowed": [
+                        {"protocol": rule.i_p_protocol, "ports": rule.ports}
+                        for rule in (firewall.allowed or [])
+                    ],
+                    "denied": [
+                        {"protocol": rule.i_p_protocol, "ports": rule.ports}
+                        for rule in (firewall.denied or [])
+                    ],
+                }
+                for firewall in client.list(request=request)
+            )
         except Exception as e:
             logger.error(f"Failed to discover firewall rules: {e}")
 
@@ -229,7 +240,7 @@ class GCPDiscovery:
 
     def discover_networks(self) -> list[dict[str, Any]]:
         """Discover VPC networks."""
-        if not hasattr(self, 'compute_v1'):
+        if not hasattr(self, "compute_v1"):
             return []
 
         networks = []
@@ -241,12 +252,15 @@ class GCPDiscovery:
             client = self.compute_v1.NetworksClient(credentials=credentials)
             request = self.compute_v1.ListNetworksRequest(project=self.project_id)
 
-            networks.extend({
-                "name": network.name,
-                "auto_create_subnetworks": network.auto_create_subnetworks,
-                "ipv4_range": network.ipv4_range,
-                "subnetworks": list(network.subnetworks or []),
-            } for network in client.list(request=request))
+            networks.extend(
+                {
+                    "name": network.name,
+                    "auto_create_subnetworks": network.auto_create_subnetworks,
+                    "ipv4_range": network.ipv4_range,
+                    "subnetworks": list(network.subnetworks or []),
+                }
+                for network in client.list(request=request)
+            )
         except Exception as e:
             logger.error(f"Failed to discover networks: {e}")
 

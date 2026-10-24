@@ -36,7 +36,9 @@ class MonitoringScheduler:
         alert_manager: AlertManager | None = None,
     ):
         if not SCHEDULER_AVAILABLE:
-            raise ImportError("APScheduler required for scheduling. Install with: pip install apscheduler")
+            raise ImportError(
+                "APScheduler required for scheduling. Install with: pip install apscheduler"
+            )
 
         self.db = Database(database_url)
         self.db.create_all()
@@ -108,7 +110,9 @@ class MonitoringScheduler:
             # Generate alerts for critical changes
             self._generate_alerts(target, result, changes)
 
-            logger.info(f"Scan completed for {target}: {result['summary']['total_findings']} findings")
+            logger.info(
+                f"Scan completed for {target}: {result['summary']['total_findings']} findings"
+            )
 
         except Exception as e:
             logger.error(f"Scan failed for {target}: {e}")
@@ -255,9 +259,9 @@ class MonitoringScheduler:
 
         # Alert on newly discovered high/critical vulnerabilities
         for change in changes.get("vulnerabilities", []):
-            if (
-                change.get("type") == "vulnerability_discovered"
-                and change.get("severity") in ("high", "critical")
+            if change.get("type") == "vulnerability_discovered" and change.get("severity") in (
+                "high",
+                "critical",
             ):
                 self.alert_manager.create_alert(
                     alert_type="new_vulnerability",

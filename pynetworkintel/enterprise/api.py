@@ -1,4 +1,5 @@
 """REST API server for PyNetworkIntel."""
+
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -34,7 +35,14 @@ class RESTAPIServer:
         self.rate_limiter: dict[str, list[datetime]] = {}
         self.rate_limit_per_minute = 100
 
-    def register_endpoint(self, path: str, method: str, handler: Callable, requires_auth: bool = True, required_role: str | None = None):
+    def register_endpoint(
+        self,
+        path: str,
+        method: str,
+        handler: Callable,
+        requires_auth: bool = True,
+        required_role: str | None = None,
+    ):
         """Register API endpoint."""
         endpoint = Endpoint(
             path=path,
@@ -78,10 +86,7 @@ class RESTAPIServer:
         minute_ago = datetime.fromtimestamp(now.timestamp() - 60)
 
         # Clean old entries
-        self.rate_limiter[client_id] = [
-            t for t in self.rate_limiter[client_id]
-            if t > minute_ago
-        ]
+        self.rate_limiter[client_id] = [t for t in self.rate_limiter[client_id] if t > minute_ago]
 
         # Check limit
         if len(self.rate_limiter[client_id]) >= self.rate_limit_per_minute:

@@ -1,4 +1,5 @@
 """Architecture review and assessment."""
+
 import logging
 from typing import Any
 
@@ -106,8 +107,7 @@ class ReviewEngine:
         cost = self.review_cost(architecture)
 
         avg_score = (
-            reliability["score"] + security["score"] +
-            scalability["score"] + cost["score"]
+            reliability["score"] + security["score"] + scalability["score"] + cost["score"]
         ) / 4
 
         return {

@@ -13,7 +13,9 @@ logger = logging.getLogger(__name__)
 class SSHConfigGrabber:
     """Grab configuration files from remote devices via SSH."""
 
-    def __init__(self, username: str | None, key_path: str | None = None, password: str | None = None):
+    def __init__(
+        self, username: str | None, key_path: str | None = None, password: str | None = None
+    ):
         self.username = username
         self.key_path = key_path
         self.password = password
@@ -106,12 +108,17 @@ class SSHConfigGrabber:
                 device.add_config(config_path, content, "linux")
 
         # Try to grab firewall rules (iptables)
-        iptables = self._run_command(client, "sudo iptables -L -v -n 2>/dev/null || iptables -L -v -n 2>/dev/null")
+        iptables = self._run_command(
+            client, "sudo iptables -L -v -n 2>/dev/null || iptables -L -v -n 2>/dev/null"
+        )
         if iptables:
             device.add_config("/etc/iptables/rules", iptables, "linux")
 
         # Try to grab firewall rules (firewalld)
-        firewalld = self._run_command(client, "sudo firewall-cmd --list-all 2>/dev/null || firewall-cmd --list-all 2>/dev/null")
+        firewalld = self._run_command(
+            client,
+            "sudo firewall-cmd --list-all 2>/dev/null || firewall-cmd --list-all 2>/dev/null",
+        )
         if firewalld:
             device.add_config("/etc/firewalld/config", firewalld, "linux")
 

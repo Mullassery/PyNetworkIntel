@@ -1,4 +1,5 @@
 """Predictive analytics for vulnerability and risk forecasting."""
+
 import logging
 import statistics
 from datetime import datetime, timedelta
@@ -20,13 +21,17 @@ class PredictiveAnalyzer:
         if device_id not in self.historical_risks:
             self.historical_risks[device_id] = []
 
-        self.historical_risks[device_id].append({
-            "timestamp": datetime.now(),
-            "severity": severity,
-            "type": vuln_type,
-        })
+        self.historical_risks[device_id].append(
+            {
+                "timestamp": datetime.now(),
+                "severity": severity,
+                "type": vuln_type,
+            }
+        )
 
-    def predict_future_vulnerabilities(self, device_id: str, days_ahead: int = 30) -> list[dict[str, Any]]:
+    def predict_future_vulnerabilities(
+        self, device_id: str, days_ahead: int = 30
+    ) -> list[dict[str, Any]]:
         """Predict future vulnerabilities based on history."""
         if device_id not in self.historical_risks:
             return []
@@ -47,12 +52,14 @@ class PredictiveAnalyzer:
                 predicted_vulns = discovery_rate * day
                 confidence = min(0.5 + (len(history) * 0.1), 0.95)
 
-                predictions.append({
-                    "day_ahead": day,
-                    "predicted_vulnerabilities": predicted_vulns,
-                    "confidence": confidence,
-                    "risk_level": self._get_risk_from_count(predicted_vulns),
-                })
+                predictions.append(
+                    {
+                        "day_ahead": day,
+                        "predicted_vulnerabilities": predicted_vulns,
+                        "confidence": confidence,
+                        "risk_level": self._get_risk_from_count(predicted_vulns),
+                    }
+                )
 
         return predictions
 
@@ -104,7 +111,9 @@ class PredictiveAnalyzer:
             "recommendation": self._get_patch_recommendation(urgency_score),
         }
 
-    def predict_device_risk_score(self, device_id: str, current_metrics: dict[str, Any]) -> dict[str, Any]:
+    def predict_device_risk_score(
+        self, device_id: str, current_metrics: dict[str, Any]
+    ) -> dict[str, Any]:
         """Predict overall device risk score."""
         base_score = 0.0
 
@@ -139,11 +148,12 @@ class PredictiveAnalyzer:
             "mitigation_priority": self._get_mitigation_priority(risk_score),
         }
 
-    def forecast_attack_surface_growth(self, device_ids: list[str], days_ahead: int = 90) -> dict[str, Any]:
+    def forecast_attack_surface_growth(
+        self, device_ids: list[str], days_ahead: int = 90
+    ) -> dict[str, Any]:
         """Forecast how attack surface will grow."""
         current_surface = sum(
-            len(self.historical_risks.get(device_id, []))
-            for device_id in device_ids
+            len(self.historical_risks.get(device_id, [])) for device_id in device_ids
         )
 
         if current_surface == 0:
@@ -156,11 +166,13 @@ class PredictiveAnalyzer:
 
         for month in range(1, int(days_ahead / 30) + 1):
             projected_surface = current_surface * ((1 + growth_rate) ** month)
-            forecast.append({
-                "month": month,
-                "projected_vulnerabilities": int(projected_surface),
-                "estimated_critical": int(projected_surface * 0.1),
-            })
+            forecast.append(
+                {
+                    "month": month,
+                    "projected_vulnerabilities": int(projected_surface),
+                    "estimated_critical": int(projected_surface * 0.1),
+                }
+            )
 
         return {
             "current_surface": current_surface,
@@ -212,7 +224,11 @@ class PredictiveAnalyzer:
         older = history[:-3]
 
         avg_recent = statistics.mean([1 if v.get("severity") == "critical" else 0 for v in recent])
-        avg_older = statistics.mean([1 if v.get("severity") == "critical" else 0 for v in older]) if older else 0
+        avg_older = (
+            statistics.mean([1 if v.get("severity") == "critical" else 0 for v in older])
+            if older
+            else 0
+        )
 
         if avg_recent > avg_older * 1.5:
             return "worsening"

@@ -1,4 +1,5 @@
 """Enterprise authentication and authorization."""
+
 import hashlib
 import logging
 from dataclasses import dataclass
@@ -42,6 +43,7 @@ class AuthenticationManager:
             return None
 
         import uuid
+
         user_id = str(uuid.uuid4())
 
         password_hash = self._hash_password(password)
@@ -139,6 +141,7 @@ class AuthenticationManager:
 
         # Generate MFA secret (simplified)
         import secrets
+
         mfa_secret = secrets.token_hex(10)
 
         logger.info(f"Enabled MFA for user {user.username}")
@@ -240,6 +243,7 @@ class AuthenticationManager:
     def _hash_password(password: str) -> str:
         """Hash password using SHA-256."""
         import secrets
+
         salt = secrets.token_hex(16)
         pwd_hash = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100000)
         return f"{salt}${pwd_hash.hex()}"
@@ -258,4 +262,5 @@ class AuthenticationManager:
     def _generate_session_token() -> str:
         """Generate secure session token."""
         import secrets
+
         return secrets.token_urlsafe(32)

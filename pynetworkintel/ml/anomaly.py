@@ -1,4 +1,5 @@
 """Network traffic and behavior anomaly detection."""
+
 import logging
 import statistics
 from datetime import datetime
@@ -33,7 +34,9 @@ class AnomalyDetector:
 
         self.historical_data[device_id].append(traffic_record)
 
-    def detect_port_scan_activity(self, device_id: str, current_ports: list[int]) -> tuple[bool, float, str]:
+    def detect_port_scan_activity(
+        self, device_id: str, current_ports: list[int]
+    ) -> tuple[bool, float, str]:
         """Detect potential port scanning activity."""
         if device_id not in self.historical_data:
             return False, 0.0, "No baseline data"
@@ -62,7 +65,9 @@ class AnomalyDetector:
 
         return False, 0.2, "Normal port variation"
 
-    def detect_bandwidth_anomaly(self, device_id: str, current_bandwidth: float) -> tuple[bool, float, str]:
+    def detect_bandwidth_anomaly(
+        self, device_id: str, current_bandwidth: float
+    ) -> tuple[bool, float, str]:
         """Detect unusual bandwidth usage."""
         if device_id not in self.historical_data:
             return False, 0.0, "No baseline data"
@@ -135,7 +140,9 @@ class AnomalyDetector:
 
         return False, 0.2, "Normal activity hours"
 
-    def detect_connection_anomaly(self, device_id: str, dest_ip: str, dest_port: int) -> tuple[bool, float, str]:
+    def detect_connection_anomaly(
+        self, device_id: str, dest_ip: str, dest_port: int
+    ) -> tuple[bool, float, str]:
         """Detect unusual connection patterns."""
         if device_id not in self.historical_data:
             return False, 0.0, "No baseline data"
@@ -227,7 +234,9 @@ class AnomalyDetector:
             "total_records": len(history),
             "unique_protocols": len(protocols),
             "unique_ports": len(ports),
-            "most_common_protocol": max(protocols.items(), key=lambda x: x[1])[0] if protocols else None,
+            "most_common_protocol": (
+                max(protocols.items(), key=lambda x: x[1])[0] if protocols else None
+            ),
             "most_common_port": max(ports.items(), key=lambda x: x[1])[0] if ports else None,
             "average_bandwidth": avg_bandwidth,
             "max_bandwidth": max_bandwidth,
@@ -237,11 +246,9 @@ class AnomalyDetector:
         """Get detected anomalies for device."""
         device_anomalies = [a for a in self.anomalies if a.get("device_id") == device_id]
 
-        return sorted(
-            device_anomalies,
-            key=lambda x: x.get("anomaly_score", 0),
-            reverse=True
-        )[:limit]
+        return sorted(device_anomalies, key=lambda x: x.get("anomaly_score", 0), reverse=True)[
+            :limit
+        ]
 
     @staticmethod
     def _get_baseline_ports(history: list[dict[str, Any]]) -> set:

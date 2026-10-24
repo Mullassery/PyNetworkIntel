@@ -30,8 +30,7 @@ logger = logging.getLogger(__name__)
 
 GRAPHML_NAMESPACE = "http://graphml.graphdrawing.org/xmlns"
 GRAPHML_SCHEMA_LOCATION = (
-    "http://graphml.graphdrawing.org/xmlns "
-    "http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"
+    "http://graphml.graphdrawing.org/xmlns " "http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"
 )
 
 

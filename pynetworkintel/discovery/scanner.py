@@ -18,8 +18,7 @@ logger = logging.getLogger(__name__)
 # rejects anything starting with "-" outright, since no legitimate target
 # ever starts with a dash.
 _HOSTNAME_RE = re.compile(
-    r"^(?=.{1,253}$)(?!-)[A-Za-z0-9-]{1,63}(?<!-)"
-    r"(\.(?!-)[A-Za-z0-9-]{1,63}(?<!-))*$"
+    r"^(?=.{1,253}$)(?!-)[A-Za-z0-9-]{1,63}(?<!-)" r"(\.(?!-)[A-Za-z0-9-]{1,63}(?<!-))*$"
 )
 
 
@@ -57,9 +56,7 @@ def validate_target(target: str) -> str:
     if _HOSTNAME_RE.match(target):
         return target
 
-    raise ValueError(
-        f"Invalid target {target!r}: expected an IP address, CIDR range, or hostname"
-    )
+    raise ValueError(f"Invalid target {target!r}: expected an IP address, CIDR range, or hostname")
 
 
 class NmapScanner:
@@ -75,7 +72,9 @@ class NmapScanner:
         try:
             subprocess.run([self.nmap_path, "-V"], capture_output=True, timeout=5)
         except (subprocess.TimeoutExpired, FileNotFoundError):
-            logger.warning(f"nmap not found at {self.nmap_path}. Some discovery features will be limited.")
+            logger.warning(
+                f"nmap not found at {self.nmap_path}. Some discovery features will be limited."
+            )
 
     def scan(self, target: str, timeout: int | None = None) -> list[Device]:
         """
@@ -102,12 +101,14 @@ class NmapScanner:
         try:
             cmd = [self.nmap_path]
             cmd.extend(self.nmap_args.split())
-            cmd.extend([
-                "--script=smb-os-discovery",
-                "-oX",
-                "-",
-                target,
-            ])
+            cmd.extend(
+                [
+                    "--script=smb-os-discovery",
+                    "-oX",
+                    "-",
+                    target,
+                ]
+            )
 
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=effective_timeout)
 
@@ -191,9 +192,7 @@ class NmapScanner:
                 # this host entirely, including every other valid port on
                 # it -- isolate it to just the one malformed port instead.
                 portid = port_elem.get("portid", "unknown")
-                logger.warning(
-                    f"Skipping unparseable port (ip={ip}, portid={portid}): {e}"
-                )
+                logger.warning(f"Skipping unparseable port (ip={ip}, portid={portid}): {e}")
                 continue
 
             if service_data:

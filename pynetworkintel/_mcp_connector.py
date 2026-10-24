@@ -56,7 +56,9 @@ class NetworkIntelligence:
         finally:
             session.close()
 
-    def _devices_for_target(self, target: str, limit_to_subnet: str | None = None) -> list[dict[str, Any]]:
+    def _devices_for_target(
+        self, target: str, limit_to_subnet: str | None = None
+    ) -> list[dict[str, Any]]:
         """Devices from the most recent scan of `target`, optionally clipped
         to an `ipaddress`-interpretable subnet."""
         from pynetworkintel.db import Device as DBDevice
@@ -119,8 +121,7 @@ class NetworkIntelligence:
         the real connectivity graph inferred from the latest scan."""
         if include_geolocation:
             raise NotImplementedError(
-                f"{NOT_IMPLEMENTED}: no geolocation data source; "
-                "pass include_geolocation=False"
+                f"{NOT_IMPLEMENTED}: no geolocation data source; " "pass include_geolocation=False"
             )
 
         devices = self._devices_for_target(flow_id)
@@ -247,7 +248,9 @@ class NetworkIntelligence:
             )
 
         if anomaly_type and anomaly_type not in {
-            "device_discovered", "device_removed", "vulnerability_discovered",
+            "device_discovered",
+            "device_removed",
+            "vulnerability_discovered",
             "vulnerability_resolved",
         }:
             return {
@@ -279,11 +282,7 @@ class NetworkIntelligence:
 
         session = self.db.get_session()
         try:
-            all_findings = (
-                session.query(DBFinding)
-                .filter(DBFinding.cve_id.isnot(None))
-                .all()
-            )
+            all_findings = session.query(DBFinding).filter(DBFinding.cve_id.isnot(None)).all()
         finally:
             session.close()
 
@@ -293,9 +292,7 @@ class NetworkIntelligence:
             if not ind:
                 continue
             matched = [
-                f
-                for f in all_findings
-                if f.device_ip == ind or (f.device_hostname or "") == ind
+                f for f in all_findings if f.device_ip == ind or (f.device_hostname or "") == ind
             ]
             if not matched:
                 groups[ind] = {"threats": [], "correlation_count": 0}
@@ -349,8 +346,13 @@ class NetworkIntelligence:
         monitored target)."""
         devices = self._devices_for_target(subnet)
         if not devices:
-            return {"subnet": subnet, "total_assets": 0, "responsive_hosts": 0,
-                    "os_breakdown": {}, "vulnerabilities": []}
+            return {
+                "subnet": subnet,
+                "total_assets": 0,
+                "responsive_hosts": 0,
+                "os_breakdown": {},
+                "vulnerabilities": [],
+            }
 
         os_breakdown: dict[str, int] = {}
         for d in devices:
@@ -443,7 +445,9 @@ class NetworkIntelligence:
         }
 
     @staticmethod
-    def _filter_ports(services: list[dict[str, Any]], port_range: str | None) -> list[dict[str, Any]]:
+    def _filter_ports(
+        services: list[dict[str, Any]], port_range: str | None
+    ) -> list[dict[str, Any]]:
         if not port_range:
             return list(services)
 
@@ -636,11 +640,7 @@ class NetworkIntelligence:
 
         session = self.db.get_session()
         try:
-            findings = (
-                session.query(DBFinding)
-                .filter(DBFinding.cve_id.isnot(None))
-                .all()
-            )
+            findings = session.query(DBFinding).filter(DBFinding.cve_id.isnot(None)).all()
         finally:
             session.close()
 
@@ -722,9 +722,13 @@ class NetworkIntelligence:
             }
 
         severity = finding.severity
-        recommendations = [
-            finding.recommendation,
-        ] if finding.recommendation else []
+        recommendations = (
+            [
+                finding.recommendation,
+            ]
+            if finding.recommendation
+            else []
+        )
         recommendations = [r for r in recommendations if r]
         if severity == "critical":
             recommendations.append("Isolate affected device(s) immediately.")
@@ -810,9 +814,7 @@ class NetworkIntelligence:
         """
         hours = {"last_24h": 24, "last_7d": 7 * 24, "last_30d": 30 * 24}.get(time_period, 24)
         if format not in ("markdown", "json"):
-            raise NotImplementedError(
-                f"{NOT_IMPLEMENTED}: {format} output requires a PDF renderer"
-            )
+            raise NotImplementedError(f"{NOT_IMPLEMENTED}: {format} output requires a PDF renderer")
 
         generator = ReportGenerator(self.db)
         if report_type == "executive_summary":

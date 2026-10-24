@@ -152,8 +152,12 @@ class ConfigManager:
         if "analysis" in data:
             analysis_data = data["analysis"]
             config.analysis = AnalysisConfig(
-                enable_cve_check=analysis_data.get("enable_cve_check", config.analysis.enable_cve_check),
-                enable_llm_summary=analysis_data.get("enable_llm_summary", config.analysis.enable_llm_summary),
+                enable_cve_check=analysis_data.get(
+                    "enable_cve_check", config.analysis.enable_cve_check
+                ),
+                enable_llm_summary=analysis_data.get(
+                    "enable_llm_summary", config.analysis.enable_llm_summary
+                ),
                 cve_cache_ttl=analysis_data.get("cve_cache_ttl", config.analysis.cve_cache_ttl),
                 llm_model=analysis_data.get("llm_model", config.analysis.llm_model),
             )

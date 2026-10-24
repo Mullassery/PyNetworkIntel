@@ -1,4 +1,5 @@
 """Multi-cloud asset correlation and network path analysis."""
+
 import logging
 from dataclasses import dataclass
 from typing import Any
@@ -9,6 +10,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class AssetMapping:
     """Represents a cross-cloud asset mapping."""
+
     asset_id: str
     asset_name: str
     asset_type: str
@@ -35,11 +37,11 @@ class CloudCorrelationEngine:
 
     def add_aws_resource(self, resource: dict[str, Any]):
         """Add AWS resource to correlation engine."""
-        resource_id = resource.get('resource_id', '')
-        resource_type = resource.get('resource_type', '')
-        name = resource.get('name', '')
-        public_ip = resource.get('public_ip')
-        private_ip = resource.get('private_ip')
+        resource_id = resource.get("resource_id", "")
+        resource_type = resource.get("resource_type", "")
+        name = resource.get("name", "")
+        public_ip = resource.get("public_ip")
+        private_ip = resource.get("private_ip")
 
         asset_key = self._get_asset_key(name, private_ip, public_ip)
 
@@ -48,11 +50,11 @@ class CloudCorrelationEngine:
                 asset_id=asset_key,
                 asset_name=name,
                 asset_type=resource_type,
-                cloud_sources={'aws': resource_id},
+                cloud_sources={"aws": resource_id},
                 primary_ip=public_ip or private_ip,
             )
         else:
-            self.assets[asset_key].cloud_sources['aws'] = resource_id
+            self.assets[asset_key].cloud_sources["aws"] = resource_id
 
         # Track IP mappings
         if public_ip:
@@ -68,11 +70,11 @@ class CloudCorrelationEngine:
 
     def add_azure_resource(self, resource: dict[str, Any]):
         """Add Azure resource to correlation engine."""
-        resource_id = resource.get('resource_id', '')
-        resource_type = resource.get('resource_type', '')
-        name = resource.get('name', '')
-        public_ip = resource.get('public_ip')
-        private_ip = resource.get('private_ip')
+        resource_id = resource.get("resource_id", "")
+        resource_type = resource.get("resource_type", "")
+        name = resource.get("name", "")
+        public_ip = resource.get("public_ip")
+        private_ip = resource.get("private_ip")
 
         asset_key = self._get_asset_key(name, private_ip, public_ip)
 
@@ -81,11 +83,11 @@ class CloudCorrelationEngine:
                 asset_id=asset_key,
                 asset_name=name,
                 asset_type=resource_type,
-                cloud_sources={'azure': resource_id},
+                cloud_sources={"azure": resource_id},
                 primary_ip=public_ip or private_ip,
             )
         else:
-            self.assets[asset_key].cloud_sources['azure'] = resource_id
+            self.assets[asset_key].cloud_sources["azure"] = resource_id
 
         if public_ip:
             self.ip_to_asset[public_ip] = asset_key
@@ -99,11 +101,11 @@ class CloudCorrelationEngine:
 
     def add_gcp_resource(self, resource: dict[str, Any]):
         """Add GCP resource to correlation engine."""
-        resource_id = resource.get('resource_id', '')
-        resource_type = resource.get('resource_type', '')
-        name = resource.get('name', '')
-        public_ip = resource.get('public_ip')
-        private_ip = resource.get('private_ip')
+        resource_id = resource.get("resource_id", "")
+        resource_type = resource.get("resource_type", "")
+        name = resource.get("name", "")
+        public_ip = resource.get("public_ip")
+        private_ip = resource.get("private_ip")
 
         asset_key = self._get_asset_key(name, private_ip, public_ip)
 
@@ -112,11 +114,11 @@ class CloudCorrelationEngine:
                 asset_id=asset_key,
                 asset_name=name,
                 asset_type=resource_type,
-                cloud_sources={'gcp': resource_id},
+                cloud_sources={"gcp": resource_id},
                 primary_ip=public_ip or private_ip,
             )
         else:
-            self.assets[asset_key].cloud_sources['gcp'] = resource_id
+            self.assets[asset_key].cloud_sources["gcp"] = resource_id
 
         if public_ip:
             self.ip_to_asset[public_ip] = asset_key
@@ -134,14 +136,16 @@ class CloudCorrelationEngine:
 
         for asset_key, asset in self.assets.items():
             if len(asset.cloud_sources) > 1:
-                duplicates.append({
-                    "asset_id": asset_key,
-                    "asset_name": asset.asset_name,
-                    "asset_type": asset.asset_type,
-                    "clouds": list(asset.cloud_sources.keys()),
-                    "resources": asset.cloud_sources,
-                    "primary_ip": asset.primary_ip,
-                })
+                duplicates.append(
+                    {
+                        "asset_id": asset_key,
+                        "asset_name": asset.asset_name,
+                        "asset_type": asset.asset_type,
+                        "clouds": list(asset.cloud_sources.keys()),
+                        "resources": asset.cloud_sources,
+                        "primary_ip": asset.primary_ip,
+                    }
+                )
 
         return duplicates
 
@@ -159,7 +163,7 @@ class CloudCorrelationEngine:
 
     def get_multi_cloud_inventory(self) -> dict[str, Any]:
         """Get complete multi-cloud inventory."""
-        by_cloud = {'aws': 0, 'azure': 0, 'gcp': 0}
+        by_cloud = {"aws": 0, "azure": 0, "gcp": 0}
         by_type = {}
         multi_cloud_assets = 0
 
@@ -178,9 +182,7 @@ class CloudCorrelationEngine:
             "multi_cloud_assets": multi_cloud_assets,
             "by_cloud": by_cloud,
             "by_type": by_type,
-            "cloud_distribution": {
-                k: v for k, v in by_cloud.items() if v > 0
-            },
+            "cloud_distribution": {k: v for k, v in by_cloud.items() if v > 0},
         }
 
     def analyze_network_paths(self) -> dict[str, Any]:
@@ -251,7 +253,7 @@ class CloudCorrelationEngine:
                         cluster["ips"].append(current_asset.primary_ip)
 
                     # Add related assets to queue
-                    for related_key in (current_asset.related_assets or []):
+                    for related_key in current_asset.related_assets or []:
                         if related_key not in visited:
                             queue.append(related_key)
                             cluster["assets"].append(related_key)

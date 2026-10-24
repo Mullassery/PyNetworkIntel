@@ -1,4 +1,5 @@
 """IoT protocol analysis and detection."""
+
 import logging
 from typing import Any
 
@@ -94,15 +95,18 @@ class ProtocolAnalyzer:
 
         unencrypted_protocols = ["HTTP", "Modbus TCP", "S7comm"]
 
-        unencrypted.extend({
-            "device_id": device.get("device_id"),
-            "ip": device.get("ip_address"),
-            "protocol": protocol,
-            "risk": "high",
-            "recommendation": f"Use encrypted variant: {self._get_encrypted_variant(protocol)}",
-        } for device in devices
-          for protocol in device.get("protocols", [])
-          if protocol in unencrypted_protocols)
+        unencrypted.extend(
+            {
+                "device_id": device.get("device_id"),
+                "ip": device.get("ip_address"),
+                "protocol": protocol,
+                "risk": "high",
+                "recommendation": f"Use encrypted variant: {self._get_encrypted_variant(protocol)}",
+            }
+            for device in devices
+            for protocol in device.get("protocols", [])
+            if protocol in unencrypted_protocols
+        )
 
         return unencrypted
 
@@ -112,16 +116,19 @@ class ProtocolAnalyzer:
 
         no_auth_protocols = ["Modbus TCP", "CoAP", "S7comm"]
 
-        weak_auth.extend({
-            "device_id": device.get("device_id"),
-            "ip": device.get("ip_address"),
-            "protocol": protocol,
-            "issue": "No authentication mechanism",
-            "risk": "critical",
-            "recommendation": "Implement network-level access controls",
-        } for device in devices
-          for protocol in device.get("protocols", [])
-          if protocol in no_auth_protocols)
+        weak_auth.extend(
+            {
+                "device_id": device.get("device_id"),
+                "ip": device.get("ip_address"),
+                "protocol": protocol,
+                "issue": "No authentication mechanism",
+                "risk": "critical",
+                "recommendation": "Implement network-level access controls",
+            }
+            for device in devices
+            for protocol in device.get("protocols", [])
+            if protocol in no_auth_protocols
+        )
 
         return weak_auth
 

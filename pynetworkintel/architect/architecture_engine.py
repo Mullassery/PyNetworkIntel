@@ -1,4 +1,5 @@
 """Architecture graph engine and modeling."""
+
 import logging
 from dataclasses import dataclass
 from typing import Any
@@ -71,22 +72,29 @@ class ArchitectureEngine:
 
             # SPOF if high incoming traffic but no redundancy
             if incoming > 2 and component.replicas == 1:
-                spofs.append({
-                    "component_id": component_id,
-                    "component_name": component.name,
-                    "type": "single_replica_bottleneck",
-                    "incoming_connections": incoming,
-                    "recommendation": "Increase replicas for redundancy",
-                })
+                spofs.append(
+                    {
+                        "component_id": component_id,
+                        "component_name": component.name,
+                        "type": "single_replica_bottleneck",
+                        "incoming_connections": incoming,
+                        "recommendation": "Increase replicas for redundancy",
+                    }
+                )
 
             # SPOF if component has no redundancy in critical path
-            if component.component_type in ["database", "message_queue"] and component.replicas == 1:
-                spofs.append({
-                    "component_id": component_id,
-                    "component_name": component.name,
-                    "type": "critical_component_single_replica",
-                    "recommendation": "Configure replication and failover",
-                })
+            if (
+                component.component_type in ["database", "message_queue"]
+                and component.replicas == 1
+            ):
+                spofs.append(
+                    {
+                        "component_id": component_id,
+                        "component_name": component.name,
+                        "type": "critical_component_single_replica",
+                        "recommendation": "Configure replication and failover",
+                    }
+                )
 
         return spofs
 
@@ -96,18 +104,12 @@ class ArchitectureEngine:
         num_connections = len(self.connections)
 
         # Calculate average connections per component
-        avg_connections = (
-            num_connections / num_components if num_components > 0 else 0
-        )
+        avg_connections = num_connections / num_components if num_components > 0 else 0
 
         # Calculate depth of architecture
         depth = self._calculate_depth()
 
-        complexity_score = (
-            num_components * 0.3 +
-            num_connections * 0.4 +
-            depth * 0.3
-        )
+        complexity_score = num_components * 0.3 + num_connections * 0.4 + depth * 0.3
 
         return {
             "total_components": num_components,
@@ -123,9 +125,7 @@ class ArchitectureEngine:
         if not self.components:
             return {"ha_score": 0, "ha_level": "none"}
 
-        redundant_components = sum(
-            1 for c in self.components.values() if c.replicas > 1
-        )
+        redundant_components = sum(1 for c in self.components.values() if c.replicas > 1)
 
         ha_percentage = (redundant_components / len(self.components)) * 100
 
@@ -144,33 +144,39 @@ class ArchitectureEngine:
         # Check for SPOFs
         spofs = self.detect_single_points_of_failure()
         if spofs:
-            suggestions.append({
-                "category": "high_availability",
-                "priority": "high",
-                "count": len(spofs),
-                "suggestion": "Add redundancy to eliminate single points of failure",
-                "details": spofs[:3],
-            })
+            suggestions.append(
+                {
+                    "category": "high_availability",
+                    "priority": "high",
+                    "count": len(spofs),
+                    "suggestion": "Add redundancy to eliminate single points of failure",
+                    "details": spofs[:3],
+                }
+            )
 
         # Check complexity
         complexity = self.analyze_complexity()
         if complexity["complexity_score"] > 70:
-            suggestions.append({
-                "category": "simplification",
-                "priority": "medium",
-                "suggestion": "Consider simplifying architecture",
-                "current_complexity": complexity["complexity_score"],
-            })
+            suggestions.append(
+                {
+                    "category": "simplification",
+                    "priority": "medium",
+                    "suggestion": "Consider simplifying architecture",
+                    "current_complexity": complexity["complexity_score"],
+                }
+            )
 
         # Check distribution
         clouds = {c.cloud for c in self.components.values()}
         if len(clouds) > 1:
-            suggestions.append({
-                "category": "multi_cloud",
-                "priority": "medium",
-                "suggestion": "Multi-cloud strategy in place",
-                "clouds": list(clouds),
-            })
+            suggestions.append(
+                {
+                    "category": "multi_cloud",
+                    "priority": "medium",
+                    "suggestion": "Multi-cloud strategy in place",
+                    "clouds": list(clouds),
+                }
+            )
 
         return suggestions
 

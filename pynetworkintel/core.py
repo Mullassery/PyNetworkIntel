@@ -98,9 +98,7 @@ class Scanner:
 
         result = ScanResult(devices=devices, scan_duration_seconds=duration)
 
-        logger.info(
-            f"Scan complete: {len(devices)} devices in {duration:.1f} seconds"
-        )
+        logger.info(f"Scan complete: {len(devices)} devices in {duration:.1f} seconds")
 
         return result
 
@@ -217,9 +215,7 @@ class Pipeline:
         if self.nuclei_scanner is not None:
             verified = self.nuclei_scanner.scan_scan_result(scan_result)
             if verified:
-                existing = {
-                    (f.device, f.title, f.evidence) for f in scan_result.findings
-                }
+                existing = {(f.device, f.title, f.evidence) for f in scan_result.findings}
                 for finding in verified:
                     key = (finding.device, finding.title, finding.evidence)
                     if key not in existing:

@@ -50,8 +50,16 @@ class SlackAlertChannel(AlertChannel):
                         "text": alert.get("description", ""),
                         "fields": [
                             {"title": "Severity", "value": severity.upper(), "short": True},
-                            {"title": "Device", "value": alert.get("device_ip", "unknown"), "short": True},
-                            {"title": "Type", "value": alert.get("alert_type", "unknown"), "short": True},
+                            {
+                                "title": "Device",
+                                "value": alert.get("device_ip", "unknown"),
+                                "short": True,
+                            },
+                            {
+                                "title": "Type",
+                                "value": alert.get("alert_type", "unknown"),
+                                "short": True,
+                            },
                         ],
                         "footer": "PyNetworkIntel",
                         "ts": int(datetime.utcnow().timestamp()),
@@ -70,7 +78,14 @@ class SlackAlertChannel(AlertChannel):
 class EmailAlertChannel(AlertChannel):
     """Send alerts via email."""
 
-    def __init__(self, smtp_server: str, smtp_port: int, sender: str, recipients: list[str], password: str = ""):
+    def __init__(
+        self,
+        smtp_server: str,
+        smtp_port: int,
+        sender: str,
+        recipients: list[str],
+        password: str = "",
+    ):
         self.smtp_server = smtp_server
         self.smtp_port = smtp_port
         self.sender = sender

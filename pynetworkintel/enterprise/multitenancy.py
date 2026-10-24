@@ -1,4 +1,5 @@
 """Multi-tenant architecture and isolation."""
+
 import hashlib
 import logging
 from dataclasses import dataclass, field
@@ -31,7 +32,9 @@ class TenantManager:
         self.tenant_data_isolation: dict[str, dict[str, Any]] = {}
         self.api_keys: dict[str, str] = {}  # api_key -> tenant_id
 
-    def create_tenant(self, name: str, owner_email: str, features: list[str] | None = None) -> str | None:
+    def create_tenant(
+        self, name: str, owner_email: str, features: list[str] | None = None
+    ) -> str | None:
         """Create a new tenant."""
         tenant_id = self._generate_tenant_id(name, owner_email)
 
@@ -132,7 +135,9 @@ class TenantManager:
 
         return True
 
-    def retrieve_tenant_data(self, tenant_id: str, data_key: str | None = None) -> dict[str, Any] | None:
+    def retrieve_tenant_data(
+        self, tenant_id: str, data_key: str | None = None
+    ) -> dict[str, Any] | None:
         """Retrieve tenant-isolated data."""
         if tenant_id not in self.tenant_data_isolation:
             return None
@@ -209,6 +214,7 @@ class TenantManager:
     def _generate_tenant_id(name: str, email: str) -> str:
         """Generate unique tenant ID."""
         import uuid
+
         unique_str = f"{name}-{email}-{uuid.uuid4()}"
         return hashlib.md5(unique_str.encode()).hexdigest()[:16]
 
@@ -217,6 +223,7 @@ class TenantManager:
         """Generate API key for tenant."""
         import base64
         import uuid
+
         key_material = f"{tenant_id}-{uuid.uuid4()}"
         return base64.b64encode(key_material.encode()).decode()[:32]
 
@@ -224,4 +231,5 @@ class TenantManager:
     def _generate_encryption_key(tenant_id: str) -> str:
         """Generate encryption key for tenant."""
         import secrets
+
         return secrets.token_hex(32)

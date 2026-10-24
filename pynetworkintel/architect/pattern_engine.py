@@ -1,4 +1,5 @@
 """Pattern recognition and matching."""
+
 import logging
 from typing import Any
 
@@ -49,11 +50,13 @@ class PatternEngine:
             similarity = overlap / len(pattern_components)
 
             if similarity > 0.5:
-                matches.append({
-                    "pattern": pattern_name,
-                    "match_score": similarity,
-                    "benefits": pattern_info.get("benefits", []),
-                })
+                matches.append(
+                    {
+                        "pattern": pattern_name,
+                        "match_score": similarity,
+                        "benefits": pattern_info.get("benefits", []),
+                    }
+                )
 
         return sorted(matches, key=lambda x: x["match_score"], reverse=True)
 
@@ -67,11 +70,13 @@ class PatternEngine:
             match_count = sum(1 for req in requirements if req in best_for)
 
             if match_count > 0:
-                suggestions.append({
-                    "pattern": pattern_name,
-                    "match_score": match_count / len(requirements),
-                    "benefits": pattern_info.get("benefits"),
-                })
+                suggestions.append(
+                    {
+                        "pattern": pattern_name,
+                        "match_score": match_count / len(requirements),
+                        "benefits": pattern_info.get("benefits"),
+                    }
+                )
 
         return sorted(suggestions, key=lambda x: x["match_score"], reverse=True)
 
@@ -84,21 +89,25 @@ class PatternEngine:
 
         # Check for too many dependencies (monolith)
         if len(connections) > len(components) * 2:
-            anti_patterns.append({
-                "pattern": "monolithic_coupling",
-                "severity": "high",
-                "description": "Too many interconnections suggest tight coupling",
-                "recommendation": "Refactor into independent services",
-            })
+            anti_patterns.append(
+                {
+                    "pattern": "monolithic_coupling",
+                    "severity": "high",
+                    "description": "Too many interconnections suggest tight coupling",
+                    "recommendation": "Refactor into independent services",
+                }
+            )
 
         # Check for missing redundancy
         redundant = sum(1 for c in components if "replica" in str(c).lower())
         if redundant == 0 and len(components) > 3:
-            anti_patterns.append({
-                "pattern": "no_redundancy",
-                "severity": "high",
-                "description": "No redundancy for high availability",
-                "recommendation": "Add replicas for critical components",
-            })
+            anti_patterns.append(
+                {
+                    "pattern": "no_redundancy",
+                    "severity": "high",
+                    "description": "No redundancy for high availability",
+                    "recommendation": "Add replicas for critical components",
+                }
+            )
 
         return anti_patterns

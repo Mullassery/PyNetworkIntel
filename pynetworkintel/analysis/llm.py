@@ -122,10 +122,9 @@ TOP ISSUES:
         sorted_findings = sorted(
             scan_result.findings,
             key=lambda f: (
-                0 if f.severity == Severity.CRITICAL
-                else 1 if f.severity == Severity.HIGH
-                else 2 if f.severity == Severity.MEDIUM
-                else 3
+                0
+                if f.severity == Severity.CRITICAL
+                else 1 if f.severity == Severity.HIGH else 2 if f.severity == Severity.MEDIUM else 3
             ),
         )
 

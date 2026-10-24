@@ -202,17 +202,13 @@ it from GitHub (this is a real operational decision - deleting a public
 tag can break anything that already references it - so it's flagged
 rather than silently done).
 
-### 2.3 `black` formatting not enforced - 48 of 62 files non-compliant
+### 2.3 ~~`black` formatting not enforced~~ - DONE (2026-10-25)
 
-`ruff`/`black` are configured in `pyproject.toml`, but there is no
-lint/format CI job (only `pytest`). Running `black --check --diff
-pynetworkintel/` reports **48 files would be reformatted, 14 unchanged**.
-This is too large a diff to apply blindly in a documentation-focused pass
-(even though `black` is behavior-preserving, a 48-file reformat makes
-every future `git blame` harder and deserves its own reviewed PR, not a
-side effect of a docs pass). Recommendation: run `black pynetworkintel/`
-in its own commit, then add a `black --check` CI job so it doesn't drift
-again.
+`black pynetworkintel/` reformatted the 48 non-compliant files in their own
+commit (behavior-preserving; full pytest suite still passes). The `lint`
+CI job now runs `black --check pynetworkintel/` as a blocking step, and
+`ruff check pynetworkintel/` is clean again after modernizing
+`pynetworkintel/sarif.py`.
 
 ### 2.4 23 bare `except:` clauses
 
@@ -291,14 +287,9 @@ version without dedicated testing.
   intentional feature-detection patterns, not left as auto-fixed since
   `ruff` itself suggests `importlib.util.find_spec` as the idiomatic
   alternative; a real (if minor) style improvement for a future pass.
-- **No CI gate on lint/format/coverage**: `.github/workflows/tests.yml`
-  only runs `pytest`. There is no `ruff check`, no `black --check`, and no
-  coverage threshold enforced in CI - all of the drift documented above
-  (67 unused imports, 48 unformatted files, uneven coverage) was able to
-  accumulate silently because nothing catches it. Recommend adding
-  `ruff check` as a blocking CI job once section 2.3/2.4 are cleaned up
-  (adding it now would make CI red for pre-existing debt, not new
-  breakage).
+- **CI lint/format gates**: `ruff check` and `black --check` are now
+  blocking steps in the `lint` job (2026-10-25). A coverage threshold is
+  still not enforced.
 - **`pip-audit` CI job added but non-blocking** (`|| true` in
   `.github/workflows/tests.yml`): this is a direct consequence of 2.5 -
   gating on `pip-audit`'s exit code would make CI permanently red over an

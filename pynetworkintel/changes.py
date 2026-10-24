@@ -96,7 +96,9 @@ class ChangeDetector:
 
         return changes
 
-    def detect_vulnerability_changes(self, current_findings: list, previous_findings_by_ip: dict) -> list[dict[str, Any]]:
+    def detect_vulnerability_changes(
+        self, current_findings: list, previous_findings_by_ip: dict
+    ) -> list[dict[str, Any]]:
         """
         Detect new vulnerabilities and resolved vulnerabilities.
 
@@ -136,7 +138,7 @@ class ChangeDetector:
                     )
 
             # Check for resolved vulnerabilities
-            for (device_ip, cve_id) in previous_findings_by_ip:
+            for device_ip, cve_id in previous_findings_by_ip:
                 if (device_ip, cve_id) not in current_by_ip_cve:
                     change = {
                         "type": "vulnerability_resolved",
@@ -168,9 +170,9 @@ class ChangeDetector:
         session = self.db.get_session()
 
         try:
-            query = session.query(
-                DBFinding, ScanSession.target
-            ).join(ScanSession, ScanSession.id == DBFinding.scan_id)
+            query = session.query(DBFinding, ScanSession.target).join(
+                ScanSession, ScanSession.id == DBFinding.scan_id
+            )
             query = query.order_by(DBFinding.found_at.desc())
 
             if exclude_scan_id is not None:
@@ -192,7 +194,9 @@ class ChangeDetector:
         finally:
             session.close()
 
-    def _record_device_change(self, session: Session, ip: str, change_type: str, hostname: str | None, os: str | None):
+    def _record_device_change(
+        self, session: Session, ip: str, change_type: str, hostname: str | None, os: str | None
+    ):
         """Record a device change in database."""
         change = DeviceChange(
             ip=ip,
@@ -202,7 +206,9 @@ class ChangeDetector:
         )
         session.add(change)
 
-    def _record_vulnerability_change(self, session: Session, device_ip: str, cve_id: str, title: str, severity: str):
+    def _record_vulnerability_change(
+        self, session: Session, device_ip: str, cve_id: str, title: str, severity: str
+    ):
         """Record a vulnerability discovery."""
         vuln_change = VulnerabilityChange(
             device_ip=device_ip,
@@ -214,11 +220,15 @@ class ChangeDetector:
 
     def _mark_vulnerability_resolved(self, session: Session, device_ip: str, cve_id: str):
         """Mark a vulnerability as resolved."""
-        change = session.query(VulnerabilityChange).filter(
-            VulnerabilityChange.device_ip == device_ip,
-            VulnerabilityChange.cve_id == cve_id,
-            VulnerabilityChange.resolved_at.is_(None),
-        ).first()
+        change = (
+            session.query(VulnerabilityChange)
+            .filter(
+                VulnerabilityChange.device_ip == device_ip,
+                VulnerabilityChange.cve_id == cve_id,
+                VulnerabilityChange.resolved_at.is_(None),
+            )
+            .first()
+        )
 
         if change:
             change.resolved_at = datetime.utcnow()

@@ -1,4 +1,5 @@
 """Kubernetes network policy analysis."""
+
 import logging
 from typing import Any
 
@@ -12,6 +13,7 @@ class NetworkPolicyAnalyzer:
         """Initialize network policy analyzer."""
         try:
             from kubernetes import client
+
             self.client = client
             self._initialized = False
         except ImportError:
@@ -47,14 +49,20 @@ class NetworkPolicyAnalyzer:
                 ingress_rules = self._extract_ingress_rules(policy.spec.ingress)
                 egress_rules = self._extract_egress_rules(policy.spec.egress)
 
-                policies.append({
-                    "namespace": policy.metadata.namespace,
-                    "name": policy.metadata.name,
-                    "pod_selector": policy.spec.pod_selector.match_labels if policy.spec.pod_selector else {},
-                    "ingress_rules": ingress_rules,
-                    "egress_rules": egress_rules,
-                    "policy_types": policy.spec.policy_types or ["Ingress"],
-                })
+                policies.append(
+                    {
+                        "namespace": policy.metadata.namespace,
+                        "name": policy.metadata.name,
+                        "pod_selector": (
+                            policy.spec.pod_selector.match_labels
+                            if policy.spec.pod_selector
+                            else {}
+                        ),
+                        "ingress_rules": ingress_rules,
+                        "egress_rules": egress_rules,
+                        "policy_types": policy.spec.policy_types or ["Ingress"],
+                    }
+                )
         except Exception as e:
             logger.error(f"Failed to analyze network policies: {e}")
 
@@ -79,12 +87,14 @@ class NetworkPolicyAnalyzer:
                 try:
                     policy_list = self.networking_v1.list_namespaced_network_policy(ns_name)
                     if not policy_list.items:
-                        vulnerable_namespaces.append({
-                            "namespace": ns_name,
-                            "policies": 0,
-                            "risk": "high",
-                            "recommendation": "Implement network policies for pod-to-pod communication control",
-                        })
+                        vulnerable_namespaces.append(
+                            {
+                                "namespace": ns_name,
+                                "policies": 0,
+                                "risk": "high",
+                                "recommendation": "Implement network policies for pod-to-pod communication control",
+                            }
+                        )
                 except Exception:
                     pass
         except Exception as e:
@@ -107,23 +117,25 @@ class NetworkPolicyAnalyzer:
                 issues = []
 
                 # Check for empty pod selector (matches all pods)
-                if not policy.get('pod_selector'):
+                if not policy.get("pod_selector"):
                     issues.append("Policy selector matches all pods")
 
                 # Check for empty ingress/egress rules (allow all)
-                if not policy.get('ingress_rules'):
+                if not policy.get("ingress_rules"):
                     issues.append("Policy allows all ingress")
 
-                if "Egress" in policy.get('policy_types', []) and not policy.get('egress_rules'):
+                if "Egress" in policy.get("policy_types", []) and not policy.get("egress_rules"):
                     issues.append("Policy allows all egress")
 
                 if issues:
-                    permissive_policies.append({
-                        "namespace": policy['namespace'],
-                        "name": policy['name'],
-                        "issues": issues,
-                        "recommendation": "Restrict policy to specific pods and ports",
-                    })
+                    permissive_policies.append(
+                        {
+                            "namespace": policy["namespace"],
+                            "name": policy["name"],
+                            "issues": issues,
+                            "recommendation": "Restrict policy to specific pods and ports",
+                        }
+                    )
         except Exception as e:
             logger.error(f"Failed to find permissive policies: {e}")
 
@@ -147,11 +159,17 @@ class NetworkPolicyAnalyzer:
             return {
                 "total_namespaces": total_namespaces,
                 "protected_namespaces": protected_namespaces,
-                "coverage_percentage": (protected_namespaces / total_namespaces * 100) if total_namespaces > 0 else 0,
+                "coverage_percentage": (
+                    (protected_namespaces / total_namespaces * 100) if total_namespaces > 0 else 0
+                ),
                 "total_policies": len(all_policies),
                 "unprotected_namespaces": len(unprotected),
                 "permissive_policies": len(permissive),
-                "recommendation": "Implement network policies in all namespaces" if len(unprotected) > 0 else "Good coverage, review permissive policies",
+                "recommendation": (
+                    "Implement network policies in all namespaces"
+                    if len(unprotected) > 0
+                    else "Good coverage, review permissive policies"
+                ),
             }
         except Exception as e:
             logger.error(f"Failed to get network policy coverage: {e}")
@@ -162,37 +180,45 @@ class NetworkPolicyAnalyzer:
         """Extract ingress rules."""
         rules = []
 
-        for rule in (ingress_rules or []):
+        for rule in ingress_rules or []:
             rule_data = {
                 "from": [],
                 "ports": [],
             }
 
             # Extract 'from' selectors
-            for from_selector in (rule.from_ or []):
+            for from_selector in rule.from_ or []:
                 if from_selector.pod_selector:
-                    rule_data['from'].append({
-                        "type": "pod_selector",
-                        "labels": from_selector.pod_selector.match_labels or {},
-                    })
+                    rule_data["from"].append(
+                        {
+                            "type": "pod_selector",
+                            "labels": from_selector.pod_selector.match_labels or {},
+                        }
+                    )
                 if from_selector.namespace_selector:
-                    rule_data['from'].append({
-                        "type": "namespace_selector",
-                        "labels": from_selector.namespace_selector.match_labels or {},
-                    })
+                    rule_data["from"].append(
+                        {
+                            "type": "namespace_selector",
+                            "labels": from_selector.namespace_selector.match_labels or {},
+                        }
+                    )
                 if from_selector.ip_block:
-                    rule_data['from'].append({
-                        "type": "ip_block",
-                        "cidr": from_selector.ip_block.cidr,
-                        "except": from_selector.ip_block.except_ or [],
-                    })
+                    rule_data["from"].append(
+                        {
+                            "type": "ip_block",
+                            "cidr": from_selector.ip_block.cidr,
+                            "except": from_selector.ip_block.except_ or [],
+                        }
+                    )
 
             # Extract ports
-            for port in (rule.ports or []):
-                rule_data['ports'].append({
-                    "protocol": port.protocol or "TCP",
-                    "port": port.port,
-                })
+            for port in rule.ports or []:
+                rule_data["ports"].append(
+                    {
+                        "protocol": port.protocol or "TCP",
+                        "port": port.port,
+                    }
+                )
 
             rules.append(rule_data)
 
@@ -203,37 +229,45 @@ class NetworkPolicyAnalyzer:
         """Extract egress rules."""
         rules = []
 
-        for rule in (egress_rules or []):
+        for rule in egress_rules or []:
             rule_data = {
                 "to": [],
                 "ports": [],
             }
 
             # Extract 'to' selectors
-            for to_selector in (rule.to or []):
+            for to_selector in rule.to or []:
                 if to_selector.pod_selector:
-                    rule_data['to'].append({
-                        "type": "pod_selector",
-                        "labels": to_selector.pod_selector.match_labels or {},
-                    })
+                    rule_data["to"].append(
+                        {
+                            "type": "pod_selector",
+                            "labels": to_selector.pod_selector.match_labels or {},
+                        }
+                    )
                 if to_selector.namespace_selector:
-                    rule_data['to'].append({
-                        "type": "namespace_selector",
-                        "labels": to_selector.namespace_selector.match_labels or {},
-                    })
+                    rule_data["to"].append(
+                        {
+                            "type": "namespace_selector",
+                            "labels": to_selector.namespace_selector.match_labels or {},
+                        }
+                    )
                 if to_selector.ip_block:
-                    rule_data['to'].append({
-                        "type": "ip_block",
-                        "cidr": to_selector.ip_block.cidr,
-                        "except": to_selector.ip_block.except_ or [],
-                    })
+                    rule_data["to"].append(
+                        {
+                            "type": "ip_block",
+                            "cidr": to_selector.ip_block.cidr,
+                            "except": to_selector.ip_block.except_ or [],
+                        }
+                    )
 
             # Extract ports
-            for port in (rule.ports or []):
-                rule_data['ports'].append({
-                    "protocol": port.protocol or "TCP",
-                    "port": port.port,
-                })
+            for port in rule.ports or []:
+                rule_data["ports"].append(
+                    {
+                        "protocol": port.protocol or "TCP",
+                        "port": port.port,
+                    }
+                )
 
             rules.append(rule_data)
 

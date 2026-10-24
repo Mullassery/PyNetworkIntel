@@ -1,4 +1,5 @@
 """Roadmap generation and planning."""
+
 import logging
 from datetime import datetime, timedelta
 from typing import Any
@@ -9,7 +10,12 @@ logger = logging.getLogger(__name__)
 class RoadmapEngine:
     """Generate phased implementation roadmaps."""
 
-    def generate_roadmap(self, current_state: dict[str, Any], target_state: dict[str, Any], timeframe_months: int = 12) -> dict[str, Any]:
+    def generate_roadmap(
+        self,
+        current_state: dict[str, Any],
+        target_state: dict[str, Any],
+        timeframe_months: int = 12,
+    ) -> dict[str, Any]:
         """Generate implementation roadmap."""
         gaps = self._identify_gaps(current_state, target_state)
         phases = self._create_phases(gaps, timeframe_months)
@@ -24,7 +30,9 @@ class RoadmapEngine:
             "success_metrics": self._define_success_metrics(target_state),
         }
 
-    def _identify_gaps(self, current_state: dict[str, Any], target_state: dict[str, Any]) -> list[dict[str, Any]]:
+    def _identify_gaps(
+        self, current_state: dict[str, Any], target_state: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """Identify gaps between current and target state."""
         gaps = []
 
@@ -32,12 +40,14 @@ class RoadmapEngine:
             current_value = current_state.get(key)
 
             if current_value != target_value:
-                gaps.append({
-                    "area": key,
-                    "current": current_value,
-                    "target": target_value,
-                    "gap_size": self._estimate_gap_size(current_value, target_value),
-                })
+                gaps.append(
+                    {
+                        "area": key,
+                        "current": current_value,
+                        "target": target_value,
+                        "gap_size": self._estimate_gap_size(current_value, target_value),
+                    }
+                )
 
         return gaps
 
@@ -59,15 +69,17 @@ class RoadmapEngine:
             start_date = datetime.now() + timedelta(months=(phase_num - 1) * (total_months // 3))
             end_date = start_date + timedelta(months=total_months // 3)
 
-            phases.append({
-                "phase": phase_num,
-                "name": f"Phase {phase_num}: {self._get_phase_name(phase_num)}",
-                "start_date": start_date.isoformat(),
-                "end_date": end_date.isoformat(),
-                "duration_weeks": 12,
-                "objectives": phase_gaps,
-                "milestones": self._create_milestones(phase_gaps),
-            })
+            phases.append(
+                {
+                    "phase": phase_num,
+                    "name": f"Phase {phase_num}: {self._get_phase_name(phase_num)}",
+                    "start_date": start_date.isoformat(),
+                    "end_date": end_date.isoformat(),
+                    "duration_weeks": 12,
+                    "objectives": phase_gaps,
+                    "milestones": self._create_milestones(phase_gaps),
+                }
+            )
 
         return phases
 
@@ -88,11 +100,13 @@ class RoadmapEngine:
         milestones = []
 
         for i, obj in enumerate(objectives, 1):
-            milestones.append({
-                "week": i * 3,
-                "objective": obj.get("area"),
-                "deliverable": f"Implement {obj.get('area')}",
-            })
+            milestones.append(
+                {
+                    "week": i * 3,
+                    "objective": obj.get("area"),
+                    "deliverable": f"Implement {obj.get('area')}",
+                }
+            )
 
         return milestones
 

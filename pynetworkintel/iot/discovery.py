@@ -1,4 +1,5 @@
 """IoT and edge device discovery."""
+
 import logging
 import socket
 from dataclasses import asdict, dataclass
@@ -45,12 +46,15 @@ class IoTDeviceDiscovery:
         self.mqtt_brokers = []
         self.iot_platforms = {}
 
-    def discover_mqtt_brokers(self, network_range: str, port: int = 1883, timeout: float = 2.0) -> list[dict[str, Any]]:
+    def discover_mqtt_brokers(
+        self, network_range: str, port: int = 1883, timeout: float = 2.0
+    ) -> list[dict[str, Any]]:
         """Discover MQTT brokers on the network."""
         brokers = []
 
         try:
             import paho.mqtt.client  # noqa: F401  (availability probe)
+
             mqtt_available = True
         except ImportError:
             mqtt_available = False
@@ -221,11 +225,13 @@ class IoTDeviceDiscovery:
             if key not in firmware_inventory:
                 firmware_inventory[key] = []
 
-            firmware_inventory[key].append({
-                "device": device.device_id,
-                "version": device.firmware_version,
-                "state": device.state,
-            })
+            firmware_inventory[key].append(
+                {
+                    "device": device.device_id,
+                    "version": device.firmware_version,
+                    "state": device.state,
+                }
+            )
 
         return firmware_inventory
 
@@ -261,6 +267,7 @@ class IoTDeviceDiscovery:
             # CIDR notation - simplified implementation
             try:
                 import ipaddress
+
                 network = ipaddress.ip_network(network_range, strict=False)
                 ips = [str(ip) for ip in network.hosts()][:256]  # Limit to first 256
             except Exception:
@@ -286,7 +293,6 @@ class IoTDeviceDiscovery:
         """Get MQTT broker information."""
         try:
             import paho.mqtt.client as mqtt_client
-
 
             def on_connect(client, userdata, flags, rc):
                 userdata["connected"] = rc == 0

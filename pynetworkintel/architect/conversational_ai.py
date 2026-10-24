@@ -1,4 +1,5 @@
 """Conversational AI interface for architectural guidance."""
+
 import logging
 from typing import Any
 
@@ -26,10 +27,12 @@ class ConversationalArchitect:
     def chat(self, user_message: str) -> str:
         """Process user message and generate response."""
         # Add to history
-        self.conversation_history.append({
-            "role": "user",
-            "content": user_message,
-        })
+        self.conversation_history.append(
+            {
+                "role": "user",
+                "content": user_message,
+            }
+        )
 
         # Classify question
         question_type = self._classify_question(user_message)
@@ -49,10 +52,12 @@ class ConversationalArchitect:
             response = self._handle_general_inquiry(user_message)
 
         # Add response to history
-        self.conversation_history.append({
-            "role": "assistant",
-            "content": response,
-        })
+        self.conversation_history.append(
+            {
+                "role": "assistant",
+                "content": response,
+            }
+        )
 
         return response
 
@@ -64,7 +69,9 @@ class ConversationalArchitect:
             return "service_inquiry"
         elif any(word in message_lower for word in ["review", "assess", "audit", "score"]):
             return "architecture_review"
-        elif any(word in message_lower for word in ["pattern", "design", "architecture", "best practice"]):
+        elif any(
+            word in message_lower for word in ["pattern", "design", "architecture", "best practice"]
+        ):
             return "pattern_recommendation"
         elif any(word in message_lower for word in ["cost", "budget", "optimize", "save"]):
             return "cost_optimization"
@@ -82,52 +89,64 @@ class ConversationalArchitect:
             if service.lower() in message.lower():
                 info = self.knowledge_base.get_service_info(service)
                 if info:
-                    return f"**{service}** is a {info.get('category')} service that {info.get('description')}. " \
-                           f"It's commonly used for {', '.join(info.get('use_cases', []))}."
+                    return (
+                        f"**{service}** is a {info.get('category')} service that {info.get('description')}. "
+                        f"It's commonly used for {', '.join(info.get('use_cases', []))}."
+                    )
 
         return "I can help with AWS, Azure, or GCP services. Which service are you interested in?"
 
     def _handle_architecture_review(self, message: str) -> str:
         """Handle architecture review requests."""
-        return "I'd be happy to review your architecture. Please share details about:" \
-               "\n- Current components and services\n- Availability requirements\n- Security needs\n- Budget constraints"
+        return (
+            "I'd be happy to review your architecture. Please share details about:"
+            "\n- Current components and services\n- Availability requirements\n- Security needs\n- Budget constraints"
+        )
 
     def _handle_pattern_recommendation(self, message: str) -> str:
         """Handle pattern recommendation requests."""
         patterns = self.knowledge_base.get_all_patterns()
 
-        return "I can help design architectures using these patterns:\n" + \
-               "\n".join([f"- {p}" for p in patterns]) + \
-               "\n\nTell me about your requirements and I'll suggest the best pattern."
+        return (
+            "I can help design architectures using these patterns:\n"
+            + "\n".join([f"- {p}" for p in patterns])
+            + "\n\nTell me about your requirements and I'll suggest the best pattern."
+        )
 
     def _handle_cost_optimization(self, message: str) -> str:
         """Handle cost optimization inquiries."""
-        return "Here are key ways to optimize cloud costs:\n" \
-               "- Use serverless for variable workloads\n" \
-               "- Purchase reserved instances for baseline capacity\n" \
-               "- Implement auto-scaling\n" \
-               "- Right-size your resources\n" \
-               "- Use spot instances for non-critical work\n\n" \
-               "What's your primary cost concern?"
+        return (
+            "Here are key ways to optimize cloud costs:\n"
+            "- Use serverless for variable workloads\n"
+            "- Purchase reserved instances for baseline capacity\n"
+            "- Implement auto-scaling\n"
+            "- Right-size your resources\n"
+            "- Use spot instances for non-critical work\n\n"
+            "What's your primary cost concern?"
+        )
 
     def _handle_roadmap_request(self, message: str) -> str:
         """Handle roadmap generation requests."""
-        return "I can create a phased implementation roadmap for you. Please provide:\n" \
-               "- Current state of your infrastructure\n" \
-               "- Target state (goals)\n" \
-               "- Budget and timeline\n" \
-               "- Team size and skills\n\n" \
-               "Share these details and I'll generate a detailed roadmap."
+        return (
+            "I can create a phased implementation roadmap for you. Please provide:\n"
+            "- Current state of your infrastructure\n"
+            "- Target state (goals)\n"
+            "- Budget and timeline\n"
+            "- Team size and skills\n\n"
+            "Share these details and I'll generate a detailed roadmap."
+        )
 
     def _handle_general_inquiry(self, message: str) -> str:
         """Handle general inquiries."""
-        return "I'm your AI infrastructure architect. I can help you with:\n" \
-               "- Cloud service selection and architecture design\n" \
-               "- Architecture reviews and assessments\n" \
-               "- Pattern recommendations\n" \
-               "- Cost optimization strategies\n" \
-               "- Implementation roadmaps\n\n" \
-               "What would you like to explore?"
+        return (
+            "I'm your AI infrastructure architect. I can help you with:\n"
+            "- Cloud service selection and architecture design\n"
+            "- Architecture reviews and assessments\n"
+            "- Pattern recommendations\n"
+            "- Cost optimization strategies\n"
+            "- Implementation roadmaps\n\n"
+            "What would you like to explore?"
+        )
 
     def get_context_awareness(self) -> dict[str, Any]:
         """Get current conversation context."""
@@ -164,7 +183,9 @@ class ConversationalArchitect:
         """Summarize conversation."""
         topics = self._extract_topics()
 
-        return f"Conversation Summary:\n" \
-               f"- Messages: {len(self.conversation_history)}\n" \
-               f"- Topics covered: {', '.join(topics) if topics else 'None yet'}\n" \
-               f"- Context: {self.current_context}"
+        return (
+            f"Conversation Summary:\n"
+            f"- Messages: {len(self.conversation_history)}\n"
+            f"- Topics covered: {', '.join(topics) if topics else 'None yet'}\n"
+            f"- Context: {self.current_context}"
+        )

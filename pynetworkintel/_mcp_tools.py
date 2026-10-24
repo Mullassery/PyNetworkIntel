@@ -49,7 +49,10 @@ class PyNetworkIntelMCPTools:
                 "inputSchema": {
                     "type": "object",
                     "properties": {
-                        "flow_id": {"type": "string", "description": "Scanned target (IP, CIDR, or hostname)"},
+                        "flow_id": {
+                            "type": "string",
+                            "description": "Scanned target (IP, CIDR, or hostname)",
+                        },
                         "time_window_seconds": {"type": "integer"},
                         "include_geolocation": {"type": "boolean"},
                     },
@@ -66,8 +69,12 @@ class PyNetworkIntelMCPTools:
                         "sensor_id": {"type": "string", "description": "Monitored target to diff"},
                         "anomaly_type": {
                             "type": "string",
-                            "enum": ["device_discovered", "device_removed",
-                                     "vulnerability_discovered", "vulnerability_resolved"],
+                            "enum": [
+                                "device_discovered",
+                                "device_removed",
+                                "vulnerability_discovered",
+                                "vulnerability_resolved",
+                            ],
                         },
                         "sensitivity": {"type": "number", "minimum": 0.0, "maximum": 1.0},
                     },
@@ -84,7 +91,7 @@ class PyNetworkIntelMCPTools:
                         "indicators": {
                             "type": "array",
                             "items": {"type": "string"},
-                            "description": "IPs or hostnames to correlate against scan findings"
+                            "description": "IPs or hostnames to correlate against scan findings",
                         },
                         "threat_intel_sources": {
                             "type": "array",
@@ -101,7 +108,10 @@ class PyNetworkIntelMCPTools:
                 "inputSchema": {
                     "type": "object",
                     "properties": {
-                        "subnet": {"type": "string", "description": "Scanned target (CIDR or hostname)"},
+                        "subnet": {
+                            "type": "string",
+                            "description": "Scanned target (CIDR or hostname)",
+                        },
                         "include_vulnerabilities": {"type": "boolean"},
                         "vulnerability_severity": {
                             "type": "string",
@@ -119,7 +129,10 @@ class PyNetworkIntelMCPTools:
                     "type": "object",
                     "properties": {
                         "host": {"type": "string"},
-                        "port_range": {"type": "string", "description": "e.g., 1-1024 or 22,80,443"},
+                        "port_range": {
+                            "type": "string",
+                            "description": "e.g., 1-1024 or 22,80,443",
+                        },
                         "check_services": {"type": "boolean"},
                     },
                     "required": ["host"],
@@ -133,10 +146,14 @@ class PyNetworkIntelMCPTools:
                     "type": "object",
                     "properties": {
                         "domain": {"type": "string"},
-                        "include_dns_history": {"type": "boolean",
-                                                "description": "No history provider exists; always empty"},
-                        "check_dga": {"type": "boolean",
-                                      "description": "Real entropy+length DGA heuristic"},
+                        "include_dns_history": {
+                            "type": "boolean",
+                            "description": "No history provider exists; always empty",
+                        },
+                        "check_dga": {
+                            "type": "boolean",
+                            "description": "Real entropy+length DGA heuristic",
+                        },
                     },
                     "required": ["domain"],
                 },
@@ -235,10 +252,17 @@ class PyNetworkIntelMCPTools:
                     "properties": {
                         "report_type": {
                             "type": "string",
-                            "enum": ["executive_summary", "threat_assessment",
-                                     "vulnerability_scan", "forensics"],
+                            "enum": [
+                                "executive_summary",
+                                "threat_assessment",
+                                "vulnerability_scan",
+                                "forensics",
+                            ],
                         },
-                        "time_period": {"type": "string", "enum": ["last_24h", "last_7d", "last_30d"]},
+                        "time_period": {
+                            "type": "string",
+                            "enum": ["last_24h", "last_7d", "last_30d"],
+                        },
                         "format": {"type": "string", "enum": ["markdown", "json"]},
                     },
                     "required": ["report_type"],
@@ -255,27 +279,36 @@ class PyNetworkIntelMCPHandler:
         self.intel = network_intel
 
     @_with_error_result
-    async def analyze_network_flow(self, flow_id: str, time_window_seconds: int = 300,
-                                  include_geolocation: bool = False) -> dict[str, Any]:
+    async def analyze_network_flow(
+        self, flow_id: str, time_window_seconds: int = 300, include_geolocation: bool = False
+    ) -> dict[str, Any]:
         return self.intel.analyze_network_flow(
-            flow_id, time_window_seconds=time_window_seconds,
+            flow_id,
+            time_window_seconds=time_window_seconds,
             include_geolocation=include_geolocation,
         )
 
     @_with_error_result
-    async def detect_anomalies(self, sensor_id: str, anomaly_type: str | None = None,
-                              sensitivity: float = 0.7) -> dict[str, Any]:
-        return self.intel.detect_anomalies(sensor_id, anomaly_type=anomaly_type,
-                                           sensitivity=sensitivity)
+    async def detect_anomalies(
+        self, sensor_id: str, anomaly_type: str | None = None, sensitivity: float = 0.7
+    ) -> dict[str, Any]:
+        return self.intel.detect_anomalies(
+            sensor_id, anomaly_type=anomaly_type, sensitivity=sensitivity
+        )
 
     @_with_error_result
-    async def threat_correlation(self, indicators: list[str],
-                                threat_intel_sources: list[str] | None = None) -> dict[str, Any]:
+    async def threat_correlation(
+        self, indicators: list[str], threat_intel_sources: list[str] | None = None
+    ) -> dict[str, Any]:
         return self.intel.threat_correlation(indicators, threat_intel_sources=threat_intel_sources)
 
     @_with_error_result
-    async def get_asset_inventory(self, subnet: str, include_vulnerabilities: bool = False,
-                                 vulnerability_severity: str | None = None) -> dict[str, Any]:
+    async def get_asset_inventory(
+        self,
+        subnet: str,
+        include_vulnerabilities: bool = False,
+        vulnerability_severity: str | None = None,
+    ) -> dict[str, Any]:
         return self.intel.get_asset_inventory(
             subnet,
             include_vulnerabilities=include_vulnerabilities,
@@ -283,23 +316,25 @@ class PyNetworkIntelMCPHandler:
         )
 
     @_with_error_result
-    async def check_port_exposure(self, host: str, port_range: str | None = None,
-                                 check_services: bool = True) -> dict[str, Any]:
+    async def check_port_exposure(
+        self, host: str, port_range: str | None = None, check_services: bool = True
+    ) -> dict[str, Any]:
         return self.intel.check_port_exposure(
             host, port_range=port_range, check_services=check_services
         )
 
     @_with_error_result
-    async def analyze_dns_records(self, domain: str, include_dns_history: bool = False,
-                                 check_dga: bool = False) -> dict[str, Any]:
+    async def analyze_dns_records(
+        self, domain: str, include_dns_history: bool = False, check_dga: bool = False
+    ) -> dict[str, Any]:
         return self.intel.analyze_dns_records(
             domain, include_dns_history=include_dns_history, check_dga=check_dga
         )
 
     @_with_error_result
-    async def get_geolocation_analysis(self, ip_addresses: list[str],
-                                      time_window_hours: int = 24,
-                                      detect_vpn_proxies: bool = False) -> dict[str, Any]:
+    async def get_geolocation_analysis(
+        self, ip_addresses: list[str], time_window_hours: int = 24, detect_vpn_proxies: bool = False
+    ) -> dict[str, Any]:
         return self.intel.get_geolocation_analysis(
             ip_addresses,
             time_window_hours=time_window_hours,
@@ -307,33 +342,40 @@ class PyNetworkIntelMCPHandler:
         )
 
     @_with_error_result
-    async def protocol_analysis(self, pcap_id: str,
-                               protocols: list[str] | None = None) -> dict[str, Any]:
+    async def protocol_analysis(
+        self, pcap_id: str, protocols: list[str] | None = None
+    ) -> dict[str, Any]:
         return self.intel.protocol_analysis(pcap_id, protocols=protocols)
 
     @_with_error_result
-    async def behavioral_profiling(self, entity_id: str, entity_type: str,
-                                  time_window_days: int = 30) -> dict[str, Any]:
+    async def behavioral_profiling(
+        self, entity_id: str, entity_type: str, time_window_days: int = 30
+    ) -> dict[str, Any]:
         return self.intel.behavioral_profiling(
             entity_id, entity_type, time_window_days=time_window_days
         )
 
     @_with_error_result
-    async def get_threat_intelligence(self, indicator: str,
-                                     threat_level: str = "any") -> dict[str, Any]:
+    async def get_threat_intelligence(
+        self, indicator: str, threat_level: str = "any"
+    ) -> dict[str, Any]:
         return self.intel.get_threat_intelligence(indicator, threat_level=threat_level)
 
     @_with_error_result
-    async def remediation_recommendations(self, threat_id: str,
-                                         remediation_priority: str = "high") -> dict[str, Any]:
+    async def remediation_recommendations(
+        self, threat_id: str, remediation_priority: str = "high"
+    ) -> dict[str, Any]:
         return self.intel.remediation_recommendations(
             threat_id, remediation_priority=remediation_priority
         )
 
     @_with_error_result
-    async def network_segmentation_analysis(self, network_id: str,
-                                           check_microsegmentation: bool = False,
-                                           security_zone: str | None = None) -> dict[str, Any]:
+    async def network_segmentation_analysis(
+        self,
+        network_id: str,
+        check_microsegmentation: bool = False,
+        security_zone: str | None = None,
+    ) -> dict[str, Any]:
         return self.intel.network_segmentation_analysis(
             network_id,
             check_microsegmentation=check_microsegmentation,
@@ -341,9 +383,9 @@ class PyNetworkIntelMCPHandler:
         )
 
     @_with_error_result
-    async def export_security_report(self, report_type: str,
-                                    time_period: str = "last_7d",
-                                    format: str = "markdown") -> dict[str, Any]:
+    async def export_security_report(
+        self, report_type: str, time_period: str = "last_7d", format: str = "markdown"
+    ) -> dict[str, Any]:
         return self.intel.export_security_report(
             report_type, time_period=time_period, format=format
         )

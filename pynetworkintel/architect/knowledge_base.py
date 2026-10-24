@@ -1,4 +1,5 @@
 """Knowledge base for architectural intelligence."""
+
 import logging
 from typing import Any
 
@@ -274,16 +275,12 @@ class KnowledgeBase:
     def get_services_by_category(self, category: str) -> list[dict[str, Any]]:
         """Get services by category."""
         return [
-            service for service in self.services.values()
-            if service.get("category") == category
+            service for service in self.services.values() if service.get("category") == category
         ]
 
     def get_services_by_cloud(self, cloud: str) -> list[dict[str, Any]]:
         """Get services by cloud provider."""
-        return [
-            service for service in self.services.values()
-            if service.get("cloud") == cloud
-        ]
+        return [service for service in self.services.values() if service.get("cloud") == cloud]
 
     def search_services(self, query: str) -> list[dict[str, Any]]:
         """Search for services by use case or description."""

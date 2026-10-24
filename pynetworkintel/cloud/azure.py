@@ -1,4 +1,5 @@
 """Azure cloud platform discovery and inventory management."""
+
 import logging
 from dataclasses import asdict, dataclass
 from typing import Any
@@ -64,21 +65,21 @@ class AzureDiscovery:
             self._initialized = False
         except ImportError:
             self._initialized = False
-            logger.warning("Azure SDK not installed. Install with: pip install azure-identity azure-mgmt-compute azure-mgmt-storage")
+            logger.warning(
+                "Azure SDK not installed. Install with: pip install azure-identity azure-mgmt-compute azure-mgmt-storage"
+            )
 
     def _get_credential(self):
         """Get Azure credential."""
-        if not hasattr(self, 'ClientSecretCredential'):
+        if not hasattr(self, "ClientSecretCredential"):
             return None
         return self.ClientSecretCredential(
-            client_id=self.client_id,
-            client_secret=self.client_secret,
-            tenant_id=self.tenant_id
+            client_id=self.client_id, client_secret=self.client_secret, tenant_id=self.tenant_id
         )
 
     def discover_virtual_machines(self) -> list[AzureResource]:
         """Discover Azure virtual machines."""
-        if not hasattr(self, 'ComputeManagementClient'):
+        if not hasattr(self, "ComputeManagementClient"):
             return []
 
         vms = []
@@ -100,8 +101,10 @@ class AzureDiscovery:
                     tags=vm.tags or {},
                     metadata={
                         "vm_id": vm.vm_id,
-                        "os_type": vm.storage_profile.os_disk.os_type if vm.storage_profile else None,
-                    }
+                        "os_type": (
+                            vm.storage_profile.os_disk.os_type if vm.storage_profile else None
+                        ),
+                    },
                 )
                 vms.append(resource)
                 self.resources.append(resource)
@@ -119,7 +122,7 @@ class AzureDiscovery:
                 return []
 
             # PostgreSQL
-            if hasattr(self, 'PostgreSQLManagementClient'):
+            if hasattr(self, "PostgreSQLManagementClient"):
                 try:
                     pg_client = self.PostgreSQLManagementClient(credential, self.subscription_id)
                     for server in pg_client.servers.list():
@@ -135,7 +138,7 @@ class AzureDiscovery:
                                 "version": server.version,
                                 "admin_username": server.administrator_login,
                                 "sku": str(server.sku),
-                            }
+                            },
                         )
                         databases.append(resource)
                         self.resources.append(resource)
@@ -148,7 +151,7 @@ class AzureDiscovery:
 
     def discover_storage_accounts(self) -> list[AzureResource]:
         """Discover Azure storage accounts."""
-        if not hasattr(self, 'StorageManagementClient'):
+        if not hasattr(self, "StorageManagementClient"):
             return []
 
         storage = []
@@ -172,7 +175,7 @@ class AzureDiscovery:
                         "kind": account.kind,
                         "sku": str(account.sku),
                         "access_tier": account.access_tier,
-                    }
+                    },
                 )
                 storage.append(resource)
                 self.resources.append(resource)
@@ -183,7 +186,7 @@ class AzureDiscovery:
 
     def discover_resource_groups(self) -> list[dict[str, Any]]:
         """Discover resource groups."""
-        if not hasattr(self, 'ComputeManagementClient'):
+        if not hasattr(self, "ComputeManagementClient"):
             return []
 
         groups = []
@@ -196,11 +199,14 @@ class AzureDiscovery:
 
             resource_client = ResourceManagementClient(credential, self.subscription_id)
 
-            groups.extend({
-                "name": group.name,
-                "location": group.location,
-                "tags": group.tags or {},
-            } for group in resource_client.resource_groups.list())
+            groups.extend(
+                {
+                    "name": group.name,
+                    "location": group.location,
+                    "tags": group.tags or {},
+                }
+                for group in resource_client.resource_groups.list()
+            )
         except Exception as e:
             logger.error(f"Failed to discover resource groups: {e}")
 
@@ -208,7 +214,7 @@ class AzureDiscovery:
 
     def discover_network_interfaces(self) -> list[dict[str, Any]]:
         """Discover network interfaces and IP configurations."""
-        if not hasattr(self, 'NetworkManagementClient'):
+        if not hasattr(self, "NetworkManagementClient"):
             return []
 
         interfaces = []
@@ -219,24 +225,27 @@ class AzureDiscovery:
 
             network_client = self.NetworkManagementClient(credential, self.subscription_id)
 
-            interfaces.extend({
-                "nic_id": nic.id,
-                "name": nic.name,
-                "region": nic.location,
-                "mac_address": nic.mac_address,
-                "ip_configurations": [
-                    {
-                        "name": ip_config.name,
-                        "private_ip": ip_config.private_ip_address,
-                        "public_ip_id": (
-                            ip_config.public_ip_address.id
-                            if ip_config.public_ip_address
-                            else None
-                        ),
-                    }
-                    for ip_config in nic.ip_configurations or []
-                ],
-            } for nic in network_client.network_interfaces.list_all())
+            interfaces.extend(
+                {
+                    "nic_id": nic.id,
+                    "name": nic.name,
+                    "region": nic.location,
+                    "mac_address": nic.mac_address,
+                    "ip_configurations": [
+                        {
+                            "name": ip_config.name,
+                            "private_ip": ip_config.private_ip_address,
+                            "public_ip_id": (
+                                ip_config.public_ip_address.id
+                                if ip_config.public_ip_address
+                                else None
+                            ),
+                        }
+                        for ip_config in nic.ip_configurations or []
+                    ],
+                }
+                for nic in network_client.network_interfaces.list_all()
+            )
         except Exception as e:
             logger.error(f"Failed to discover network interfaces: {e}")
 
@@ -271,8 +280,8 @@ class AzureDiscovery:
     def _extract_resource_group(resource_id: str) -> str:
         """Extract resource group from Azure resource ID."""
         try:
-            parts = resource_id.split('/')
-            rg_index = parts.index('resourceGroups')
+            parts = resource_id.split("/")
+            rg_index = parts.index("resourceGroups")
             return parts[rg_index + 1]
         except Exception:
             return "unknown"

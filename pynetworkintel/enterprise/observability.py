@@ -1,4 +1,5 @@
 """Observability: metrics, logging, and tracing."""
+
 import logging
 from datetime import datetime
 from typing import Any
@@ -50,6 +51,7 @@ class ObservabilityManager:
     def start_trace(self, operation_name: str, parent_span_id: str | None = None) -> str:
         """Start a distributed trace."""
         import uuid
+
         span_id = str(uuid.uuid4())
 
         span = {
@@ -107,16 +109,18 @@ class ObservabilityManager:
             if parent_id not in traces:
                 traces[parent_id] = []
 
-            traces[parent_id].append({
-                "spanID": span["span_id"],
-                "operationName": span["operation_name"],
-                "startTime": span["start_time"],
-                "duration": span.get("duration_ms", 0),
-                "status": span.get("status", "ok"),
-                "tags": {
-                    "error": span.get("error") is not None,
-                },
-            })
+            traces[parent_id].append(
+                {
+                    "spanID": span["span_id"],
+                    "operationName": span["operation_name"],
+                    "startTime": span["start_time"],
+                    "duration": span.get("duration_ms", 0),
+                    "status": span.get("status", "ok"),
+                    "tags": {
+                        "error": span.get("error") is not None,
+                    },
+                }
+            )
 
         return {
             "data": [{"spans": traces.get("root", [])}],

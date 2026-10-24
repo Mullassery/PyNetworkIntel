@@ -1,4 +1,5 @@
 """SIEM integration for centralized logging and alerting."""
+
 import logging
 from datetime import datetime
 from typing import Any
@@ -109,10 +110,7 @@ class SIEMIntegrator:
             }
 
             response = requests.post(
-                f"{self.endpoint}/services/collector",
-                json=payload,
-                headers=headers,
-                timeout=10
+                f"{self.endpoint}/services/collector", json=payload, headers=headers, timeout=10
             )
 
             return response.status_code == 200
@@ -130,6 +128,7 @@ class SIEMIntegrator:
             # Add auth if provided
             if self.credentials.get("username"):
                 import base64
+
                 auth = base64.b64encode(
                     f"{self.credentials['username']}:{self.credentials['password']}".encode()
                 ).decode()
@@ -138,10 +137,7 @@ class SIEMIntegrator:
             index_name = "pynetworkintel-" + datetime.utcnow().strftime("%Y.%m.%d")
 
             response = requests.post(
-                f"{self.endpoint}/{index_name}/_doc",
-                json=data,
-                headers=headers,
-                timeout=10
+                f"{self.endpoint}/{index_name}/_doc", json=data, headers=headers, timeout=10
             )
 
             return response.status_code in [200, 201]
@@ -163,7 +159,7 @@ class SIEMIntegrator:
                 "https://http-intake.logs.datadoghq.com/v1/input",
                 json=data,
                 headers=headers,
-                timeout=10
+                timeout=10,
             )
 
             return response.status_code == 200

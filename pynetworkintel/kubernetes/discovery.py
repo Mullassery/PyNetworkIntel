@@ -1,4 +1,5 @@
 """Kubernetes cluster discovery and resource enumeration."""
+
 import logging
 from dataclasses import asdict, dataclass
 from typing import Any
@@ -46,6 +47,7 @@ class KubernetesDiscovery:
 
         try:
             from kubernetes import client, config, watch
+
             self.client = client
             self.config = config
             self.watch = watch
@@ -56,7 +58,7 @@ class KubernetesDiscovery:
 
     def _initialize(self):
         """Initialize Kubernetes client."""
-        if not hasattr(self, 'config') or self._initialized:
+        if not hasattr(self, "config") or self._initialized:
             return
 
         try:
@@ -98,10 +100,14 @@ class KubernetesDiscovery:
                     labels=node.metadata.labels or {},
                     metadata={
                         "capacity": dict(node.status.capacity) if node.status.capacity else {},
-                        "allocatable": dict(node.status.allocatable) if node.status.allocatable else {},
-                        "kernel_version": node.status.node_info.kernel_version if node.status.node_info else None,
+                        "allocatable": (
+                            dict(node.status.allocatable) if node.status.allocatable else {}
+                        ),
+                        "kernel_version": (
+                            node.status.node_info.kernel_version if node.status.node_info else None
+                        ),
                         "addresses": addresses,
-                    }
+                    },
                 )
                 nodes.append(resource)
                 self.resources.append(resource)
@@ -142,7 +148,7 @@ class KubernetesDiscovery:
                             c.restart_count for c in (pod.status.container_statuses or [])
                         ),
                         "pod_ip": pod.status.pod_ip,
-                    }
+                    },
                 )
                 pods.append(resource)
                 self.resources.append(resource)
@@ -177,8 +183,12 @@ class KubernetesDiscovery:
                         "replicas": deployment.spec.replicas,
                         "ready_replicas": deployment.status.ready_replicas or 0,
                         "updated_replicas": deployment.status.updated_replicas or 0,
-                        "image": deployment.spec.template.spec.containers[0].image if deployment.spec.template.spec.containers else None,
-                    }
+                        "image": (
+                            deployment.spec.template.spec.containers[0].image
+                            if deployment.spec.template.spec.containers
+                            else None
+                        ),
+                    },
                 )
                 deployments.append(resource)
                 self.resources.append(resource)
@@ -225,7 +235,7 @@ class KubernetesDiscovery:
                         "external_ips": service.spec.external_i_ps or [],
                         "load_balancer_ip": service.spec.load_balancer_source_ranges or [],
                         "ports": ports,
-                    }
+                    },
                 )
                 services.append(resource)
                 self.resources.append(resource)
@@ -273,12 +283,15 @@ class KubernetesDiscovery:
             else:
                 secret_list = self.v1.list_secret_for_all_namespaces()
 
-            secrets.extend({
-                "namespace": secret.metadata.namespace,
-                "name": secret.metadata.name,
-                "type": secret.type,
-                "keys": list(secret.data.keys()) if secret.data else [],
-            } for secret in secret_list.items)
+            secrets.extend(
+                {
+                    "namespace": secret.metadata.namespace,
+                    "name": secret.metadata.name,
+                    "type": secret.type,
+                    "keys": list(secret.data.keys()) if secret.data else [],
+                }
+                for secret in secret_list.items
+            )
         except Exception as e:
             logger.error(f"Failed to discover secrets: {e}")
 

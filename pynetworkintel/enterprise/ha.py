@@ -1,4 +1,5 @@
 """High Availability (HA) architecture components."""
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -174,9 +175,7 @@ class HAArchitecture:
                 logger.error(f"Standby node {standby} not found")
                 return False
 
-        logger.info(
-            f"Configured replication: {primary_node} -> {standby_nodes}"
-        )
+        logger.info(f"Configured replication: {primary_node} -> {standby_nodes}")
 
         return True
 
@@ -215,7 +214,7 @@ class HAArchitecture:
                 x[1].state == "healthy",
                 x[1].node_id,
             ),
-            reverse=True
+            reverse=True,
         )
 
         if candidates:

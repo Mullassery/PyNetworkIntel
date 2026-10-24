@@ -37,7 +37,9 @@ class ReportGenerator:
                 severity_counts[severity] = severity_counts.get(severity, 0) + 1
 
             # Get unique devices
-            devices = session.query(DBDevice.ip).distinct().filter(DBDevice.last_seen >= since).all()
+            devices = (
+                session.query(DBDevice.ip).distinct().filter(DBDevice.last_seen >= since).all()
+            )
 
             report = {
                 "period": f"Last {hours} hours",
@@ -73,17 +75,21 @@ class ReportGenerator:
                 device_type = device.device_type or "unknown"
                 os_type = device.os or "unknown"
 
-                inventory["devices_by_type"][device_type] = inventory["devices_by_type"].get(device_type, 0) + 1
+                inventory["devices_by_type"][device_type] = (
+                    inventory["devices_by_type"].get(device_type, 0) + 1
+                )
                 inventory["devices_by_os"][os_type] = inventory["devices_by_os"].get(os_type, 0) + 1
 
-                inventory["devices"].append({
-                    "ip": device.ip,
-                    "hostname": device.hostname,
-                    "os": device.os,
-                    "type": device_type,
-                    "status": "online" if device.is_online else "offline",
-                    "last_seen": device.last_seen.isoformat() if device.last_seen else None,
-                })
+                inventory["devices"].append(
+                    {
+                        "ip": device.ip,
+                        "hostname": device.hostname,
+                        "os": device.os,
+                        "type": device_type,
+                        "status": "online" if device.is_online else "offline",
+                        "last_seen": device.last_seen.isoformat() if device.last_seen else None,
+                    }
+                )
 
             return inventory
 
@@ -96,7 +102,12 @@ class ReportGenerator:
 
         try:
             # Get latest findings
-            findings = session.query(DBFinding).filter(DBFinding.cve_id.isnot(None)).order_by(DBFinding.found_at.desc()).all()
+            findings = (
+                session.query(DBFinding)
+                .filter(DBFinding.cve_id.isnot(None))
+                .order_by(DBFinding.found_at.desc())
+                .all()
+            )
 
             cves_by_severity = {}
             cves_by_device = {}
@@ -110,12 +121,14 @@ class ReportGenerator:
                     cves_by_device[device_ip] = []
 
                 if finding.cve_id not in [c["cve_id"] for c in cves_by_device[device_ip]]:
-                    cves_by_device[device_ip].append({
-                        "cve_id": finding.cve_id,
-                        "severity": severity,
-                        "title": finding.title,
-                        "cvss_score": finding.cvss_score,
-                    })
+                    cves_by_device[device_ip].append(
+                        {
+                            "cve_id": finding.cve_id,
+                            "severity": severity,
+                            "title": finding.title,
+                            "cvss_score": finding.cvss_score,
+                        }
+                    )
 
             report = {
                 "total_cves": len({f.cve_id for f in findings if f.cve_id}),
