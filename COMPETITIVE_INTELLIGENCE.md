@@ -56,6 +56,8 @@ starts, and record the decision in the PR or changelog.
 
 ## OSS gap analysis — 2026-10-24
 
+**What matters most here:** fast discovery and evidence-backed vulnerabilities. One nmap subprocess per scan does not scale to large ranges, and keyword CVE matches produce false positives; integrate RustScan/Naabu and Nuclei evidence.
+
 Scope: PyNetworkIntel assessed against four maintained network-scanning tools on discovery speed, service/version detection, script/template coverage, CVE triage, topology fidelity, change tracking, inventory export, and scan safety. It is a wrapper around Nmap, so Nmap is both dependency and comparator.
 
 ### Comparable OSS projects
