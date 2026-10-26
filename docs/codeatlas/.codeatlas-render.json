@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "outputs": {
+    "md": [
+      "docs.1.md",
+      "overview.md",
+      "pynetworkintel.3.md",
+      "tests.5.md",
+      "tools.6.md"
+    ],
+    "html": [
+      "docs.1.html",
+      "overview.html",
+      "pynetworkintel.3.html",
+      "tests.5.html",
+      "tools.6.html"
+    ]
+  }
+}
