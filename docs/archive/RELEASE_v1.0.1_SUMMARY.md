@@ -91,7 +91,7 @@ pynetworkintel --version
 ### GitHub Release
 
 **Release**: v1.0.1  
-**Location**: https://github.com/Mullassery/PyNetworkIntel/releases/tag/v1.0.1  
+**Location**: ../PyNetworkIntel/releases/tag/v1.0.1  
 **Assets**: Wheel file (pynetworkintel-1.0.1-py3-none-any.whl)  
 **Format**: Wheels only (no source distribution)
 
@@ -186,7 +186,7 @@ WHEELS ONLY - No source distribution included
 
 ### GitHub: v1.0.1
 - Release tagged: v1.0.1
-- URL: https://github.com/Mullassery/PyNetworkIntel/releases/tag/v1.0.1
+- URL: ../PyNetworkIntel/releases/tag/v1.0.1
 - Assets: Wheel file included in release
 
 ### Local: v1.0.1
@@ -270,7 +270,7 @@ pip install --upgrade pynetworkintel
 - See README.md for general feature overview
 
 ### Support
-- GitHub Issues: https://github.com/Mullassery/PyNetworkIntel/issues
+- GitHub Issues: ../PyNetworkIntel/issues
 - Email: mullassery@gmail.com
 
 ---
@@ -300,7 +300,7 @@ pip install --upgrade pynetworkintel
 - Python: 3.10+
 
 **GitHub Release**
-- URL: https://github.com/Mullassery/PyNetworkIntel/releases/tag/v1.0.1
+- URL: ../PyNetworkIntel/releases/tag/v1.0.1
 - Assets: Wheel file
 - Format: Wheels only
 

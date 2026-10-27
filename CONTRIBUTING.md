@@ -14,7 +14,7 @@ commit messages. See [SECURITY.md](SECURITY.md).
 ## Development setup
 
 ```bash
-git clone https://github.com/Mullassery/PyNetworkIntel.git
+git clone ../PyNetworkIntel
 cd PyNetworkIntel
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
